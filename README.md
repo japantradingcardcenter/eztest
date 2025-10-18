@@ -1,36 +1,172 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EzTest - Self-Hostable Test Management Platform
 
-## Getting Started
+A lightweight, open-source test management application built with Next.js, designed to run efficiently on minimal hardware (1 core, 2GB RAM). EzTest provides a modern alternative to commercial tools like Testiny and TestRail.
 
-First, run the development server:
+## Features
+
+- **Project Management** - Multi-project support with role-based access control
+- **Test Organization** - Hierarchical test suites and comprehensive test cases
+- **Test Execution** - Run tests, track results, and monitor progress
+- **Requirements Traceability** - Link test cases to requirements
+- **Collaboration** - Comments, attachments, and team collaboration
+- **Lightweight** - Optimized for self-hosting on minimal resources
+- **Modern UI** - Built with Next.js, Tailwind CSS, and ShadCN UI
+- **Fully Self-Hostable** - Docker-based deployment with PostgreSQL
+
+## Tech Stack
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS v4, ShadCN UI
+- **Database**: PostgreSQL 16
+- **ORM**: Prisma
+- **Deployment**: Docker & Docker Compose
+
+## Quick Start
+
+### With Docker (Recommended)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Clone the repository
+git clone <repository-url>
+cd eztest.houseoffoss.com
+
+# Copy and configure environment
+cp .env.example .env
+# Edit .env with your settings
+
+# Start with Docker Compose
+docker-compose up -d
+
+# Access the application
+open http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+See [DOCKER.md](./DOCKER.md) for detailed deployment instructions.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Local Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Install dependencies
+npm install
 
-## Learn More
+# Set up environment
+cp .env.example .env
+# Update DATABASE_URL in .env
 
-To learn more about Next.js, take a look at the following resources:
+# Start PostgreSQL (or use Docker)
+docker-compose up -d postgres
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Generate Prisma client
+npx prisma generate
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Run database migrations
+npx prisma db push
 
-## Deploy on Vercel
+# Start development server
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Database Schema
+
+EzTest includes a comprehensive schema for test management:
+
+- **Users & Roles** - User management with ADMIN, PROJECT_MANAGER, TESTER, VIEWER roles
+- **Projects** - Multi-project support with team members and permissions
+- **Test Suites** - Hierarchical organization with nested suites
+- **Test Cases** - Detailed test cases with steps, priorities, and statuses
+- **Test Runs** - Execution tracking with environments and assignments
+- **Test Results** - Result logging with duration, comments, and attachments
+- **Requirements** - Requirement management and traceability
+- **Comments & Attachments** - Collaboration features
+
+## Resource Requirements
+
+**Minimum**:
+- 1 CPU Core
+- 2GB RAM
+- 10GB Storage
+
+**Recommended**:
+- 2 CPU Cores
+- 4GB RAM
+- 20GB Storage
+
+## Development
+
+```bash
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Lint code
+npm run lint
+
+# Prisma commands
+npx prisma studio        # Open Prisma Studio
+npx prisma generate      # Generate Prisma Client
+npx prisma db push       # Push schema changes
+npx prisma migrate dev   # Create and apply migration
+```
+
+## Project Structure
+
+```
+eztest.houseoffoss.com/
+├── app/                 # Next.js app directory
+│   ├── api/            # API routes
+│   └── ...
+├── lib/                # Utility functions and shared code
+│   ├── prisma.ts       # Prisma client singleton
+│   └── utils.ts        # Utility functions
+├── prisma/             # Database schema and migrations
+│   └── schema.prisma   # Prisma schema
+├── public/             # Static assets
+├── Dockerfile          # Docker configuration
+├── docker-compose.yml  # Docker Compose configuration
+└── DOCKER.md          # Docker deployment guide
+```
+
+## Environment Variables
+
+Required environment variables (see `.env.example`):
+
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/eztest
+NODE_ENV=development
+APP_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key
+NEXTAUTH_URL=http://localhost:3000
+MAX_FILE_SIZE=10485760
+UPLOAD_DIR=./uploads
+```
+
+## Deployment
+
+See [DOCKER.md](./DOCKER.md) for comprehensive deployment instructions including:
+- Docker Compose setup
+- Production configuration
+- Reverse proxy setup (Nginx/Traefik)
+- SSL/TLS configuration
+- Backup strategies
+- Monitoring and troubleshooting
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+[Your License Here]
+
+## Support
+
+For issues and questions:
+- GitHub Issues: [Repository URL]
+- Documentation: [Docs URL]
