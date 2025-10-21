@@ -1,97 +1,146 @@
 # EzTest - Self-Hostable Test Management Platform
 
-A lightweight, open-source test management application built with Next.js, designed to run efficiently on minimal hardware (1 core, 2GB RAM). EzTest provides a modern alternative to commercial tools like Testiny and TestRail.
+## Summary
+
+EzTest is a lightweight, open-source test management platform built with Next.js and designed for self-hosting. It provides an efficient alternative to commercial tools like Testiny and TestRail, optimized to run on minimal hardware (1 CPU core, 2GB RAM). EzTest combines a modern UI with powerful test management capabilities, featuring project management, test organization, execution tracking, and team collaboration—all deployable with Docker.
+
+---
+
+## Installation Guide
+
+### Requirements
+
+- Docker & Docker Compose (recommended)
+- Node.js 18+ (for local development)
+- PostgreSQL 16 (included in Docker setup)
+
+### Docker Installation (Recommended)
+
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd eztest.houseoffoss.com
+   ```
+
+2. **Set up environment:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+3. **Start the application:**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Access the application:**
+   - Open http://localhost:3000 in your browser
+   - Default credentials are in your `.env` file
+
+For detailed Docker deployment, production setup, and advanced configuration, see [DOCKER.md](./DOCKER.md).
+
+### Local Development Installation
+
+1. **Clone and install:**
+   ```bash
+   git clone <repository-url>
+   cd eztest.houseoffoss.com
+   npm install
+   ```
+
+2. **Configure environment:**
+   ```bash
+   cp .env.example .env
+   # Update DATABASE_URL in .env
+   ```
+
+3. **Set up database:**
+   ```bash
+   # Start PostgreSQL container
+   docker-compose up -d postgres
+
+   # Generate Prisma client
+   npx prisma generate
+
+   # Run migrations
+   npx prisma db push
+   ```
+
+4. **Start development server:**
+   ```bash
+   npm run dev
+   ```
+
+5. **Access the application:**
+   - Open http://localhost:3000
+
+---
 
 ## Features
 
-- **Project Management** - Multi-project support with role-based access control
-- **Test Organization** - Hierarchical test suites and comprehensive test cases
-- **Test Execution** - Run tests, track results, and monitor progress
-- **Requirements Traceability** - Link test cases to requirements
-- **Collaboration** - Comments, attachments, and team collaboration
-- **Lightweight** - Optimized for self-hosting on minimal resources
-- **Modern UI** - Built with Next.js, Tailwind CSS, and ShadCN UI
-- **Fully Self-Hostable** - Docker-based deployment with PostgreSQL
+### Project Management
+- Multi-project support with dedicated workspaces
+- Role-based access control (ADMIN, PROJECT_MANAGER, TESTER, VIEWER)
+- Team member management and permissions
+- Project settings and configuration
 
-## Tech Stack
+### Test Organization
+- Hierarchical test suites with nested structure
+- Comprehensive test case management
+- Test prioritization and status tracking
+- Test templates for quick test creation
 
+### Test Execution & Tracking
+- Execute tests with real-time progress monitoring
+- Track test results with detailed metrics
+- Environment-specific test runs
+- Test duration and performance logging
+- Historical test result analysis
+
+### Requirements Traceability
+- Link test cases to requirements
+- Traceability matrix for requirements coverage
+- Requirements-to-test mapping
+
+### Collaboration & Communication
+- Comments on test cases and results
+- File attachments for documentation
+- Team notifications and activity feeds
+- Audit logs for compliance tracking
+
+### Modern User Interface
+- Clean, intuitive glass morphism design
+- Responsive layout (desktop, tablet, mobile)
+- Real-time UI updates
+- Accessibility-focused components
+
+### Self-Hosting & Deployment
+- Docker containerization for easy deployment
+- Docker Compose for one-command setup
+- Minimal resource footprint (1 core, 2GB RAM minimum)
+- PostgreSQL integration
+- Reverse proxy compatible (Nginx, Traefik)
+- SSL/TLS support
+
+### Technology Stack
 - **Frontend**: Next.js 15, React 19, TypeScript
-- **Styling**: Tailwind CSS v4, ShadCN UI
+- **Styling**: Tailwind CSS v4, ShadCN UI components
 - **Database**: PostgreSQL 16
 - **ORM**: Prisma
+- **Authentication**: NextAuth.js
 - **Deployment**: Docker & Docker Compose
 
-## Quick Start
-
-### With Docker (Recommended)
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd eztest.houseoffoss.com
-
-# Copy and configure environment
-cp .env.example .env
-# Edit .env with your settings
-
-# Start with Docker Compose
-docker-compose up -d
-
-# Access the application
-open http://localhost:3000
-```
-
-See [DOCKER.md](./DOCKER.md) for detailed deployment instructions.
-
-### Local Development
-
-```bash
-# Install dependencies
-npm install
-
-# Set up environment
-cp .env.example .env
-# Update DATABASE_URL in .env
-
-# Start PostgreSQL (or use Docker)
-docker-compose up -d postgres
-
-# Generate Prisma client
-npx prisma generate
-
-# Run database migrations
-npx prisma db push
-
-# Start development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser.
-
-## Database Schema
-
-EzTest includes a comprehensive schema for test management:
-
-- **Users & Roles** - User management with ADMIN, PROJECT_MANAGER, TESTER, VIEWER roles
-- **Projects** - Multi-project support with team members and permissions
-- **Test Suites** - Hierarchical organization with nested suites
-- **Test Cases** - Detailed test cases with steps, priorities, and statuses
-- **Test Runs** - Execution tracking with environments and assignments
-- **Test Results** - Result logging with duration, comments, and attachments
-- **Requirements** - Requirement management and traceability
-- **Comments & Attachments** - Collaboration features
+---
 
 ## Resource Requirements
 
-**Minimum**:
-- 1 CPU Core
-- 2GB RAM
-- 10GB Storage
+| Specification | Minimum | Recommended |
+|---|---|---|
+| CPU Cores | 1 | 2+ |
+| RAM | 2GB | 4GB |
+| Storage | 10GB | 20GB |
 
-**Recommended**:
-- 2 CPU Cores
-- 4GB RAM
-- 20GB Storage
+---
 
 ## Development
 
@@ -108,54 +157,23 @@ npm start
 # Lint code
 npm run lint
 
-# Prisma commands
+# Database commands
 npx prisma studio        # Open Prisma Studio
 npx prisma generate      # Generate Prisma Client
 npx prisma db push       # Push schema changes
-npx prisma migrate dev   # Create and apply migration
+npx prisma migrate dev   # Create migration
 ```
 
-## Project Structure
+---
 
-```
-eztest.houseoffoss.com/
-├── app/                 # Next.js app directory
-│   ├── api/            # API routes
-│   └── ...
-├── lib/                # Utility functions and shared code
-│   ├── prisma.ts       # Prisma client singleton
-│   └── utils.ts        # Utility functions
-├── prisma/             # Database schema and migrations
-│   └── schema.prisma   # Prisma schema
-├── public/             # Static assets
-├── Dockerfile          # Docker configuration
-├── docker-compose.yml  # Docker Compose configuration
-└── DOCKER.md          # Docker deployment guide
-```
+## Documentation
 
-## Environment Variables
+- [Technical Documentation](./docs/INDEX.md) - Complete technical documentation
+- [Docker Deployment Guide](./DOCKER.md) - Production setup, configuration, and troubleshooting
+- [Development Roadmap](./ROADMAP.md) - Future features and planned development
+- [Tech Stack](#technology-stack) - Technologies and frameworks used
 
-Required environment variables (see `.env.example`):
-
-```env
-DATABASE_URL=postgresql://user:password@localhost:5432/eztest
-NODE_ENV=development
-APP_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-secret-key
-NEXTAUTH_URL=http://localhost:3000
-MAX_FILE_SIZE=10485760
-UPLOAD_DIR=./uploads
-```
-
-## Deployment
-
-See [DOCKER.md](./DOCKER.md) for comprehensive deployment instructions including:
-- Docker Compose setup
-- Production configuration
-- Reverse proxy setup (Nginx/Traefik)
-- SSL/TLS configuration
-- Backup strategies
-- Monitoring and troubleshooting
+---
 
 ## Contributing
 
