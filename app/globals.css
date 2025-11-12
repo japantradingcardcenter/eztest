@@ -47,7 +47,7 @@
   --radius: 0.75rem;
   /* Glassmorphism Blue & Orange Theme */
   /* Primary palette */
-  --primary: #0b72ff; /* blue-600 */
+  --primary: #0b72ff; /* custom blue (not Tailwind blue-600) */
   --primary-foreground: #ffffff;
   --accent: #ff7a18; /* orange-600 */
   --accent-foreground: #ffffff;
