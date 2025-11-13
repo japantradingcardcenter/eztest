@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
                 The link will expire in 1 hour for security reasons.
               </p>
               <p className="text-green-200/90 text-sm">
-                Didn&apos;t receive the email? Check your spam folder or{' '}
+                Didn't receive the email? Check your spam folder or{' '}
                 <button
                   onClick={() => setSuccess(false)}
                   className="font-medium text-green-900 hover:underline"
