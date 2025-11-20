@@ -9,7 +9,6 @@ import { Input } from '@/elements/input';
 import { Label } from '@/elements/label';
 import { Textarea } from '@/elements/textarea';
 import { Save, Trash2 } from 'lucide-react';
-import { Navbar } from '@/components/design/Navbar';
 import { Breadcrumbs } from '@/components/design/Breadcrumbs';
 
 interface Project {
@@ -157,35 +156,27 @@ export default function ProjectSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1628]">
-      <Navbar
-        items={[
-          { label: 'Overview', href: `/projects/${projectId}` },
-          { label: 'Test Suites', href: `/projects/${projectId}/testsuites` },
-          { label: 'Test Cases', href: `/projects/${projectId}/testcases` },
-          { label: 'Test Runs', href: `/projects/${projectId}/testruns` },
-          { label: 'Members', href: `/projects/${projectId}/members` },
-          { label: 'Settings', href: `/projects/${projectId}/settings` },
-        ]}
-        breadcrumbs={
-          <Breadcrumbs 
-            items={[
-              { label: 'Projects', href: '/projects' },
-              { label: project.name, href: `/projects/${projectId}` },
-              { label: 'Settings' }
-            ]}
-          />
-        }
-        actions={
-          <form action="/api/auth/signout" method="POST">
-            <Button type="submit" variant="glass-destructive" size="sm" className="px-5">
-              Sign Out
-            </Button>
-          </form>
-        }
-      />
+    <>
+      {/* Top Bar */}
+      <div className="sticky top-0 z-40 backdrop-blur-xl border-b border-white/10">
+        <div className="px-8 py-4">
+          <div className="flex items-center justify-between">
+            <Breadcrumbs 
+              items={[
+                { label: 'Projects', href: '/projects' },
+                { label: project.name, href: `/projects/${projectId}` },
+                { label: 'Settings' }
+              ]}
+            />
+            <form action="/api/auth/signout" method="POST" className="inline">
+              <Button type="submit" variant="glass-destructive" size="sm" className="px-5">
+                Sign Out
+              </Button>
+            </form>
+          </div>
+        </div>
+      </div>
       
-      {/* Page Header */}
       <div className="max-w-4xl mx-auto px-8 pt-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-white mb-1">Project Settings</h1>
@@ -385,6 +376,6 @@ export default function ProjectSettingsPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

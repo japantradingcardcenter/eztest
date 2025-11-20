@@ -47,6 +47,8 @@ const iconMap: Record<string, React.ReactNode> = {
   'Test Runs': <PlayCircle className="w-4 h-4" />,
   Members: <Users className="w-4 h-4" />,
   Settings: <Settings className="w-4 h-4" />,
+  Admin: <Settings className="w-4 h-4" />,
+  Users: <Users className="w-4 h-4" />,
 };
 
 export function Sidebar({ items, projectId, className }: SidebarProps) {
@@ -296,7 +298,7 @@ export function Sidebar({ items, projectId, className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 h-screen bg-[#0f1623] border-r border-white/10 overflow-y-auto transition-all duration-300',
+        'fixed left-0 top-0 h-screen bg-[#0f1623] border-r border-white/10 overflow-y-auto transition-all duration-300 flex flex-col',
         isCollapsed ? 'w-20' : 'w-64',
         className
       )}
@@ -341,6 +343,31 @@ export function Sidebar({ items, projectId, className }: SidebarProps) {
       <nav className={cn('p-4 space-y-1', isCollapsed && 'px-2')}>
         {displayItems.map((item, index) => renderItem(item, 0, index))}
       </nav>
+
+      {/* User Account Section - Spacer to push to bottom */}
+      <div className="flex-1" />
+
+      {/* User Account Section - Bottom */}
+      <div className={cn('border-t border-white/10 p-4', isCollapsed && 'px-2')}>
+        <Link
+          href="/settings/profile"
+          className={cn(
+            'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all',
+            isCollapsed ? 'justify-center' : 'justify-start',
+            'text-white/70 hover:text-white hover:bg-white/5'
+          )}
+          title={isCollapsed ? 'Account' : ''}
+        >
+          {isCollapsed ? (
+            <Settings className="w-4 h-4" />
+          ) : (
+            <>
+              <Settings className="w-4 h-4" />
+              <span className="text-sm font-medium">Account</span>
+            </>
+          )}
+        </Link>
+      </div>
     </aside>
   );
 }

@@ -14,12 +14,19 @@ interface AccountStatus {
   permanentDeleteDate: string | null;
 }
 
+interface UserInfo {
+  name: string;
+  email: string;
+  role: string;
+}
+
 export default function AccountSettingsPage() {
   useEffect(() => {
     document.title = 'Account Settings | EZTest';
   }, []);
 
   const router = useRouter();
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [accountStatus, setAccountStatus] = useState<AccountStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,24 +42,35 @@ export default function AccountSettingsPage() {
   });
   const [changingPassword, setChangingPassword] = useState(false);
 
-  // Fetch account status
+  // Fetch user info and account status
   useEffect(() => {
-    const fetchAccountStatus = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/users/account');
-        if (!response.ok) {
+        const [userResponse, accountResponse] = await Promise.all([
+          fetch('/api/users/profile'),
+          fetch('/api/users/account'),
+        ]);
+
+        if (!userResponse.ok) {
+          throw new Error('Failed to fetch user info');
+        }
+        if (!accountResponse.ok) {
           throw new Error('Failed to fetch account status');
         }
-        const data = await response.json();
-        setAccountStatus(data.data);
+
+        const userData = await userResponse.json();
+        const accountData = await accountResponse.json();
+
+        setUserInfo(userData.data);
+        setAccountStatus(accountData.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error loading account status');
+        setError(err instanceof Error ? err.message : 'Error loading account settings');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAccountStatus();
+    fetchData();
   }, []);
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -158,6 +176,23 @@ export default function AccountSettingsPage() {
           <h1 className="text-4xl font-bold text-foreground mb-2">Account & Security</h1>
           <p className="text-muted-foreground">Manage password, security settings, and account deletion</p>
         </div>
+
+        {/* User Info Display */}
+        {userInfo && (
+          <div className="mb-8 p-4 rounded-lg border border-primary/30 bg-primary/5">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Logged in as</p>
+                <h2 className="text-2xl font-bold text-foreground">{userInfo.name}</h2>
+                <p className="text-sm text-muted-foreground mt-1">{userInfo.email}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground mb-1">Role</p>
+                <p className="text-lg font-semibold text-primary">{userInfo.role}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="mb-6 p-4 rounded-md border border-red-500/40 bg-red-500/10">
