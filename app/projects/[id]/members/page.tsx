@@ -10,7 +10,6 @@ import { Label } from '@/elements/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/elements/select';
 import { Badge } from '@/elements/badge';
 import { Plus, Trash2, Mail, Shield, Eye, Users } from 'lucide-react';
-import { Navbar } from '@/components/design/Navbar';
 import { Breadcrumbs } from '@/components/design/Breadcrumbs';
 
 interface ProjectMember {
@@ -205,109 +204,101 @@ export default function ProjectMembersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1628]">
-      <Navbar
-        items={[
-          { label: 'Overview', href: `/projects/${projectId}` },
-          { label: 'Test Suites', href: `/projects/${projectId}/testsuites` },
-          { label: 'Test Cases', href: `/projects/${projectId}/testcases` },
-          { label: 'Test Runs', href: `/projects/${projectId}/testruns` },
-          { label: 'Members', href: `/projects/${projectId}/members` },
-          { label: 'Settings', href: `/projects/${projectId}/settings` },
-        ]}
-        breadcrumbs={
-          <Breadcrumbs 
-            items={[
-              { label: 'Projects', href: '/projects' },
-              { label: project.name, href: `/projects/${projectId}` },
-              { label: 'Members' }
-            ]}
-          />
-        }
-        actions={
-          <form action="/api/auth/signout" method="POST">
-            <Button type="submit" variant="glass-destructive" size="sm" className="px-5">
-              Sign Out
-            </Button>
-          </form>
-        }
-      />
-      
-      {/* Page Header */}
-      <div className="max-w-6xl mx-auto px-8 pt-8">
-        <div className="flex items-center justify-end mb-4">
-          <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="glass-primary" size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Member
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Project Member</DialogTitle>
-                  <DialogDescription>
-                    Add a team member to this project
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleAddMember} className="space-y-4 mt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="user@example.com"
-                      value={formData.email}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Enter the email address of the user you want to add
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Project Role</Label>
-                    <Select
-                      value={formData.role}
-                      onValueChange={(value: string) => setFormData({ ...formData, role: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="OWNER">Owner</SelectItem>
-                        <SelectItem value="ADMIN">Admin</SelectItem>
-                        <SelectItem value="TESTER">Tester (Default)</SelectItem>
-                        <SelectItem value="VIEWER">Viewer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {error && (
-                    <div className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 p-3 rounded-md">
-                      {error}
+    <>
+      {/* Top Bar */}
+      <div className="sticky top-0 z-40 backdrop-blur-xl border-b border-white/10">
+        <div className="px-8 py-4">
+          <div className="flex items-center justify-between">
+            <Breadcrumbs 
+              items={[
+                { label: 'Projects', href: '/projects' },
+                { label: project.name, href: `/projects/${projectId}` },
+                { label: 'Members' }
+              ]}
+            />
+            <div className="flex items-center gap-3">
+              <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="glass-primary" size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Member
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add Project Member</DialogTitle>
+                    <DialogDescription>
+                      Add a team member to this project
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleAddMember} className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="user@example.com"
+                        value={formData.email}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setFormData({ ...formData, email: e.target.value })}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Enter the email address of the user you want to add
+                      </p>
                     </div>
-                  )}
-                  <div className="flex gap-3 justify-end">
-                    <Button
-                      type="button"
-                      variant="glass"
-                      onClick={() => setAddDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={adding}
-                      variant="glass-primary"
-                    >
-                      {adding ? 'Adding...' : 'Add Member'}
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+                    <div className="space-y-2">
+                      <Label htmlFor="role">Project Role</Label>
+                      <Select
+                        value={formData.role}
+                        onValueChange={(value: string) => setFormData({ ...formData, role: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="OWNER">Owner</SelectItem>
+                          <SelectItem value="ADMIN">Admin</SelectItem>
+                          <SelectItem value="TESTER">Tester (Default)</SelectItem>
+                          <SelectItem value="VIEWER">Viewer</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {error && (
+                      <div className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 p-3 rounded-md">
+                        {error}
+                      </div>
+                    )}
+                    <div className="flex gap-3 justify-end">
+                      <Button
+                        type="button"
+                        variant="glass"
+                        onClick={() => setAddDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={adding}
+                        variant="glass-primary"
+                      >
+                        {adding ? 'Adding...' : 'Add Member'}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              <form action="/api/auth/signout" method="POST" className="inline">
+                <Button type="submit" variant="glass-destructive" size="sm" className="px-5">
+                  Sign Out
+                </Button>
+              </form>
+            </div>
           </div>
-        
+        </div>
+      </div>
+      
+      <div className="max-w-6xl mx-auto px-8 pt-8">
+        {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-white mb-1">Project Members</h1>
           <p className="text-white/70 text-sm">
@@ -427,6 +418,6 @@ export default function ProjectMembersPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

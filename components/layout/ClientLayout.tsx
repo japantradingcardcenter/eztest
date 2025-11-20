@@ -1,8 +1,9 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Sidebar } from '@/components/design/Sidebar';
-import { mainSidebarItems, getProjectSidebarItems, getProjectsPageSidebarItems } from '@/lib/sidebar-config';
+import { mainSidebarItems, getProjectSidebarItems, getProjectsPageSidebarItems, getAdminSidebarItems } from '@/lib/sidebar-config';
 import { useEffect, useState } from 'react';
 import { useSidebarCollapsed } from '@/lib/sidebar-context';
 
@@ -15,36 +16,50 @@ interface ClientLayoutProps {
  */
 export function ClientLayout({ children }: ClientLayoutProps) {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [sidebarItems, setSidebarItems] = useState(mainSidebarItems);
   const [projectId, setProjectId] = useState<string | null>(null);
   const { isCollapsed } = useSidebarCollapsed();
 
-  // Auth pages that shouldn't have sidebar
+  // Pages that shouldn't have sidebar
   const isAuthPage = pathname?.startsWith('/auth');
-  const showSidebar = !isAuthPage;
+  const isHomePage = pathname === '/';
+  const showSidebar = !isAuthPage && !isHomePage;
+
+  // Check if user is admin
+  const isAdmin = session?.user?.roleName === 'ADMIN';
 
   useEffect(() => {
     // Determine which sidebar items to show based on current path
-    if (pathname === '/projects') {
-      // Projects list page - show projects menu
-      setSidebarItems(getProjectsPageSidebarItems());
+    if (pathname?.startsWith('/admin')) {
+      // Admin pages - show admin menu
+      setSidebarItems(getAdminSidebarItems());
+      setProjectId(null);
+    } else if (pathname === '/projects') {
+      // Projects list page - show projects menu with admin items if applicable
+      setSidebarItems(getProjectsPageSidebarItems(isAdmin));
       setProjectId(null);
     } else if (pathname?.startsWith('/projects/')) {
-      // Project detail page - extract project ID and show project menu
+      // Project detail page - extract project ID and show project menu with admin items if applicable
       const projectIdMatch = pathname.match(/\/projects\/([^\/]+)/);
       if (projectIdMatch && projectIdMatch[1]) {
         const extractedProjectId = projectIdMatch[1];
         setProjectId(extractedProjectId);
-        setSidebarItems(getProjectSidebarItems(extractedProjectId));
+        setSidebarItems(getProjectSidebarItems(extractedProjectId, isAdmin));
       } else {
         setSidebarItems(mainSidebarItems);
         setProjectId(null);
       }
     } else {
-      setSidebarItems(mainSidebarItems);
+      // Main pages - add admin items if user is admin
+      if (isAdmin) {
+        setSidebarItems([...mainSidebarItems, ...getAdminSidebarItems()]);
+      } else {
+        setSidebarItems(mainSidebarItems);
+      }
       setProjectId(null);
     }
-  }, [pathname]);
+  }, [pathname, isAdmin]);
 
   if (!showSidebar) {
     return <>{children}</>;

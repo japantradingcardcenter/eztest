@@ -29,7 +29,6 @@ export default function ProfileSettingsPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    bio: '',
     phone: '',
     location: '',
   });
@@ -46,7 +45,6 @@ export default function ProfileSettingsPage() {
         setProfile(data.data);
         setFormData({
           name: data.data.name || '',
-          bio: data.data.bio || '',
           phone: data.data.phone || '',
           location: data.data.location || '',
         });
@@ -147,7 +145,7 @@ export default function ProfileSettingsPage() {
                 {/* Name */}
                 <div>
                   <label className="block text-sm font-medium text-muted-foreground mb-2">
-                    Full Name
+                     Role
                   </label>
                   <input
                     type="text"
@@ -157,21 +155,6 @@ export default function ProfileSettingsPage() {
                     required
                     className="w-full px-4 py-2 rounded-[10px] border border-border bg-transparent focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                     placeholder="Enter your full name"
-                  />
-                </div>
-
-                {/* Bio */}
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">
-                    Bio
-                  </label>
-                  <textarea
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleInputChange}
-                    rows={4}
-                    className="w-full px-4 py-2 rounded-[10px] border border-border bg-transparent focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"
-                    placeholder="Tell us about yourself"
                   />
                 </div>
 

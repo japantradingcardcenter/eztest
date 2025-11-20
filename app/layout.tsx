@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClientLayout } from "@/components/layout/ClientLayout";
-import { SidebarProvider } from "@/lib/sidebar-context";
+import { Providers } from "@/components/layout/Providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,11 +44,11 @@ export default function RootLayout({
         <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-[#0a1628]" />
 
         <div className="relative z-10">
-          <SidebarProvider>
+          <Providers>
             <ClientLayout>
               {children}
             </ClientLayout>
-          </SidebarProvider>
+          </Providers>
         </div>
       </body>
     </html>

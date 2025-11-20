@@ -66,8 +66,8 @@ export function Navbar({
                         className={cn(
                           "px-4 py-2 text-sm rounded-full transition-colors",
                           active
-                            ? "bg-white/[0.12] text-white shadow-inner"
-                            : "text-white/80 hover:text-white hover:bg-white/[0.08]"
+                            ? "bg-white/12 text-white shadow-inner"
+                            : "text-white/80 hover:text-white hover:bg-white/8"
                         )}
                         aria-current={active ? "page" : undefined}
                       >

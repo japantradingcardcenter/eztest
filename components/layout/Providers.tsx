@@ -1,0 +1,19 @@
+'use client';
+
+import { SessionProvider } from 'next-auth/react';
+import { SidebarProvider } from '@/lib/sidebar-context';
+import { ReactNode } from 'react';
+
+interface ProvidersProps {
+  children: ReactNode;
+}
+
+export function Providers({ children }: ProvidersProps) {
+  return (
+    <SessionProvider>
+      <SidebarProvider>
+        {children}
+      </SidebarProvider>
+    </SessionProvider>
+  );
+}

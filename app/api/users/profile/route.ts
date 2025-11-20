@@ -24,7 +24,11 @@ export async function GET(request: NextRequest) {
       bio: true,
       phone: true,
       location: true,
-      role: true,
+      role: {
+        select: {
+          name: true,
+        },
+      },
       createdAt: true,
       updatedAt: true,
     },
@@ -32,7 +36,7 @@ export async function GET(request: NextRequest) {
   if (!user) {
     throw new NotFoundException('User not found');
   }
-  return NextResponse.json({ data: user });
+  return NextResponse.json({ data: { ...user, role: user.role.name } });
 }
 
 /**
@@ -71,9 +75,13 @@ export async function PUT(request: NextRequest) {
       bio: true,
       phone: true,
       location: true,
-      role: true,
+      role: {
+        select: {
+          name: true,
+        },
+      },
       updatedAt: true,
     },
   });
-  return NextResponse.json({ data: updatedUser });
+  return NextResponse.json({ data: { ...updatedUser, role: updatedUser.role.name } });
 }

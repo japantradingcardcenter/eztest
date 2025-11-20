@@ -355,17 +355,21 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       }
     });
 
-    stats.pending =
-      stats.total - (stats.passed + stats.failed + stats.blocked + stats.skipped);
+    // Pending = tests that haven't been executed (skipped tests count as not executed)
+    stats.pending = stats.skipped;
 
     return stats;
   };
 
   const stats = calculateStats();
+  // Progress = tests that have been executed (passed, failed, blocked, retest)
+  // Skipped tests are NOT considered executed
+  const executed = stats.passed + stats.failed + stats.blocked;
   const progressPercentage =
-    stats.total > 0 ? Math.round(((stats.total - stats.pending) / stats.total) * 100) : 0;
+    stats.total > 0 ? Math.round((executed / stats.total) * 100) : 0;
+  // Pass rate = passed tests / executed tests (excluding skipped)
   const passRate =
-    stats.total > 0 ? Math.round((stats.passed / stats.total) * 100) : 0;
+    executed > 0 ? Math.round((stats.passed / executed) * 100) : 0;
 
   if (loading) {
     return (
