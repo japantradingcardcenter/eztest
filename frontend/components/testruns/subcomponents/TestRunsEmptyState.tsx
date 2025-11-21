@@ -1,6 +1,7 @@
-import { EmptyState } from '@/elements/empty-state';
-import { AlertCircle, Plus } from 'lucide-react';
-import { Button } from '@/elements/button';
+'use client';
+
+import { EmptyStateCard } from '@/components/design';
+import { AlertCircle } from 'lucide-react';
 
 interface TestRunsEmptyStateProps {
   hasTestRuns: boolean;
@@ -14,7 +15,7 @@ export function TestRunsEmptyState({
   canCreate = true,
 }: TestRunsEmptyStateProps) {
   return (
-    <EmptyState
+    <EmptyStateCard
       icon={AlertCircle}
       title="No test runs found"
       description={hasTestRuns
@@ -22,7 +23,6 @@ export function TestRunsEmptyState({
         : 'Get started by creating your first test run'}
       actionLabel={!hasTestRuns && canCreate ? 'Create Test Run' : undefined}
       onAction={!hasTestRuns && canCreate ? onCreateClick : undefined}
-      variant="glass"
     />
   );
 }

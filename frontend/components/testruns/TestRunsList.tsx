@@ -194,7 +194,7 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
                   New Test Run
                 </Button>
               )}
-              <form action="/api/auth/signout" method="POST">
+              <form action="/api/auth/signout" method="POST" className="inline">
                 <Button type="submit" variant="glass-destructive" size="sm" className="px-5">
                   Sign Out
                 </Button>

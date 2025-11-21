@@ -1,6 +1,6 @@
 'use client';
 
-import { EmptyState } from '@/elements/empty-state';
+import { EmptyStateCard } from '@/components/design';
 import { AlertCircle } from 'lucide-react';
 
 interface EmptyTestCaseStateProps {
@@ -11,7 +11,7 @@ interface EmptyTestCaseStateProps {
 
 export function EmptyTestCaseState({ hasFilters, onCreateClick, canCreate = true }: EmptyTestCaseStateProps) {
   return (
-    <EmptyState
+    <EmptyStateCard
       icon={AlertCircle}
       title="No test cases found"
       description={hasFilters
@@ -19,7 +19,6 @@ export function EmptyTestCaseState({ hasFilters, onCreateClick, canCreate = true
         : 'Get started by creating your first test case'}
       actionLabel={!hasFilters && canCreate ? 'Create Test Case' : undefined}
       onAction={!hasFilters && canCreate ? onCreateClick : undefined}
-      variant="glass"
     />
   );
 }

@@ -33,12 +33,13 @@ export function CreateTestRunDialog({
       label: 'Environment',
       type: 'select',
       placeholder: 'Select environment',
+      required: true,
       defaultValue: 'none',
       options: [
         { value: 'none', label: 'Select environment' },
         ...ENVIRONMENT_OPTIONS.map(opt => ({ value: opt.value, label: opt.label })),
       ],
-      cols: 1,
+      cols: 2,
     },
     {
       name: 'description',
@@ -51,6 +52,11 @@ export function CreateTestRunDialog({
   ];
 
   const handleSubmit = async (formData: Record<string, string>) => {
+    // Validate environment is selected
+    if (formData.environment === 'none' || !formData.environment) {
+      throw new Error('Environment is required');
+    }
+
     const response = await fetch(`/api/projects/${projectId}/testruns`, {
       method: 'POST',
       headers: {
@@ -59,7 +65,7 @@ export function CreateTestRunDialog({
       body: JSON.stringify({
         name: formData.name,
         description: formData.description || undefined,
-        environment: formData.environment !== 'none' ? formData.environment : undefined,
+        environment: formData.environment,
       }),
     });
 

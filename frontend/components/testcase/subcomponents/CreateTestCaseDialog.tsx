@@ -7,6 +7,7 @@ import { PRIORITY_OPTIONS, STATUS_OPTIONS } from '../constants/testCaseFormConfi
 interface CreateTestCaseDialogProps {
   projectId: string;
   testSuites: TestSuite[];
+  defaultSuiteId?: string;
   triggerOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   onTestCaseCreated: (testCase: TestCase) => void;
@@ -15,6 +16,7 @@ interface CreateTestCaseDialogProps {
 export function CreateTestCaseDialog({
   projectId,
   testSuites,
+  defaultSuiteId,
   triggerOpen,
   onOpenChange,
   onTestCaseCreated,
@@ -56,7 +58,7 @@ export function CreateTestCaseDialog({
       label: 'Test Suite',
       type: 'select',
       placeholder: 'Select a test suite',
-      defaultValue: 'none',
+      defaultValue: defaultSuiteId || 'none',
       options: [
         { value: 'none', label: 'None (No Suite)' },
         ...suiteOptions,
