@@ -12,8 +12,6 @@ interface GeneralSettingsCardProps {
   project: Project;
   formData: ProjectFormData;
   saving: boolean;
-  error: string;
-  successMessage: string;
   onFormChange: (data: ProjectFormData) => void;
   onSave: (e: React.FormEvent) => void;
   onCancel: () => void;
@@ -23,8 +21,6 @@ export function GeneralSettingsCard({
   project,
   formData,
   saving,
-  error,
-  successMessage,
   onFormChange,
   onSave,
   onCancel,
@@ -51,6 +47,7 @@ export function GeneralSettingsCard({
               minLength={3}
               maxLength={255}
               placeholder="E-Commerce Platform"
+              className="bg-[#0f172a] border-[#334155]"
             />
           </div>
 
@@ -60,7 +57,7 @@ export function GeneralSettingsCard({
               id="key"
               value={project.key}
               disabled
-              className="bg-white/5 border-white/10 text-white/50 cursor-not-allowed backdrop-blur-none"
+              className="bg-[#0f172a] border-[#334155] cursor-not-allowed opacity-50"
             />
             <p className="text-xs text-muted-foreground">
               Project key cannot be changed after creation
@@ -77,20 +74,9 @@ export function GeneralSettingsCard({
               }
               rows={4}
               placeholder="Brief description of the project..."
+              className="bg-[#0f172a] border-[#334155]"
             />
           </div>
-
-          {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-              {error}
-            </div>
-          )}
-
-          {successMessage && (
-            <div className="text-sm text-green-400 bg-green-400/10 border border-green-400/20 p-3 rounded-md">
-              {successMessage}
-            </div>
-          )}
 
           <div className="flex gap-3">
             <Button type="submit" disabled={saving} variant="glass-primary">

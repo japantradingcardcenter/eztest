@@ -9,11 +9,10 @@ import { ProjectMember } from '../types';
 interface MembersCardProps {
   members: ProjectMember[];
   isAdminOrManager: boolean;
-  onAddMember: () => void;
   onRemoveMember: (memberId: string, memberName: string) => void;
 }
 
-export function MembersCard({ members, isAdminOrManager, onAddMember, onRemoveMember }: MembersCardProps) {
+export function MembersCard({ members, isAdminOrManager, onRemoveMember }: MembersCardProps) {
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case 'ADMIN':
@@ -51,12 +50,6 @@ export function MembersCard({ members, isAdminOrManager, onAddMember, onRemoveMe
               <p className="text-white/60 mb-6">
                 {isAdminOrManager ? 'Add team members to collaborate on this project' : 'Waiting for project manager or admin to add members'}
               </p>
-              {isAdminOrManager && (
-                <Button onClick={onAddMember} variant="glass-primary">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add First Member
-                </Button>
-              )}
             </div>
           ) : (
             <div className="space-y-3">
