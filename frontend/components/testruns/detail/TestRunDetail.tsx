@@ -413,7 +413,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         </div>
       </div>
 
-      <div className="p-4 md:p-6 lg:p-8">
+      <div className="p-4 md:p-6 lg:p-8 space-y-6">
         <TestRunHeader
           testRun={testRun}
           actionLoading={actionLoading}

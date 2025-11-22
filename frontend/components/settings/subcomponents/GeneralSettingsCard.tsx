@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/elements/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/elements/card';
+import { DetailCard } from '@/components/design/DetailCard';
 import { Input } from '@/elements/input';
 import { Label } from '@/elements/label';
 import { Textarea } from '@/elements/textarea';
@@ -26,15 +26,12 @@ export function GeneralSettingsCard({
   onCancel,
 }: GeneralSettingsCardProps) {
   return (
-    <Card variant="glass">
-      <CardHeader>
-        <CardTitle className="text-white">General Information</CardTitle>
-        <CardDescription className="text-white/70">
-          Update your project name and description
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={onSave} className="space-y-4">
+    <DetailCard
+      title="General Information"
+      description="Update your project name and description"
+      contentClassName=""
+    >
+      <form onSubmit={onSave} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Project Name *</Label>
             <Input
@@ -88,7 +85,6 @@ export function GeneralSettingsCard({
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+    </DetailCard>
   );
 }
