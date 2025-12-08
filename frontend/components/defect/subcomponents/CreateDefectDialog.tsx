@@ -222,8 +222,8 @@ export function CreateDefectDialog({
     onOpenChange: handleDialogOpenChange,
     formPersistenceKey: `create-defect-${projectId}`,
     onSubmit: async (formData) => {
-      // Get test case ID from form data
-      const finalTestCaseId = formData.testCaseId || null;
+      // Get test case ID from prop (passed when creating from test run) or from form data (selected from dropdown)
+      const finalTestCaseId = testCaseId || formData.testCaseId || null;
       
       const payload = {
         title: formData.title,

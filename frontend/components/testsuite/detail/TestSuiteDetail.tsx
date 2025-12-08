@@ -178,7 +178,6 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
       if (data.data) {
         setAvailableModules(data.data);
       } else {
-        console.log('No data.data in response');
         setAvailableModules([]);
       }
     } catch (error) {
@@ -457,8 +456,8 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
               isEditing={isEditing}
               description={testSuite.description}
               formData={formData}
-              onDescriptionChange={(description) =>
-                setFormData({ ...formData, description })
+              onFormChange={(data) =>
+                setFormData(data)
               }
             />
 
