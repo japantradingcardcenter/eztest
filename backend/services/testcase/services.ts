@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { Priority, TestStatus } from '@prisma/client';
+import { CustomRequest } from '@/backend/utils/interceptor';
 
 interface CreateTestCaseInput {
   projectId: string;
@@ -228,7 +229,6 @@ export class TestCaseService {
         },
         _count: {
           select: {
-            results: true,
             comments: true,
             attachments: true,
           },
@@ -510,10 +510,47 @@ export class TestCaseService {
       throw new Error('Test case not found or access denied');
     }
 
-    // Delete test case (steps will cascade)
-    return await prisma.testCase.delete({
+    // Fetch all attachments before deletion to clean up files
+    const attachments = await prisma.attachment.findMany({
+      where: {
+        OR: [
+          { testCaseId: testCaseId },
+          {
+            testStep: {
+              testCaseId: testCaseId,
+            },
+          },
+        ],
+      },
+    });
+
+    // Delete test case (attachments and steps will cascade)
+    const result = await prisma.testCase.delete({
       where: { id: testCaseId },
     });
+
+    // Delete files from S3 (fire and forget)
+    if (attachments.length > 0) {
+      Promise.all([
+        import('@/lib/s3-client'),
+        import('@aws-sdk/client-s3')
+      ]).then(([{ s3Client, S3_BUCKET }, { DeleteObjectCommand }]) => {
+        Promise.all(
+          attachments.map(attachment =>
+            s3Client.send(
+              new DeleteObjectCommand({
+                Bucket: S3_BUCKET,
+                Key: attachment.path,
+              })
+            ).catch((error: Error) => {
+              console.error(`Failed to delete S3 file ${attachment.path}:`, error);
+            })
+          )
+        );
+      });
+    }
+
+    return result;
   }
 
   /**
@@ -557,20 +594,84 @@ export class TestCaseService {
       throw new Error('Test case not found or access denied');
     }
 
-    // Delete existing steps
-    await prisma.testStep.deleteMany({
+    // Get existing steps
+    const existingSteps = await prisma.testStep.findMany({
       where: { testCaseId },
     });
 
-    // Create new steps
+    // Update or create steps while preserving IDs for existing steps
     if (steps.length > 0) {
-      await prisma.testStep.createMany({
-        data: steps.map((step) => ({
-          testCaseId,
-          stepNumber: step.stepNumber,
-          action: step.action,
-          expectedResult: step.expectedResult,
-        })),
+      // Step 1: Delete steps that are no longer in the list FIRST to avoid unique constraint conflicts
+      const stepIdsToKeep = steps
+        .filter(s => s.id && !s.id.startsWith('temp-'))
+        .map(s => s.id as string);
+      
+      if (stepIdsToKeep.length > 0) {
+        await prisma.testStep.deleteMany({
+          where: {
+            testCaseId,
+            id: {
+              notIn: stepIdsToKeep,
+            },
+          },
+        });
+      } else {
+        // No existing steps to keep, delete all
+        await prisma.testStep.deleteMany({
+          where: { testCaseId },
+        });
+      }
+
+      // Step 2: Update existing steps and create new steps
+      for (const step of steps) {
+        if (step.id && !step.id.startsWith('temp-')) {
+          // Existing step - update it
+          try {
+            const existingStep = await prisma.testStep.findUnique({
+              where: { id: step.id },
+            });
+            
+            if (existingStep) {
+              // Step exists, update it
+              await prisma.testStep.update({
+                where: { id: step.id },
+                data: {
+                  stepNumber: step.stepNumber,
+                  action: step.action,
+                  expectedResult: step.expectedResult,
+                },
+              });
+            } else {
+              // Step doesn't exist, create it with the specified ID
+              await prisma.testStep.create({
+                data: {
+                  id: step.id,
+                  testCaseId,
+                  stepNumber: step.stepNumber,
+                  action: step.action,
+                  expectedResult: step.expectedResult,
+                },
+              });
+            }
+          } catch (error) {
+            throw error;
+          }
+        } else {
+          // New step (no ID or temp ID) - create it
+          await prisma.testStep.create({
+            data: {
+              testCaseId,
+              stepNumber: step.stepNumber,
+              action: step.action,
+              expectedResult: step.expectedResult,
+            },
+          });
+        }
+      }
+    } else {
+      // No steps provided - delete all
+      await prisma.testStep.deleteMany({
+        where: { testCaseId },
       });
     }
 
@@ -886,18 +987,150 @@ export class TestCaseService {
     }
 
     // Create TestCaseDefect links
-    const links = await prisma.testCaseDefect.createMany({
-      data: defectIds.map((defectId: string) => ({
-        defectId,
-        testCaseId,
-      })),
-      skipDuplicates: true, // Skip if already linked
-    });
+    const results = await Promise.allSettled(
+      defectIds.map((defectId: string) =>
+        (prisma.testCaseDefect.create as unknown as (args: unknown) => Promise<unknown>)({
+          data: {
+            testCaseId,
+            defectId,
+          },
+        }).catch((error: { code: string }) => {
+          // Ignore if link already exists (unique constraint)
+          if (error.code === 'P2002') return null;
+          throw error;
+        })
+      )
+    );
+
+    const successCount = results.filter(r => r.status === 'fulfilled').length;
 
     return {
       message: 'Defects linked successfully',
-      count: links.count,
+      count: successCount,
     };
+  }
+
+  /**
+   * Associate S3 attachments with a test case
+   */
+  async associateAttachments(testCaseId: string, req: CustomRequest) {
+    // Verify test case exists
+    const testCase = await prisma.testCase.findUnique({
+      where: { id: testCaseId },
+    });
+
+    if (!testCase) {
+      throw new Error('Test case not found');
+    }
+
+    const body = await req.json();
+    const { attachments } = body as {
+      attachments: Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }>;
+    };
+
+    if (!attachments || !Array.isArray(attachments)) {
+      throw new Error('attachments array is required');
+    }
+
+    // Link existing attachments or create new ones
+    const linkedAttachments = await Promise.all(
+      attachments.map(async (att) => {
+        // If attachment ID is provided, update the existing record
+        if (att.id) {
+          return prisma.attachment.update({
+            where: { id: att.id },
+            data: {
+              testCaseId: testCaseId,
+              fieldName: att.fieldName || 'attachment',
+            },
+          });
+        }
+        
+        // Otherwise, create a new attachment record (legacy/fallback)
+        return (prisma.attachment.create as unknown as (args: unknown) => Promise<unknown>)({
+          data: {
+            filename: att.s3Key.split('/').pop() || att.fileName,
+            originalName: att.fileName,
+            mimeType: att.mimeType,
+            size: 0,
+            path: att.s3Key,
+            ...(att.fieldName && { fieldName: att.fieldName }),
+            testCaseId: testCaseId,
+          },
+        });
+      })
+    );
+
+    return linkedAttachments;
+  }
+
+  /**
+   * Get all attachments for a test case
+   */
+  async getTestCaseAttachments(testCaseId: string) {
+    // Verify test case exists
+    const testCase = await prisma.testCase.findUnique({
+      where: { id: testCaseId },
+    });
+
+    if (!testCase) {
+      throw new Error('Test case not found');
+    }
+
+    const attachments = await prisma.attachment.findMany({
+      where: { testCaseId },
+      orderBy: { uploadedAt: 'desc' },
+    });
+
+    return attachments;
+  }
+
+  /**
+   * Delete an attachment from a test case
+   */
+  async deleteAttachment(testCaseId: string, attachmentId: string) {
+    // Verify test case exists
+    const testCase = await prisma.testCase.findUnique({
+      where: { id: testCaseId },
+    });
+
+    if (!testCase) {
+      throw new Error('Test case not found');
+    }
+
+    // Verify attachment exists and belongs to this test case
+    const attachment = await prisma.attachment.findUnique({
+      where: { id: attachmentId },
+    });
+
+    if (!attachment || attachment.testCaseId !== testCaseId) {
+      throw new Error('Attachment not found');
+    }
+
+    // Delete attachment record from database
+    const deleted = await prisma.attachment.delete({
+      where: { id: attachmentId },
+    });
+
+    // Delete file from S3 (fire and forget to avoid blocking)
+    if (attachment.path) {
+      Promise.all([
+        import('@/lib/s3-client'),
+        import('@aws-sdk/client-s3')
+      ]).then(([{ s3Client, S3_BUCKET }, { DeleteObjectCommand }]) => {
+        s3Client.send(
+          new DeleteObjectCommand({
+            Bucket: S3_BUCKET,
+            Key: attachment.path,
+          })
+        ).catch((error: Error) => {
+          console.error(`Failed to delete S3 file ${attachment.path}:`, error);
+          // Don't throw - file is already deleted from DB
+        });
+      });
+    }
+
+    return deleted;
   }
 }
 
