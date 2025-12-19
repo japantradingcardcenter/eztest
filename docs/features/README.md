@@ -8,6 +8,7 @@ Comprehensive documentation for all EZTest features.
 |---------|--------|---------------|
 | **Authentication & Security** | ✅ Complete | [View Docs](./authentication/README.md) |
 | **Project Management** | ✅ Complete | [View Docs](./projects/README.md) |
+| **Modules** | ✅ Complete | [View Docs](./modules/README.md) |
 | **Test Cases** | ✅ Complete | [View Docs](./test-cases/README.md) |
 | **Test Suites** | ✅ Complete | [View Docs](./test-suites/README.md) |
 | **Test Runs** | ✅ Complete | [View Docs](./test-runs/README.md) |
@@ -45,14 +46,30 @@ Organize testing efforts with multi-project support.
 - Create and manage multiple projects
 - Unique project keys (e.g., ECOM, MAT)
 - Team membership with project-level roles
-- Project statistics and dashboards
+- Project statistics
 
 **Quick Links:**
 - See [Projects Documentation](./projects/README.md) for complete details
 
 ---
 
-### 📝 [Test Cases](./test-cases/README.md)
+### � [Modules](./modules/README.md)
+
+Organize test cases by feature or component within a project.
+
+**Capabilities:**
+- Group test cases into logical modules
+- Feature-based or component-based organization
+- Module-level test case management
+- Custom ordering and descriptions
+- Flexible test case assignment
+
+**Quick Links:**
+- See [Modules Documentation](./modules/README.md) for complete details
+
+---
+
+### �📝 [Test Cases](./test-cases/README.md)
 
 Create and manage comprehensive test cases.
 

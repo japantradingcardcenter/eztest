@@ -1,14 +1,6 @@
 # EzTest - Docker Deployment Guide
 
-EzTest is a lightweight, self-hostable Test Management Application built with Next.js, Tailwind CSS, ShadCN UI, and PostgreSQL. It's designed to run efficiently on minimal hardware (1 core, 2GB RAM).
-
----
-
-## 📚 Documentation Overview
-
-- **This Document**: General Docker guide for all platforms
-- **[DEPLOYMENT_LINUX.md](./docs/DEPLOYMENT_LINUX.md)**: Complete Linux server deployment guide with production checklist
-- **[DOCKER_STATUS.md](./docs/DOCKER_STATUS.md)**: Docker files compatibility summary and troubleshooting
+EzTest is a lightweight, self-hostable Test Management Application built with Next.js, Tailwind CSS, Radix UI, and PostgreSQL. It's designed to run efficiently on minimal hardware (1 core, 2GB RAM).
 
 ---
 
