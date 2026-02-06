@@ -84,6 +84,8 @@ export class ImportService {
       'automation': 'automation',
       'module category': 'moduleCategory',
       'modulecategory': 'moduleCategory',
+      'domain category': 'moduleCategory',
+      'domaincategory': 'moduleCategory',
       'feature category': 'featureCategory',
       'featurecategory': 'featureCategory',
       // Defect columns (for defect import)

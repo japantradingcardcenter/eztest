@@ -103,7 +103,7 @@ export class MigrationController {
         { name: 'Notes', required: false, description: 'Additional notes or remarks' },
         { name: 'Automation', required: false, description: 'Automation status: 自動化あり / 自動化なし / 自動化予定' },
         { name: 'Environment', required: false, description: 'Target environment: iOS / Android / Web' },
-        { name: 'Module Category', required: false, description: 'Module category: Module1 / Module2' },
+        { name: 'Domain Category', required: false, description: 'Domain category: Module1 / Module2' },
         { name: 'Feature Category', required: false, description: 'Feature category: Feature1 / Feature2' },
       ],
       example: {
@@ -129,7 +129,7 @@ export class MigrationController {
         'Notes': '',
         'Automation': 'NO',
         'Environment': 'WEB',
-        'Module Category': 'MODULE1',
+        'Domain Category': 'MODULE1',
         'Feature Category': 'FEATURE1',
       },
       examples: [
@@ -157,7 +157,7 @@ export class MigrationController {
           'Notes': '',
           'Automation': 'NO',
           'Environment': 'WEB',
-          'Module Category': 'MODULE1',
+          'Domain Category': 'MODULE1',
           'Feature Category': 'FEATURE1',
         },
         {
@@ -184,7 +184,7 @@ export class MigrationController {
           'Notes': '本番環境では実際のカード情報を使用しないこと',
           'Automation': 'YES',
           'Environment': 'WEB',
-          'Module Category': 'MODULE2',
+          'Domain Category': 'MODULE2',
           'Feature Category': 'FEATURE2',
         },
         {
@@ -209,7 +209,7 @@ export class MigrationController {
           'Notes': '',
           'Automation': 'PLANNED',
           'Environment': 'WEB',
-          'Module Category': '',
+          'Domain Category': '',
           'Feature Category': '',
         },
         {
@@ -233,7 +233,7 @@ export class MigrationController {
           'Notes': '',
           'Automation': 'NO',
           'Environment': 'IOS',
-          'Module Category': '',
+          'Domain Category': '',
           'Feature Category': '',
         },
         {
@@ -257,7 +257,7 @@ export class MigrationController {
           'Notes': '',
           'Automation': '',
           'Environment': 'ANDROID',
-          'Module Category': '',
+          'Domain Category': '',
           'Feature Category': '',
         },
         {
@@ -281,7 +281,7 @@ export class MigrationController {
           'Notes': '',
           'Automation': '',
           'Environment': '',
-          'Module Category': '',
+          'Domain Category': '',
           'Feature Category': '',
         },
       ],

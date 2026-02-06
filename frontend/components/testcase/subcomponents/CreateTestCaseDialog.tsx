@@ -220,9 +220,9 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'moduleCategory',
-      label: 'Module',
+      label: 'Domain',
       type: 'select',
-      placeholder: 'Select module',
+      placeholder: 'Select domain',
       options: [
         { value: 'none', label: 'None' },
         ...moduleCategoryOptions.map(opt => ({ value: opt.value, label: opt.label })),

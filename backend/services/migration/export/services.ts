@@ -241,7 +241,7 @@ export class ExportService {
         'Notes': tc.notes || '',
         'Automation': tc.automation || '',
         'Environment': tc.environment || '',
-        'Module Category': tc.moduleCategory || '',
+        'Domain Category': tc.moduleCategory || '',
         'Feature Category': tc.featureCategory || '',
       };
     });
