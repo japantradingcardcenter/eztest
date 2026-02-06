@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { DetailCard } from '@/frontend/reusable-components/cards/DetailCard';
 import { Clock } from 'lucide-react';
@@ -25,7 +25,7 @@ interface TestCaseDetailsCardProps {
   errors?: Record<string, string>;
   modules?: Module[];
   onFormChange: (data: TestCaseFormData) => void;
-  onFieldChange?: (field: keyof TestCaseFormData, value: string | number | null) => void;
+  onFieldChange?: (field: keyof TestCaseFormData, value: string | number | boolean | null) => void;
   projectId?: string;
   // Attachments
   descriptionAttachments?: Attachment[];
