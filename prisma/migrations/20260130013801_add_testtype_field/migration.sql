@@ -1,2 +1,2 @@
--- AlterTable
-ALTER TABLE "TestCase" ADD COLUMN     "testType" TEXT;
+-- AlterTable (idempotent)
+ALTER TABLE "TestCase" ADD COLUMN IF NOT EXISTS "testType" TEXT;
