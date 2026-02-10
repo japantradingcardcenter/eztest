@@ -109,6 +109,14 @@ export const TEST_CASE_IMPORT_COLUMNS = {
   'test type': { normalized: 'testType', required: false },
   'testType': { normalized: 'testType', required: false },
   'testtype': { normalized: 'testType', required: false },
+
+  // 実行方式・自動化状況
+  '実行方式': { normalized: 'executionType', required: false },
+  'executionType': { normalized: 'executionType', required: false },
+  'execution type': { normalized: 'executionType', required: false },
+  '自動化状況': { normalized: 'automationStatus', required: false },
+  'automationStatus': { normalized: 'automationStatus', required: false },
+  'automation status': { normalized: 'automationStatus', required: false },
 } as const;
 
 /**

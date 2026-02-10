@@ -119,6 +119,8 @@ export class MigrationController {
         '期待結果': '1. Login page displays\n2. Credentials accepted\n3. User redirected to dashboard\n4. Dashboard page loads successfully\n5. User profile information is visible',
         '状態': 'ACTIVE',
         '不具合ID': 'DEF-1, DEF-LOGIN-001',
+        '実行方式': '手動',
+        '自動化状況': '',
       },
       examples: [
         {
@@ -132,6 +134,8 @@ export class MigrationController {
           '期待結果': '1. Login page displays\n2. Credentials accepted\n3. User redirected to dashboard\n4. Dashboard page loads successfully\n5. User profile information is visible',
           '状態': 'ACTIVE',
           '不具合ID': 'DEF-1, DEF-LOGIN-001',
+          '実行方式': '手動',
+          '自動化状況': '',
         },
         {
           description: 'Test case with custom format defect IDs',
@@ -144,6 +148,8 @@ export class MigrationController {
           '期待結果': '1. Checkout page loads\n2. Payment method selected\n3. Details accepted\n4. Payment processed successfully',
           '状態': 'ACTIVE',
           '不具合ID': 'DEF-PAYMENT-001, BUG-456, DEF-LOGIN-123',
+          '実行方式': '',
+          '自動化状況': '',
         },
         {
           description: 'Both Test Steps and Expected Result without numbers (4 steps) - Custom format defect IDs',
@@ -154,6 +160,8 @@ export class MigrationController {
           '期待結果': 'Login page displays\nLogin form is visible\nRemember me option is available\nPassword input shows dots or asterisks',
           '状態': 'ACTIVE',
           '不具合ID': 'BUG-123, DEF-UI-456',
+          '実行方式': '',
+          '自動化状況': '',
         },
         {
           description: 'Single Expected Result applies to all steps (3 steps)',
@@ -163,6 +171,8 @@ export class MigrationController {
           'テスト手順': 'Click logout button\nConfirm logout action\nVerify redirect to login page',
           '期待結果': 'User successfully logs out',
           '状態': 'ACTIVE',
+          '実行方式': '',
+          '自動化状況': '',
         },
         {
           description: 'Only Expected Result (no Test Steps) - steps created from Expected Result (4 steps)',
@@ -172,6 +182,8 @@ export class MigrationController {
           'テスト手順': '',
           '期待結果': 'Invalid credentials error message\nUser remains on login page\nAccount is not locked\nError message disappears after 5 seconds',
           '状態': 'ACTIVE',
+          '実行方式': '',
+          '自動化状況': '',
         },
         {
           description: 'Only Test Steps (no Expected Result) - steps with actions only (5 steps)',
@@ -181,6 +193,8 @@ export class MigrationController {
           'テスト手順': 'Click forgot password link\nEnter email address\nSubmit reset request\nCheck email for reset link\nClick reset link and set new password',
           '期待結果': '',
           '状態': 'ACTIVE',
+          '実行方式': '',
+          '自動化状況': '',
         },
         {
           description: 'Test case with new enhanced fields (RTC-ID, Flow-ID, Layer, 根拠コード, 備考)',
@@ -192,6 +206,8 @@ export class MigrationController {
           '備考': 'UI/画面名は不明',
           '優先度': 'HIGH',
           '状態': 'ACTIVE',
+          '実行方式': '',
+          '自動化状況': '',
         },
         {
           description: 'Test case with screen/flow',
@@ -203,6 +219,8 @@ export class MigrationController {
           '備考': 'UI/画面名は不明',
           '優先度': 'HIGH',
           '状態': 'ACTIVE',
+          '実行方式': '',
+          '自動化状況': '',
         },
         {
           description: 'Test case example 2',
@@ -214,6 +232,8 @@ export class MigrationController {
           '備考': 'オリパ選択UIは不明',
           '優先度': 'HIGH',
           '状態': 'ACTIVE',
+          '実行方式': '',
+          '自動化状況': '',
         },
       ],
     };
