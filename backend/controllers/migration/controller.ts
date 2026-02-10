@@ -106,6 +106,8 @@ export class MigrationController {
         { name: '端末', required: false, description: '端末: Device - iPhone / Android / PC（いずれか1つ）' },
         { name: 'ドメイン', required: false, description: 'ドメイン（自由入力）' },
         { name: '機能', required: false, description: '機能（自由入力）' },
+        { name: '実行方式', required: false, description: '実行方式: 手動 / 自動' },
+        { name: '自動化状況', required: false, description: '自動化状況: 自動化済 / 自動化対象 / 自動化対象外 / 検討中' },
       ],
       example: {
         'Test Case Title': 'Verify user authentication with valid credentials',
