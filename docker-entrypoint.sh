@@ -27,6 +27,11 @@ echo "Database is ready!"
 
 # Run migrations
 echo "Running database migrations..."
+
+# TEMPORARY FIX: Resolve failed migration (remove this block after successful deployment)
+echo "Resolving failed migration..."
+npx prisma migrate resolve --applied 20260206001223_add_testcase_additional_fields 2>/dev/null || true
+
 npx prisma migrate deploy
 
 # Seed database if SEED_DATABASE is set to true

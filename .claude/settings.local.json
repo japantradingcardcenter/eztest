@@ -3,7 +3,11 @@
     "allow": [
       "Bash(npm run build:*)",
       "Bash(python:*)",
-      "Bash(copy:*)"
+      "Bash(copy:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git rebase:*)"
     ]
   }
 }
