@@ -242,26 +242,6 @@ export function CreateTestCaseDialog({
       cols: 1,
     },
     {
-      name: 'isAutomated',
-      label: '自動化',
-      type: 'custom',
-      customRender: (value: string, onChange: (value: string) => void) => (
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="isAutomated"
-            checked={value === 'true'}
-            onChange={(e) => onChange(e.target.checked ? 'true' : 'false')}
-            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-          />
-          <label htmlFor="isAutomated" className="text-sm font-medium text-gray-700">
-            自動化テスト
-          </label>
-        </div>
-      ),
-      cols: 1,
-    },
-    {
       name: 'description',
       label: 'Description',
       type: 'textarea-with-attachments',
@@ -388,7 +368,6 @@ export function CreateTestCaseDialog({
     const uploadedAttachments = await uploadPendingAttachments();
 
     const estimatedTime = formData.estimatedTime ? parseInt(formData.estimatedTime) : undefined;
-    const isAutomated = formData.isAutomated === 'true';
 
     const response = await fetch(`/api/projects/${projectId}/testcases`, {
       method: 'POST',
@@ -415,7 +394,6 @@ export function CreateTestCaseDialog({
         testType: formData.testType || undefined,
         evidence: formData.evidence || undefined,
         notes: formData.notes || undefined,
-        isAutomated,
         platform: formData.platform || undefined,
         device: formData.device || undefined,
         domain: formData.domain || undefined,

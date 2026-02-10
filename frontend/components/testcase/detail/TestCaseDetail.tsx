@@ -142,7 +142,6 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
           testType: data.data.testType || undefined,
           evidence: data.data.evidence || undefined,
           notes: data.data.notes || undefined,
-          isAutomated: data.data.isAutomated,
           platform: data.data.platform || undefined,
           device: data.data.device || undefined,
           domain: data.data.domain || undefined,

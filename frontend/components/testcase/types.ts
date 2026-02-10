@@ -29,7 +29,6 @@ export interface TestCase {
   evidence?: string;
   notes?: string;
 
-  isAutomated?: boolean;
   platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
   device?: 'iPhone' | 'Android' | 'PC' | null;
   domain?: string | null;
@@ -77,7 +76,6 @@ export interface TestCaseFormData {
   evidence?: string;
   notes?: string;
 
-  isAutomated?: boolean;
   platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
   device?: 'iPhone' | 'Android' | 'PC' | null;
   domain?: string | null;

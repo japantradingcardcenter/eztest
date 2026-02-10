@@ -27,7 +27,6 @@ interface CreateTestCaseInput {
   testType?: string | null;
   evidence?: string | null;
   notes?: string | null;
-  isAutomated?: boolean;
   platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
   device?: 'iPhone' | 'Android' | 'PC' | null;
   domain?: string | null;
@@ -56,7 +55,6 @@ interface UpdateTestCaseInput {
   testType?: string | null;
   evidence?: string | null;
   notes?: string | null;
-  isAutomated?: boolean;
   platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
   device?: 'iPhone' | 'Android' | 'PC' | null;
   domain?: string | null;
@@ -626,7 +624,6 @@ export class TestCaseService {
             testType: data.testType,
             evidence: data.evidence,
             notes: data.notes,
-            isAutomated: data.isAutomated ?? false,
             platform: data.platform ?? undefined,
             device: data.device ?? undefined,
             domain: data.domain ?? undefined,
@@ -784,7 +781,6 @@ export class TestCaseService {
     if (data.testType !== undefined) updateData.testType = data.testType;
     if (data.evidence !== undefined) updateData.evidence = data.evidence;
     if (data.notes !== undefined) updateData.notes = data.notes;
-    if (data.isAutomated !== undefined) updateData.isAutomated = data.isAutomated;
     if (data.platform !== undefined) updateData.platform = data.platform;
     if (data.device !== undefined) updateData.device = data.device;
     if (data.domain !== undefined) updateData.domain = data.domain;

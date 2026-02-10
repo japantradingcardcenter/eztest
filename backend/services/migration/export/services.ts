@@ -102,7 +102,6 @@ export class ExportService {
         testType: true,
         evidence: true,
         notes: true,
-        isAutomated: true,
         platform: true,
         device: true,
         domain: true,
@@ -224,9 +223,6 @@ export class ExportService {
       };
       const testTypeFormatted = tc.testType ? (testTypeMap[tc.testType] || tc.testType) : '';
 
-      // Format isAutomated to display value
-      const isAutomatedFormatted = tc.isAutomated ? 'true' : '';
-
       return {
         'Test Case ID': tc.tcId,
         'Test Case Title': tc.title,
@@ -246,7 +242,6 @@ export class ExportService {
         'テスト種別': testTypeFormatted,
         '根拠（ドキュメント）': tc.evidence || '',
         '備考': tc.notes || '',
-        '自動化': isAutomatedFormatted,
         'プラットフォーム': tc.platform || '',
         '端末': tc.device || '',
         'ドメイン': tc.domain || '',

@@ -84,9 +84,6 @@ export class ImportService {
       'evidence': 'evidence',
       '備考': 'notes',
       'notes': 'notes',
-      '自動化': 'isAutomated',
-      'automation': 'isAutomated',
-      'isautomated': 'isAutomated',
       '端末': 'device',
       'device': 'device',
       'プラットフォーム': 'platform',
@@ -282,7 +279,6 @@ export class ImportService {
         const targetType = this.getRowValue(row, 'targetType');
         const evidence = this.getRowValue(row, 'evidence');
         const notes = this.getRowValue(row, 'notes');
-        const isAutomated = this.getRowValue(row, 'isAutomated');
         const testType = this.getRowValue(row, 'testType');
         const device = this.getRowValue(row, 'device');
         const platformCol = this.getRowValue(row, 'platform');
@@ -760,19 +756,6 @@ export class ImportService {
           ? notes.toString().trim()
           : null;
 
-        // Is Automated (自動化) - boolean
-        let isAutomatedValue = false;
-        if (isAutomated !== undefined && isAutomated !== null) {
-          if (typeof isAutomated === 'boolean') {
-            isAutomatedValue = isAutomated;
-          } else if (typeof isAutomated === 'string') {
-            const automatedStr = isAutomated.toString().trim().toLowerCase();
-            isAutomatedValue = automatedStr === 'true' || automatedStr === '1' || automatedStr === 'yes' || automatedStr === '自動化';
-          } else if (typeof isAutomated === 'number') {
-            isAutomatedValue = isAutomated !== 0;
-          }
-        }
-
         // Test Type (テスト種別) - convert to standard values
         // Valid values: NORMAL, ABNORMAL, NON_FUNCTIONAL, REGRESSION, DATA_INTEGRITY, STATE_TRANSITION, OPERATIONAL, FAILURE
         let testTypeValue: string | null = null;
@@ -924,7 +907,6 @@ export class ImportService {
               testType: testTypeValue,
               evidence: evidenceValue,
               notes: notesValue,
-              isAutomated: isAutomatedValue,
               platform: platformValue,
               device: deviceValue,
               domain: domainValue,
@@ -1003,7 +985,6 @@ export class ImportService {
             testType: testTypeValue,
             evidence: evidenceValue,
             notes: notesValue,
-            isAutomated: isAutomatedValue,
             platform: platformValue,
             device: deviceValue,
             domain: domainValue,

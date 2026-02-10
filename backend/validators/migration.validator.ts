@@ -96,10 +96,6 @@ export const TEST_CASE_IMPORT_COLUMNS = {
   'Notes': { normalized: 'notes', required: false },
   'notes': { normalized: 'notes', required: false },
   
-  '自動化': { normalized: 'isAutomated', required: false },
-  'Automation': { normalized: 'isAutomated', required: false },
-  'automation': { normalized: 'isAutomated', required: false },
-  'isAutomated': { normalized: 'isAutomated', required: false },
   
   // Test Type (テスト種別)
   'テスト種別': { normalized: 'testType', required: false },

@@ -438,23 +438,6 @@ export function TestCaseDetailsCard({
             {errors.testData && <p className="text-xs text-red-400">{errors.testData}</p>}
           </div>
 
-          {/* isAutomated */}
-          <div className="space-y-2">
-            <Label htmlFor="isAutomated">自動化</Label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="isAutomated"
-                checked={formData.isAutomated || false}
-                onChange={(e) => handleFieldChange('isAutomated', e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="isAutomated" className="text-sm text-white/70">
-                自動化テスト
-              </label>
-            </div>
-          </div>
-
           {/* Evidence */}
           <div className="space-y-2">
             <Label htmlFor="evidence">根拠</Label>
@@ -570,16 +553,6 @@ export function TestCaseDetailsCard({
               </div>
             </div>
           )}
-
-          {/* isAutomated */}
-          <div className="border-t border-white/10 pt-6">
-            <h4 className="text-sm font-medium text-white/60 mb-2">
-              自動化
-            </h4>
-            <span className={`text-sm px-2 py-1 rounded ${testCase.isAutomated ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
-              {testCase.isAutomated ? '自動化済み' : '手動'}
-            </span>
-          </div>
 
           {/* Evidence */}
           {testCase.evidence && (
