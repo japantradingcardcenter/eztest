@@ -31,6 +31,8 @@ interface CreateTestCaseInput {
   platforms?: ('IOS' | 'ANDROID' | 'WEB')[];
   platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
   device?: 'iPhone' | 'Android' | 'PC' | null;
+  domain?: string | null;
+  functionName?: string | null;
 }
 
 interface UpdateTestCaseInput {
@@ -57,6 +59,8 @@ interface UpdateTestCaseInput {
   platforms?: ('IOS' | 'ANDROID' | 'WEB')[];
   platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
   device?: 'iPhone' | 'Android' | 'PC' | null;
+  domain?: string | null;
+  functionName?: string | null;
 }
 
 interface TestCaseFilters {
@@ -64,6 +68,8 @@ interface TestCaseFilters {
   priority?: string;
   status?: string;
   search?: string;
+  domain?: string;
+  functionName?: string;
 }
 
 export class TestCaseService {
@@ -209,6 +215,14 @@ export class TestCaseService {
     
     if (filters?.moduleId) {
       where.moduleId = filters.moduleId;
+    }
+    
+    if (filters?.domain) {
+      where.domain = filters.domain;
+    }
+    
+    if (filters?.functionName) {
+      where.functionName = filters.functionName;
     }
     
     if (filters?.search) {
@@ -425,6 +439,27 @@ export class TestCaseService {
   }
 
   /**
+   * Get distinct domain and functionName values for a project (for filter dropdowns)
+   */
+  async getTestCaseFilterOptions(projectId: string): Promise<{ domains: string[]; functionNames: string[] }> {
+    const [domainRows, functionNameRows] = await Promise.all([
+      prisma.testCase.findMany({
+        where: { projectId, domain: { not: null } },
+        select: { domain: true },
+        distinct: ['domain'],
+      }),
+      prisma.testCase.findMany({
+        where: { projectId, functionName: { not: null } },
+        select: { functionName: true },
+        distinct: ['functionName'],
+      }),
+    ]);
+    const domains = domainRows.map(r => r.domain).filter((s): s is string => s != null && s.trim() !== '').sort();
+    const functionNames = functionNameRows.map(r => r.functionName).filter((s): s is string => s != null && s.trim() !== '').sort();
+    return { domains, functionNames };
+  }
+
+  /**
    * Get test case by ID with full details
    * Scope filtering applied via project membership check
    */
@@ -593,6 +628,8 @@ export class TestCaseService {
             platforms: data.platforms || [],
             platform: data.platform ?? undefined,
             device: data.device ?? undefined,
+            domain: data.domain ?? undefined,
+            functionName: data.functionName ?? undefined,
             steps: data.steps
               ? {
                   create: data.steps.map((step) => ({
@@ -748,6 +785,8 @@ export class TestCaseService {
     if (data.platforms !== undefined) updateData.platforms = data.platforms;
     if (data.platform !== undefined) updateData.platform = data.platform;
     if (data.device !== undefined) updateData.device = data.device;
+    if (data.domain !== undefined) updateData.domain = data.domain;
+    if (data.functionName !== undefined) updateData.functionName = data.functionName;
 
     return await prisma.testCase.update({
       where: { id: testCaseId },

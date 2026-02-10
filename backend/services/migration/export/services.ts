@@ -106,6 +106,8 @@ export class ExportService {
         platforms: true,
         platform: true,
         device: true,
+        domain: true,
+        functionName: true,
         module: {
           select: {
             name: true,
@@ -252,6 +254,8 @@ export class ExportService {
         '環境（iOS / Android / Web）': platformsFormatted,
         'プラットフォーム': tc.platform || '',
         '端末': tc.device || '',
+        'ドメイン': tc.domain || '',
+        '機能': tc.functionName || '',
         // Older fields (for backward compatibility)
         'Description': tc.description || '',
         'Estimated Time (minutes)': tc.estimatedTime || '',

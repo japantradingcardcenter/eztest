@@ -94,6 +94,11 @@ export class ImportService {
       'device': 'device',
       'プラットフォーム': 'platform',
       'platform': 'platform',
+      'ドメイン': 'domain',
+      'domain': 'domain',
+      '機能': 'functionName',
+      'functionname': 'functionName',
+      'function name': 'functionName',
       // Test Type (テスト種別)
       'テスト種別': 'testType',
       'test type': 'testType',
@@ -286,6 +291,8 @@ export class ImportService {
         const testType = this.getRowValue(row, 'testType');
         const device = this.getRowValue(row, 'device');
         const platformCol = this.getRowValue(row, 'platform');
+        const domainCol = this.getRowValue(row, 'domain');
+        const functionNameCol = this.getRowValue(row, 'functionName');
 
         // Determine title: Test Case Title is required
         let testCaseTitle: string;
@@ -871,6 +878,14 @@ export class ImportService {
           else if (platformLower === 'web' || platformStr === 'Web') platformValue = 'Web';
         }
 
+        // Domain (ドメイン) and Function (機能) - free text
+        const domainValue = domainCol != null && typeof domainCol === 'string' && domainCol.toString().trim()
+          ? domainCol.toString().trim()
+          : null;
+        const functionNameValue = functionNameCol != null && typeof functionNameCol === 'string' && functionNameCol.toString().trim()
+          ? functionNameCol.toString().trim()
+          : null;
+
         // Determine the expected result value to use for the test case
         // If there are no test steps, use the parsed expected result (singleExpectedResult) or original value
         // If there are test steps with individual expected results, only set test case level if single value
@@ -935,6 +950,8 @@ export class ImportService {
               platforms: platformsValue.length > 0 ? platformsValue : [],
               platform: platformValue,
               device: deviceValue,
+              domain: domainValue,
+              functionName: functionNameValue,
             },
           });
           await prisma.testStep.deleteMany({ where: { testCaseId: existingTestCaseToUpdate.id } });
@@ -1011,6 +1028,8 @@ export class ImportService {
             platforms: platformsValue.length > 0 ? platformsValue : [],
             platform: platformValue,
             device: deviceValue,
+            domain: domainValue,
+            functionName: functionNameValue,
             steps: filteredSteps.length > 0 ? { create: filteredSteps } : undefined,
           },
         });

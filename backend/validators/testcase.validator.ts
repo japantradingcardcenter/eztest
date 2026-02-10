@@ -57,6 +57,8 @@ export const createTestCaseSchema = z.object({
   platforms: z.array(z.enum(['IOS', 'ANDROID', 'WEB'])).optional().default([]),
   platform: z.enum(['Web', 'Web(SP)', 'iOS Native', 'Android Native']).optional().nullable(),
   device: z.enum(['iPhone', 'Android', 'PC']).optional().nullable(),
+  domain: z.string().optional().nullable(),
+  functionName: z.string().optional().nullable(),
 });
 
 /**
@@ -88,6 +90,8 @@ export const updateTestCaseSchema = z.object({
   platforms: z.array(z.enum(['IOS', 'ANDROID', 'WEB'])).optional(),
   platform: z.enum(['Web', 'Web(SP)', 'iOS Native', 'Android Native']).optional().nullable(),
   device: z.enum(['iPhone', 'Android', 'PC']).optional().nullable(),
+  domain: z.string().optional().nullable(),
+  functionName: z.string().optional().nullable(),
 });
 
 /**
@@ -108,6 +112,8 @@ export const testCaseQuerySchema = z.object({
   priority: z.string().optional(),
   status: z.string().optional(),
   search: z.string().optional(),
+  domain: z.string().optional(),
+  functionName: z.string().optional(),
 });
 
 /**

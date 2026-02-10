@@ -146,6 +146,8 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
           platforms: data.data.platforms,
           platform: data.data.platform || undefined,
           device: data.data.device || undefined,
+          domain: data.data.domain || undefined,
+          functionName: data.data.functionName || undefined,
         });
 
         // Initialize steps and ensure the test case level expected result is

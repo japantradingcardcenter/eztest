@@ -42,6 +42,15 @@ export class TestCaseController {
   }
 
   /**
+   * Get distinct domain and functionName values for filter dropdowns
+   * Access already checked by route wrapper
+   */
+  async getTestCaseFilterOptions(_req: CustomRequest, projectId: string) {
+    const options = await testCaseService.getTestCaseFilterOptions(projectId);
+    return { data: options };
+  }
+
+  /**
    * Get test cases with pagination and module grouping
    * Access already checked by route wrapper
    */
@@ -63,6 +72,8 @@ export class TestCaseController {
       status: searchParams.get('status') || undefined,
       search: searchParams.get('search') || undefined,
       moduleId: searchParams.get('moduleId') || undefined,
+      domain: searchParams.get('domain') || undefined,
+      functionName: searchParams.get('functionName') || undefined,
     };
 
     // Validation with Zod
@@ -147,6 +158,8 @@ export class TestCaseController {
       platforms: validatedData.platforms ?? undefined,
       platform: validatedData.platform ?? undefined,
       device: validatedData.device ?? undefined,
+      domain: validatedData.domain ?? undefined,
+      functionName: validatedData.functionName ?? undefined,
     });
 
     return { data: testCase, statusCode: 201 };
@@ -224,6 +237,8 @@ export class TestCaseController {
           platforms: validatedData.platforms,
           platform: validatedData.platform,
           device: validatedData.device,
+          domain: validatedData.domain,
+          functionName: validatedData.functionName,
         }
       );
 

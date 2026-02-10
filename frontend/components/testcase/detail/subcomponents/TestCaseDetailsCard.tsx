@@ -292,6 +292,28 @@ export function TestCaseDetailsCard({
                 </Select>
               </div>
             </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="domain">ドメイン</Label>
+                <Input
+                  id="domain"
+                  variant="glass"
+                  value={formData.domain || ''}
+                  onChange={(e) => handleFieldChange('domain', e.target.value)}
+                  placeholder="ドメインを入力"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="functionName">機能</Label>
+                <Input
+                  id="functionName"
+                  variant="glass"
+                  value={formData.functionName || ''}
+                  onChange={(e) => handleFieldChange('functionName', e.target.value)}
+                  placeholder="機能を入力"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Estimated Time */}
@@ -439,7 +461,7 @@ export function TestCaseDetailsCard({
           )}
 
           {/* Custom Fields Section */}
-          {(testCase.rtcId || testCase.flowId || testCase.layer || testCase.targetType || testCase.testType || testCase.platform || testCase.device) && (
+          {(testCase.rtcId || testCase.flowId || testCase.layer || testCase.targetType || testCase.testType || testCase.platform || testCase.device || testCase.domain || testCase.functionName) && (
             <div className="border-t border-white/10 pt-6">
               <h4 className="text-sm font-medium text-white/60 mb-3">
                 識別情報
@@ -487,6 +509,18 @@ export function TestCaseDetailsCard({
                   <div>
                     <span className="text-xs text-white/50">端末</span>
                     <p className="text-sm text-white/90">{testCase.device}</p>
+                  </div>
+                )}
+                {testCase.domain && (
+                  <div>
+                    <span className="text-xs text-white/50">ドメイン</span>
+                    <p className="text-sm text-white/90">{testCase.domain}</p>
+                  </div>
+                )}
+                {testCase.functionName && (
+                  <div>
+                    <span className="text-xs text-white/50">機能</span>
+                    <p className="text-sm text-white/90">{testCase.functionName}</p>
                   </div>
                 )}
               </div>

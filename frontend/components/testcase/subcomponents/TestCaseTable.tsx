@@ -213,6 +213,22 @@ export function TestCaseTable({
       ),
     },
     {
+      key: 'domain',
+      label: 'ドメイン',
+      width: '100px',
+      render: (row) => (
+        <span className="text-xs text-white/70 truncate">{row.domain || '-'}</span>
+      ),
+    },
+    {
+      key: 'functionName',
+      label: '機能',
+      width: '100px',
+      render: (row) => (
+        <span className="text-xs text-white/70 truncate">{row.functionName || '-'}</span>
+      ),
+    },
+    {
       key: 'device',
       label: '端末',
       width: '80px',

@@ -33,6 +33,8 @@ export interface TestCase {
   platforms?: Platform[];
   platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
   device?: 'iPhone' | 'Android' | 'PC' | null;
+  domain?: string | null;
+  functionName?: string | null;
 
   createdBy: {
     id: string;
@@ -78,6 +80,8 @@ export interface TestCaseFormData {
   platforms?: Platform[];
   platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
   device?: 'iPhone' | 'Android' | 'PC' | null;
+  domain?: string | null;
+  functionName?: string | null;
 }
 
 export interface TestSuite {

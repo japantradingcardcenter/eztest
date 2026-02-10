@@ -107,6 +107,8 @@ export class MigrationController {
         { name: '環境（iOS / Android / Web）', required: false, description: '環境: Platforms - iOS / Android / Web (can specify multiple separated by "/", ",", "、", or whitespace. Duplicates are automatically removed). Will be converted to array: ["IOS", "ANDROID", "WEB"]' },
         { name: 'プラットフォーム', required: false, description: 'プラットフォーム: Web / Web(SP) / iOS Native / Android Native（いずれか1つ）' },
         { name: '端末', required: false, description: '端末: Device - iPhone / Android / PC（いずれか1つ）' },
+        { name: 'ドメイン', required: false, description: 'ドメイン（自由入力）' },
+        { name: '機能', required: false, description: '機能（自由入力）' },
       ],
       example: {
         'Test Case Title': 'Verify user authentication with valid credentials',

@@ -206,6 +206,20 @@ export function CreateTestCaseDialog({
       cols: 1,
     },
     {
+      name: 'domain',
+      label: 'ドメイン',
+      type: 'text',
+      placeholder: 'ドメインを入力',
+      cols: 1,
+    },
+    {
+      name: 'functionName',
+      label: '機能',
+      type: 'text',
+      placeholder: '機能を入力',
+      cols: 1,
+    },
+    {
       name: 'isAutomated',
       label: '自動化',
       type: 'custom',
@@ -421,6 +435,8 @@ export function CreateTestCaseDialog({
         platforms: platforms.length > 0 ? platforms : undefined,
         platform: formData.platform || undefined,
         device: formData.device || undefined,
+        domain: formData.domain || undefined,
+        functionName: formData.functionName || undefined,
       }),
     });
 
