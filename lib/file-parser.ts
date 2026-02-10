@@ -11,16 +11,30 @@ export interface ParseResult {
 }
 
 /**
- * Parse CSV file from buffer or string
+ * Parse CSV file from buffer or string.
+ * Duplicate headers are made unique by appending _2, _3, ... so the first column's value is preserved.
  */
 export function parseCSV(content: string): ParseResult {
   const errors: string[] = [];
-  
+  const headerCount = new Map<string, number>();
+
   try {
+    // 1行目が Column1,Column2,... の場合は2行目をヘッダーとして使う（テンプレートCSV対応）
+    const lines = content.split(/\r?\n/).filter((line) => line.length > 0);
+    if (lines.length >= 2 && /^Column\d+/.test(lines[0].trim())) {
+      content = lines.slice(1).join('\n');
+    }
+
     const result = Papa.parse(content, {
       header: true,
       skipEmptyLines: true,
-      transformHeader: (header: string) => header.trim(),
+      transformHeader: (header: string) => {
+        const trimmed = header.trim();
+        const key = trimmed.toLowerCase();
+        const count = (headerCount.get(key) ?? 0) + 1;
+        headerCount.set(key, count);
+        return count === 1 ? trimmed : `${trimmed}_${count}`;
+      },
       transform: (value: string) => value.trim(),
     });
 

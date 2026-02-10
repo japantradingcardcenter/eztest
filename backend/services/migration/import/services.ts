@@ -275,7 +275,14 @@ export class ImportService {
         const evidence = this.getRowValue(row, 'evidence');
         const notes = this.getRowValue(row, 'notes');
         const isAutomated = this.getRowValue(row, 'isAutomated');
-        const platforms = this.getRowValue(row, 'platforms');
+        let platforms = this.getRowValue(row, 'platforms');
+        // CSVテンプレートの "Environment" 列（iOS/Android/Web）を platforms のフォールバックとして使用
+        if ((platforms === undefined || platforms === null || (typeof platforms === 'string' && !platforms.toString().trim())) && this.getRowValue(row, 'environment') != null) {
+          const envVal = this.getRowValue(row, 'environment');
+          if (typeof envVal === 'string' && envVal.toString().trim()) {
+            platforms = envVal;
+          }
+        }
         const testType = this.getRowValue(row, 'testType');
 
         // Determine title: use title column if provided, otherwise use assertionId as fallback
@@ -287,6 +294,12 @@ export class ImportService {
         } else {
           throw new Error('Test Case Title is required. Please provide "Test Case Title" or "Assertion-ID"');
         }
+
+        // RTC-ID の文字列（既存テストケース判定に使用）
+        const rtcIdStr =
+          rtcId != null && typeof rtcId === 'string' && rtcId.toString().trim() !== ''
+            ? rtcId.toString().trim()
+            : null;
 
         // Process defect IDs if provided (supports multiple defects: comma or semicolon separated)
         // Store all defect IDs (both existing and pending) for later linking
@@ -319,16 +332,22 @@ export class ImportService {
           }
         }
 
-        // Check if test case with same title already exists
-        const existingTestCase = await prisma.testCase.findFirst({
-          where: {
-            projectId,
-            title: {
-              equals: testCaseTitle,
-              mode: 'insensitive',
+        // 既存テストケースの判定: RTC-ID があれば RTC-ID でのみ照合（異なる RTC-ID は別テストケース）、なければタイトルで照合
+        let existingTestCase: { id: string; tcId: string } | null = null;
+        if (rtcIdStr) {
+          existingTestCase = await prisma.testCase.findFirst({
+            where: { projectId, rtcId: rtcIdStr },
+            select: { id: true, tcId: true },
+          });
+        } else {
+          existingTestCase = await prisma.testCase.findFirst({
+            where: {
+              projectId,
+              title: { equals: testCaseTitle, mode: 'insensitive' },
             },
-          },
-        });
+            select: { id: true, tcId: true },
+          });
+        }
 
         let existingTestCaseToUpdate: { id: string; tcId: string } | null = null;
         if (existingTestCase) {
