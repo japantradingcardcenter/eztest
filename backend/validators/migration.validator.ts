@@ -6,59 +6,73 @@ import { ParsedRow } from '@/lib/file-parser';
  */
 export const TEST_CASE_IMPORT_COLUMNS = {
   // Required fields
+  'テストケース名': { normalized: 'title', required: true },
   'Test Case Title': { normalized: 'title', required: true },
   'title': { normalized: 'title', required: true },
   'test case title': { normalized: 'title', required: true },
   'testcase title': { normalized: 'title', required: true },
   
   // Optional fields
+  'テストケースID': { normalized: 'testCaseId', required: false },
   'Test Case ID': { normalized: 'testCaseId', required: false },
   'test case id': { normalized: 'testCaseId', required: false },
   'testcase id': { normalized: 'testCaseId', required: false },
   
+  'モジュール・機能': { normalized: 'module', required: false },
   'Module / Feature': { normalized: 'module', required: false },
   'module / feature': { normalized: 'module', required: false },
   'module/feature': { normalized: 'module', required: false },
   'module': { normalized: 'module', required: false },
   'feature': { normalized: 'module', required: false },
   
+  '優先度': { normalized: 'priority', required: false },
   'Priority': { normalized: 'priority', required: false },
   'priority': { normalized: 'priority', required: false },
   
+  '前提条件': { normalized: 'preconditions', required: false },
   'Preconditions': { normalized: 'preconditions', required: false },
   'preconditions': { normalized: 'preconditions', required: false },
   
+  'テスト手順': { normalized: 'testSteps', required: false },
   'Test Steps': { normalized: 'testSteps', required: false },
   'test steps': { normalized: 'testSteps', required: false },
   'teststeps': { normalized: 'testSteps', required: false },
   
+  'テストデータ': { normalized: 'testData', required: false },
   'Test Data': { normalized: 'testData', required: false },
   'test data': { normalized: 'testData', required: false },
   'testdata': { normalized: 'testData', required: false },
   
+  '期待結果': { normalized: 'expectedResult', required: false },
   'Expected Result': { normalized: 'expectedResult', required: false },
   'expected result': { normalized: 'expectedResult', required: false },
   'expectedresult': { normalized: 'expectedResult', required: false },
   
+  '状態': { normalized: 'status', required: false },
   'Status': { normalized: 'status', required: false },
   'status': { normalized: 'status', required: false },
   
+  '不具合ID': { normalized: 'defectId', required: false },
   'Defect ID': { normalized: 'defectId', required: false },
   'defect id': { normalized: 'defectId', required: false },
   'defectid': { normalized: 'defectId', required: false },
   'defect': { normalized: 'defectId', required: false },
   
   // Older fields (backward compatibility)
+  '説明': { normalized: 'description', required: false },
   'Description': { normalized: 'description', required: false },
   'description': { normalized: 'description', required: false },
   
+  '想定時間（分）': { normalized: 'estimatedTime', required: false },
   'Estimated Time (minutes)': { normalized: 'estimatedTime', required: false },
   'estimated time (minutes)': { normalized: 'estimatedTime', required: false },
   'estimated time': { normalized: 'estimatedTime', required: false },
   
+  '事後条件': { normalized: 'postconditions', required: false },
   'Postconditions': { normalized: 'postconditions', required: false },
   'postconditions': { normalized: 'postconditions', required: false },
   
+  'テストスイート': { normalized: 'testsuite', required: false },
   'Test Suites': { normalized: 'testsuite', required: false },
   'test suites': { normalized: 'testsuite', required: false },
   'testsuite': { normalized: 'testsuite', required: false },
@@ -118,17 +132,17 @@ export function validateTestCaseImportColumns(data: ParsedRow[]): string[] {
     ])
   );
 
-  // Check for required field: Test Case Title (in any variation)
-  const titleVariations = ['title', 'test case title', 'testcase title'];
+  // Check for required field: テストケース名 / Test Case Title (in any variation)
+  const titleVariations = ['テストケース名', 'title', 'test case title', 'testcase title'];
 
   const hasTitle = titleVariations.some((variation) =>
-    availableFieldsLower.has(variation)
+    availableFieldsLower.has(variation) || availableFields.some((f) => f.trim() === variation)
   );
 
   if (!hasTitle) {
     const availableFieldNames = availableFields.join(', ');
     errors.push(
-      `Missing required column: "Test Case Title". Available columns: ${availableFieldNames}`
+      `必須列「テストケース名」がありません。利用可能な列: ${availableFieldNames}`
     );
   }
 

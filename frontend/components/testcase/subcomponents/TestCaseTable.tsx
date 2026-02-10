@@ -103,7 +103,7 @@ export function TestCaseTable({
               {row.title && row.title.length > 40 && (
                 <HoverCardContent side="top" className="w-80">
                   <div className="space-y-2">
-                    <h4 className="text-sm font-semibold text-white">Test Case Title</h4>
+                    <h4 className="text-sm font-semibold text-white">テストケース名</h4>
                     <p className="text-sm text-white/80 break-words">{row.title}</p>
                     {row._count.defects > 0 && (
                       <div className="pt-2 border-t border-white/10">

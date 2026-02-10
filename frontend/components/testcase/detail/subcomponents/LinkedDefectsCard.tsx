@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -69,7 +69,7 @@ export function LinkedDefectsCard({ testCase, onRefresh }: LinkedDefectsCardProp
   const columns: ColumnDef<DefectRow>[] = [
     {
       key: 'defectId',
-      label: 'Defect ID',
+      label: '不具合ID',
       render: (value: unknown) => (
         <span className="text-red-400 font-mono text-sm font-semibold">
           {value as string}

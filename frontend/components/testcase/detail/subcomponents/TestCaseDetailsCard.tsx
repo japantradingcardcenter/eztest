@@ -98,7 +98,7 @@ export function TestCaseDetailsCard({
           {/* Priority and Status */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority">優先度</Label>
               <Select
                 value={formData.priority}
                 onValueChange={(value) => handleFieldChange('priority', value)}
@@ -124,7 +124,7 @@ export function TestCaseDetailsCard({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">状態</Label>
               <Select
                 value={formData.status}
                 onValueChange={(value) => handleFieldChange('status', value)}
@@ -329,7 +329,7 @@ export function TestCaseDetailsCard({
 
           {/* Estimated Time */}
           <div className="space-y-2 pt-6 mt-6 border-t border-white/10">
-            <Label htmlFor="estimatedTime">Estimated Time (minutes)</Label>
+            <Label htmlFor="estimatedTime">想定時間（分）</Label>
             <Input
               id="estimatedTime"
               variant="glass"
@@ -364,7 +364,7 @@ export function TestCaseDetailsCard({
 
           {/* Preconditions with Attachments */}
           <div className="space-y-2">
-            <Label htmlFor="preconditions">Preconditions</Label>
+            <Label htmlFor="preconditions">前提条件</Label>
             <TextareaWithAttachments
               fieldName="preconditions"
               variant="glass"
@@ -384,7 +384,7 @@ export function TestCaseDetailsCard({
 
           {/* Postconditions with Attachments */}
           <div className="space-y-2">
-            <Label htmlFor="postconditions">Postconditions</Label>
+            <Label htmlFor="postconditions">事後条件</Label>
             <TextareaWithAttachments
               fieldName="postconditions"
               variant="glass"
@@ -404,7 +404,7 @@ export function TestCaseDetailsCard({
 
           {/* Test Data */}
           <div className="space-y-2">
-            <Label htmlFor="testData">Test Data</Label>
+            <Label htmlFor="testData">テストデータ</Label>
             <Textarea
               id="testData"
               variant="glass"
@@ -571,7 +571,7 @@ export function TestCaseDetailsCard({
           {testCase.estimatedTime && (
             <div className="border-t border-white/10 pt-6">
               <h4 className="text-sm font-medium text-white/60 mb-1">
-                Estimated Time
+                想定時間
               </h4>
               <div className="flex items-center gap-2 text-white/90">
                 <Clock className="w-4 h-4" />
@@ -584,7 +584,7 @@ export function TestCaseDetailsCard({
             <div className="border-t border-white/10 pt-6">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-medium text-white/60">
-                  Preconditions
+                  前提条件
                 </h4>
                 {preconditionAttachments.length > 0 ? (
                   <span className="text-xs text-white/50">{preconditionAttachments.length} Attachments</span>
@@ -617,7 +617,7 @@ export function TestCaseDetailsCard({
             <div className="border-t border-white/10 pt-6">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-medium text-white/60">
-                  Postconditions
+                  事後条件
                 </h4>
                 {postconditionAttachments.length > 0 ? (
                   <span className="text-xs text-white/50">{postconditionAttachments.length} Attachments</span>
@@ -649,7 +649,7 @@ export function TestCaseDetailsCard({
           {testCase.testData && (
             <div className="border-t border-white/10 pt-6">
               <h4 className="text-sm font-medium text-white/60 mb-2">
-                Test Data
+                テストデータ
               </h4>
               <p className="text-white/90 whitespace-pre-wrap break-words">
                 {testCase.testData}

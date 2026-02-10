@@ -84,7 +84,7 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'priority',
-      label: 'Priority',
+      label: '優先度',
       type: 'select',
       defaultValue: 'MEDIUM',
       options: priorityOptions.map(opt => ({ value: opt.value, label: opt.label })),
@@ -92,7 +92,7 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'status',
-      label: 'Status',
+      label: '状態',
       type: 'select',
       defaultValue: 'DRAFT',
       options: statusOptions.map(opt => ({ value: opt.value, label: opt.label })),
@@ -112,7 +112,7 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'estimatedTime',
-      label: 'Estimated Time (minutes)',
+      label: '想定時間（分）',
       type: 'number',
       placeholder: 'Enter estimated time',
       cols: 1,
@@ -255,7 +255,7 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'preconditions',
-      label: 'Preconditions',
+      label: '前提条件',
       type: 'textarea-with-attachments',
       placeholder: 'Enter preconditions',
       rows: 3,
@@ -265,7 +265,7 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'postconditions',
-      label: 'Postconditions',
+      label: '事後条件',
       type: 'textarea-with-attachments',
       placeholder: 'Enter postconditions',
       rows: 3,
@@ -275,7 +275,7 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'testData',
-      label: 'Test Data',
+      label: 'テストデータ',
       type: 'textarea',
       placeholder: 'Enter test data or input values',
       rows: 3,

@@ -213,16 +213,16 @@ export class ExportService {
       const testTypeFormatted = tc.testType ? (testTypeMap[tc.testType] || tc.testType) : '';
 
       return {
-        'Test Case ID': tc.tcId,
-        'Test Case Title': tc.title,
-        'Module / Feature': tc.module?.name || '',
-        'Priority': tc.priority,
-        'Preconditions': tc.preconditions || '',
-        'Test Steps': testStepsFormatted,
-        'Test Data': testData,
-        'Expected Result': expectedResultFormatted,
-        'Status': tc.status,
-        'Defect ID': defectIds,
+        'テストケースID': tc.tcId,
+        'テストケース名': tc.title,
+        'モジュール・機能': tc.module?.name || '',
+        '優先度': tc.priority,
+        '前提条件': tc.preconditions || '',
+        'テスト手順': testStepsFormatted,
+        'テストデータ': testData,
+        '期待結果': expectedResultFormatted,
+        '状態': tc.status,
+        '不具合ID': defectIds,
         // New fields for enhanced test case management
         'RTC-ID': tc.rtcId || '',
         'Flow-ID': tc.flowId || '',
@@ -237,10 +237,10 @@ export class ExportService {
         '実行方式': tc.executionType || '',
         '自動化状況': tc.automationStatus || '',
         // Older fields (for backward compatibility)
-        'Description': tc.description || '',
-        'Estimated Time (minutes)': tc.estimatedTime || '',
-        'Postconditions': tc.postconditions || '',
-        'Test Suites': suites,
+        '説明': tc.description || '',
+        '想定時間（分）': tc.estimatedTime || '',
+        '事後条件': tc.postconditions || '',
+        'テストスイート': suites,
       };
     });
 

@@ -35,7 +35,22 @@ export class ImportService {
     
     // Map export format column names to import format
     const columnMap: Record<string, string> = {
-      // New test case fields
+      // 日本語列名（CSV/画面）
+      'テストケースid': 'testCaseId',
+      'テストケース名': 'title',
+      'モジュール・機能': 'module',
+      '優先度': 'priority',
+      '前提条件': 'preconditions',
+      'テスト手順': 'testSteps',
+      'テストデータ': 'testData',
+      '期待結果': 'expectedResult',
+      '状態': 'status',
+      '不具合id': 'defectId',
+      '説明': 'description',
+      '想定時間（分）': 'estimatedTime',
+      '事後条件': 'postconditions',
+      'テストスイート': 'testsuite',
+      // English (backward compatibility)
       'test case id': 'testCaseId',
       'testcase id': 'testCaseId',
       'test case title': 'title',
@@ -54,11 +69,9 @@ export class ImportService {
       'expected result': 'expectedResult',
       'expectedresult': 'expectedResult',
       'status': 'status',
-      // Defect linking for test cases
       'defect id': 'defectId',
       'defectid': 'defectId',
       'defect': 'defectId',
-      // Older fields (kept for backward compatibility)
       'description': 'description',
       'estimated time (minutes)': 'estimatedTime',
       'estimated time': 'estimatedTime',
@@ -256,9 +269,10 @@ export class ImportService {
         const preconditions = this.getRowValue(row, 'preconditions');
         const postconditions = this.getRowValue(row, 'postconditions');
         const moduleValue = this.getRowValue(row, 'module');
-        // Test Suites 列: 正規化キーで取得、なければテンプレートでよく使う生ヘッダ名（Test Suites / Test Suite）で取得
+        // テストスイート列: 正規化キーで取得、なければ日本語/英語ヘッダ名で取得
         const testsuiteRaw =
           this.getRowValue(row, 'testsuite') ??
+          (row as Record<string, unknown>)['テストスイート'] ??
           (row as Record<string, unknown>)['Test Suites'] ??
           (row as Record<string, unknown>)['Test Suite'];
         const testsuite =
@@ -282,12 +296,12 @@ export class ImportService {
         const executionTypeCol = this.getRowValue(row, 'executionType');
         const automationStatusCol = this.getRowValue(row, 'automationStatus');
 
-        // Determine title: Test Case Title is required
+        // 必須: テストケース名
         let testCaseTitle: string;
         if (title && typeof title === 'string' && title.toString().trim() !== '') {
           testCaseTitle = title.toString().trim();
         } else {
-          throw new Error('Test Case Title is required. Please provide "Test Case Title"');
+          throw new Error('必須列「テストケース名」がありません。');
         }
 
         // RTC-ID の文字列（既存テストケース判定に使用）

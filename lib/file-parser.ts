@@ -15,7 +15,7 @@ export interface ParseResult {
  * Duplicate headers are made unique by appending _2, _3, ... so the first column's value is preserved.
  *
  * 対応形式:
- * - 1行目が正式ヘッダー（Test Case Title, Module / Feature, ...）→ そのままパース
+ * - 1行目が正式ヘッダー（テストケース名、モジュール・機能、...）→ そのままパース
  * - 1行目が Column1,Column2,... のときは2行目をヘッダーとして使用（テンプレートCSV対応）
  */
 export function parseCSV(content: string): ParseResult {
