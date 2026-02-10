@@ -13,6 +13,10 @@ export interface ParseResult {
 /**
  * Parse CSV file from buffer or string.
  * Duplicate headers are made unique by appending _2, _3, ... so the first column's value is preserved.
+ *
+ * 対応形式:
+ * - 1行目が正式ヘッダー（Test Case Title, Module / Feature, ...）→ そのままパース
+ * - 1行目が Column1,Column2,... のときは2行目をヘッダーとして使用（テンプレートCSV対応）
  */
 export function parseCSV(content: string): ParseResult {
   const errors: string[] = [];
@@ -21,6 +25,8 @@ export function parseCSV(content: string): ParseResult {
   try {
     // BOM を除去（Excel 等で保存した CSV で必須列が認識されない問題を防ぐ）
     content = content.replace(/^\uFEFF/, '');
+    // 先頭の空行を除去（一部エクスポートで先頭に空行が付く場合に対応）
+    content = content.replace(/^\s*[\r\n]+/, '');
 
     // 1行目が Column1,Column2,... の場合は2行目をヘッダーとして使う（テンプレートCSV対応）
     const lines = content.split(/\r?\n/).filter((line) => line.length > 0);
