@@ -74,11 +74,6 @@ export class ImportService {
       'flow id': 'flowId',
       'flowid': 'flowId',
       'layer': 'layer',
-      '対象': 'targetType',
-      '対象（api/画面）': 'targetType',
-      '対象（api / 画面）': 'targetType',
-      'target type': 'targetType',
-      'targettype': 'targetType',
       '根拠': 'evidence',
       '根拠（ドキュメント）': 'evidence',
       '根拠コード': 'evidence',
@@ -277,7 +272,6 @@ export class ImportService {
         const rtcId = this.getRowValue(row, 'rtcId');
         const flowId = this.getRowValue(row, 'flowId');
         const layer = this.getRowValue(row, 'layer');
-        const targetType = this.getRowValue(row, 'targetType');
         const evidence = this.getRowValue(row, 'evidence');
         const notes = this.getRowValue(row, 'notes');
         const testType = this.getRowValue(row, 'testType');
@@ -717,36 +711,6 @@ export class ImportService {
           }
         }
 
-        // Target Type (convert: "API" -> "API", "画面" -> "SCREEN", "API/画面" -> "API" or "SCREEN")
-        let targetTypeValue: 'API' | 'SCREEN' | 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'PERFORMANCE' | 'SECURITY' | 'USABILITY' | 'COMPATIBILITY' | null = null;
-        if (targetType && typeof targetType === 'string' && targetType.toString().trim()) {
-          const targetTypeStr = targetType.toString().trim();
-          const targetTypeUpper = targetTypeStr.toUpperCase();
-          
-          // Check for exact matches first
-          if (targetTypeUpper === 'API' || targetTypeUpper === 'SCREEN' ||
-              targetTypeUpper === 'FUNCTIONAL' || targetTypeUpper === 'NON_FUNCTIONAL' ||
-              targetTypeUpper === 'PERFORMANCE' || targetTypeUpper === 'SECURITY' ||
-              targetTypeUpper === 'USABILITY' || targetTypeUpper === 'COMPATIBILITY') {
-            targetTypeValue = targetTypeUpper as 'API' | 'SCREEN' | 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'PERFORMANCE' | 'SECURITY' | 'USABILITY' | 'COMPATIBILITY';
-          } else if (targetTypeStr.includes('API') || targetTypeStr.includes('画面')) {
-            // Handle "API/画面" or "API / 画面" - default to API if contains API, otherwise SCREEN
-            if (targetTypeStr.includes('API') || targetTypeStr.toUpperCase().includes('API')) {
-              targetTypeValue = 'API';
-            } else if (targetTypeStr.includes('画面') || targetTypeStr.toUpperCase().includes('SCREEN')) {
-              targetTypeValue = 'SCREEN';
-            }
-          } else if (targetTypeStr.startsWith('POST ') || targetTypeStr.startsWith('GET ') || 
-                     targetTypeStr.startsWith('PUT ') || targetTypeStr.startsWith('DELETE ') ||
-                     targetTypeStr.startsWith('PATCH ')) {
-            // If it starts with HTTP method, it's likely an API endpoint
-            targetTypeValue = 'API';
-          } else if (targetTypeStr.includes('画面') || targetTypeStr.includes('フロー')) {
-            // If it contains "画面" or "フロー", it's likely a screen/flow
-            targetTypeValue = 'SCREEN';
-          }
-        }
-
         // Evidence (根拠コード)
         const evidenceValue = evidence && typeof evidence === 'string' && evidence.toString().trim()
           ? evidence.toString().trim()
@@ -904,7 +868,6 @@ export class ImportService {
               rtcId: rtcIdValue,
               flowId: flowIdValue,
               layer: layerValue,
-              targetType: targetTypeValue,
               testType: testTypeValue,
               evidence: evidenceValue,
               notes: notesValue,
@@ -982,7 +945,6 @@ export class ImportService {
             rtcId: rtcIdValue,
             flowId: flowIdValue,
             layer: layerValue,
-            targetType: targetTypeValue,
             testType: testTypeValue,
             evidence: evidenceValue,
             notes: notesValue,

@@ -22,17 +22,6 @@ enum TestLayer {
   UNKNOWN
 }
 
-enum TargetType {
-  FUNCTIONAL
-  NON_FUNCTIONAL
-  PERFORMANCE
-  SECURITY
-  USABILITY
-  COMPATIBILITY
-  API
-  SCREEN
-}
-
 // ====================================
 // User Management
 // ====================================
@@ -226,7 +215,6 @@ model TestCase {
   rtcId         String?  // RTC-ID
   flowId        String?  // Flow-ID
   layer         TestLayer?  // Layer
-  targetType    TargetType?  // 対象
   testType      String?  // テスト種別（正常系、異常系、非機能、回帰、データ整合性確認、状態遷移確認、運用確認、障害時確認）
   evidence      String?  // 根拠コード
   notes         String?  // 備考

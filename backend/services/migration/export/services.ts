@@ -98,7 +98,6 @@ export class ExportService {
         rtcId: true,
         flowId: true,
         layer: true,
-        targetType: true,
         testType: true,
         evidence: true,
         notes: true,
@@ -200,16 +199,6 @@ export class ExportService {
       // Format layer to display value
       const layerFormatted = tc.layer || '';
 
-      // Format targetType to display value (API or 画面)
-      let targetTypeFormatted = '';
-      if (tc.targetType === 'API') {
-        targetTypeFormatted = 'API';
-      } else if (tc.targetType === 'SCREEN') {
-        targetTypeFormatted = '画面';
-      } else if (tc.targetType) {
-        targetTypeFormatted = tc.targetType;
-      }
-
       // Format testType to Japanese display value
       const testTypeMap: Record<string, string> = {
         'NORMAL': '正常系',
@@ -238,7 +227,6 @@ export class ExportService {
         'RTC-ID': tc.rtcId || '',
         'Flow-ID': tc.flowId || '',
         'Layer': layerFormatted,
-        '対象（API/画面）': targetTypeFormatted,
         'テスト種別': testTypeFormatted,
         '根拠コード': tc.evidence || '',
         '備考': tc.notes || '',

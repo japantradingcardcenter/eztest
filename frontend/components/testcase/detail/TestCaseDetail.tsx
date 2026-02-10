@@ -138,7 +138,6 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
           rtcId: data.data.rtcId || undefined,
           flowId: data.data.flowId || undefined,
           layer: data.data.layer || undefined,
-          targetType: data.data.targetType || undefined,
           testType: data.data.testType || undefined,
           evidence: data.data.evidence || undefined,
           notes: data.data.notes || undefined,

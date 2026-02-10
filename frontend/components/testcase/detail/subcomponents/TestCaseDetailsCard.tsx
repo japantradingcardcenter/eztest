@@ -216,27 +216,6 @@ export function TestCaseDetailsCard({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="targetType">対象</Label>
-                <Select
-                  value={formData.targetType || ''}
-                  onValueChange={(value) => handleFieldChange('targetType', value)}
-                >
-                  <SelectTrigger variant="glass" id="targetType">
-                    <SelectValue placeholder="Select target type" />
-                  </SelectTrigger>
-                  <SelectContent variant="glass">
-                    <SelectItem value="API">API</SelectItem>
-                    <SelectItem value="SCREEN">画面</SelectItem>
-                    <SelectItem value="FUNCTIONAL">Functional</SelectItem>
-                    <SelectItem value="NON_FUNCTIONAL">Non-Functional</SelectItem>
-                    <SelectItem value="PERFORMANCE">Performance</SelectItem>
-                    <SelectItem value="SECURITY">Security</SelectItem>
-                    <SelectItem value="USABILITY">Usability</SelectItem>
-                    <SelectItem value="COMPATIBILITY">Compatibility</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="testType">テスト種別</Label>
                 <Select
                   value={formData.testType || ''}
@@ -476,7 +455,7 @@ export function TestCaseDetailsCard({
           )}
 
           {/* Custom Fields Section */}
-          {(testCase.rtcId || testCase.flowId || testCase.layer || testCase.targetType || testCase.testType || testCase.platform || testCase.device || testCase.domain || testCase.functionName || testCase.executionType || testCase.automationStatus) && (
+          {(testCase.rtcId || testCase.flowId || testCase.layer || testCase.testType || testCase.platform || testCase.device || testCase.domain || testCase.functionName || testCase.executionType || testCase.automationStatus) && (
             <div className="border-t border-white/10 pt-6">
               <h4 className="text-sm font-medium text-white/60 mb-3">
                 識別情報
@@ -506,12 +485,6 @@ export function TestCaseDetailsCard({
                     <p className="text-sm text-white/90">
                       {testTypeOptions.find(opt => opt.value === testCase.testType)?.label || testCase.testType}
                     </p>
-                  </div>
-                )}
-                {testCase.targetType && (
-                  <div>
-                    <span className="text-xs text-white/50">対象</span>
-                    <p className="text-sm text-white/90">{testCase.targetType}</p>
                   </div>
                 )}
                 {testCase.platform && (

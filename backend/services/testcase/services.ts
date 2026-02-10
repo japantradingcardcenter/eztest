@@ -23,7 +23,6 @@ interface CreateTestCaseInput {
   rtcId?: string | null;
   flowId?: string | null;
   layer?: 'SMOKE' | 'CORE' | 'EXTENDED' | 'UNKNOWN' | null;
-  targetType?: 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'PERFORMANCE' | 'SECURITY' | 'USABILITY' | 'COMPATIBILITY' | 'API' | 'SCREEN' | null;
   testType?: string | null;
   evidence?: string | null;
   notes?: string | null;
@@ -51,7 +50,6 @@ interface UpdateTestCaseInput {
   rtcId?: string | null;
   flowId?: string | null;
   layer?: 'SMOKE' | 'CORE' | 'EXTENDED' | 'UNKNOWN' | null;
-  targetType?: 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'PERFORMANCE' | 'SECURITY' | 'USABILITY' | 'COMPATIBILITY' | 'API' | 'SCREEN' | null;
   testType?: string | null;
   evidence?: string | null;
   notes?: string | null;
@@ -620,7 +618,6 @@ export class TestCaseService {
             rtcId: data.rtcId,
             flowId: data.flowId,
             layer: data.layer,
-            targetType: data.targetType,
             testType: data.testType,
             evidence: data.evidence,
             notes: data.notes,
@@ -777,7 +774,6 @@ export class TestCaseService {
     if (data.rtcId !== undefined) updateData.rtcId = data.rtcId;
     if (data.flowId !== undefined) updateData.flowId = data.flowId;
     if (data.layer !== undefined) updateData.layer = data.layer;
-    if (data.targetType !== undefined) updateData.targetType = data.targetType;
     if (data.testType !== undefined) updateData.testType = data.testType;
     if (data.evidence !== undefined) updateData.evidence = data.evidence;
     if (data.notes !== undefined) updateData.notes = data.notes;

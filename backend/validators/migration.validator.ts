@@ -78,16 +78,7 @@ export const TEST_CASE_IMPORT_COLUMNS = {
   'Layer': { normalized: 'layer', required: false },
   'layer': { normalized: 'layer', required: false },
   
-  '対象': { normalized: 'targetType', required: false },
-  '対象（API/画面）': { normalized: 'targetType', required: false },
-  '対象（api/画面）': { normalized: 'targetType', required: false },
-  '対象（API / 画面）': { normalized: 'targetType', required: false },
-  '対象（api / 画面）': { normalized: 'targetType', required: false },
-  'Target Type': { normalized: 'targetType', required: false },
-  'target type': { normalized: 'targetType', required: false },
-  'targettype': { normalized: 'targetType', required: false },
-  
-  '根拠': { normalized: 'evidence', required: false },
+'根拠': { normalized: 'evidence', required: false },
   '根拠（ドキュメント）': { normalized: 'evidence', required: false },
   '根拠コード': { normalized: 'evidence', required: false },
   'Evidence': { normalized: 'evidence', required: false },

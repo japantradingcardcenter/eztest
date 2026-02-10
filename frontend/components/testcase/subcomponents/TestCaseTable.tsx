@@ -188,23 +188,6 @@ export function TestCaseTable({
       ),
     },
     {
-      key: 'targetType',
-      label: '対象',
-      width: '80px',
-      render: (row) => (
-        row.targetType ? (
-          <Badge
-            variant="outline"
-            className="w-fit text-xs px-2 py-0.5 bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
-          >
-            {row.targetType}
-          </Badge>
-        ) : (
-          <span className="text-xs text-white/40">-</span>
-        )
-      ),
-    },
-    {
       key: 'platform',
       label: 'プラットフォーム',
       width: '100px',

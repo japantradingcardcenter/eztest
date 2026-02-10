@@ -1,5 +1,4 @@
 export type TestLayer = 'SMOKE' | 'CORE' | 'EXTENDED' | 'UNKNOWN';
-export type TargetType = 'API' | 'SCREEN' | 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'PERFORMANCE' | 'SECURITY' | 'USABILITY' | 'COMPATIBILITY';
 export type Platform = 'IOS' | 'ANDROID' | 'WEB';
 export type TestType = 'NORMAL' | 'ABNORMAL' | 'NON_FUNCTIONAL' | 'REGRESSION' | 'DATA_INTEGRITY' | 'STATE_TRANSITION' | 'OPERATIONAL' | 'FAILURE';
 
@@ -23,7 +22,6 @@ export interface TestCase {
   flowId?: string;
 
   layer?: TestLayer;
-  targetType?: TargetType;
   testType?: TestType;
 
   evidence?: string;
@@ -70,7 +68,6 @@ export interface TestCaseFormData {
   flowId?: string;
 
   layer?: TestLayer | string;
-  targetType?: TargetType | string;
   testType?: TestType | string;
 
   evidence?: string;
