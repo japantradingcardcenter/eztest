@@ -571,25 +571,6 @@ export function TestCaseDetailsCard({
             </div>
           )}
 
-          {/* Platforms */}
-          {testCase.platforms && testCase.platforms.length > 0 && (
-            <div className="border-t border-white/10 pt-6">
-              <div>
-                <span className="text-xs text-white/50">環境</span>
-                <div className="flex gap-1 mt-1">
-                  {testCase.platforms.map((platform) => (
-                    <span
-                      key={platform}
-                      className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded"
-                    >
-                      {platform}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* isAutomated */}
           <div className="border-t border-white/10 pt-6">
             <h4 className="text-sm font-medium text-white/60 mb-2">

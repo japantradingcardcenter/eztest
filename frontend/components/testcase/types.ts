@@ -30,7 +30,6 @@ export interface TestCase {
   notes?: string;
 
   isAutomated?: boolean;
-  platforms?: Platform[];
   platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
   device?: 'iPhone' | 'Android' | 'PC' | null;
   domain?: string | null;
@@ -79,7 +78,6 @@ export interface TestCaseFormData {
   notes?: string;
 
   isAutomated?: boolean;
-  platforms?: Platform[];
   platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
   device?: 'iPhone' | 'Android' | 'PC' | null;
   domain?: string | null;

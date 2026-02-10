@@ -28,7 +28,6 @@ interface CreateTestCaseInput {
   evidence?: string | null;
   notes?: string | null;
   isAutomated?: boolean;
-  platforms?: ('IOS' | 'ANDROID' | 'WEB')[];
   platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
   device?: 'iPhone' | 'Android' | 'PC' | null;
   domain?: string | null;
@@ -58,7 +57,6 @@ interface UpdateTestCaseInput {
   evidence?: string | null;
   notes?: string | null;
   isAutomated?: boolean;
-  platforms?: ('IOS' | 'ANDROID' | 'WEB')[];
   platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
   device?: 'iPhone' | 'Android' | 'PC' | null;
   domain?: string | null;
@@ -629,7 +627,6 @@ export class TestCaseService {
             evidence: data.evidence,
             notes: data.notes,
             isAutomated: data.isAutomated ?? false,
-            platforms: data.platforms || [],
             platform: data.platform ?? undefined,
             device: data.device ?? undefined,
             domain: data.domain ?? undefined,
@@ -788,7 +785,6 @@ export class TestCaseService {
     if (data.evidence !== undefined) updateData.evidence = data.evidence;
     if (data.notes !== undefined) updateData.notes = data.notes;
     if (data.isAutomated !== undefined) updateData.isAutomated = data.isAutomated;
-    if (data.platforms !== undefined) updateData.platforms = data.platforms;
     if (data.platform !== undefined) updateData.platform = data.platform;
     if (data.device !== undefined) updateData.device = data.device;
     if (data.domain !== undefined) updateData.domain = data.domain;

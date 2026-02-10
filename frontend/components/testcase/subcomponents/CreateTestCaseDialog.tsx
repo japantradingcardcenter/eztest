@@ -1,14 +1,12 @@
 'use client';
 
 import { BaseDialog, BaseDialogField, BaseDialogConfig } from '@/frontend/reusable-components/dialogs/BaseDialog';
-import { TestCase, Module, Platform } from '../types';
+import { TestCase, Module } from '../types';
 import React, { useEffect, useState } from 'react';
 import { attachmentStorage } from '@/lib/attachment-storage';
 import type { Attachment } from '@/lib/s3';
 import { uploadFileToS3 } from '@/lib/s3';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
-import { PlatformsCheckboxGroup } from './PlatformsCheckboxGroup';
-
 interface CreateTestCaseDialogProps {
   projectId: string;
   defaultModuleId?: string;
@@ -264,29 +262,6 @@ export function CreateTestCaseDialog({
       cols: 1,
     },
     {
-      name: 'platforms',
-      label: '環境',
-      type: 'custom',
-      customRender: (value: string, onChange: (value: string) => void) => {
-        let platforms: Platform[] = [];
-        if (value) {
-          try {
-            platforms = JSON.parse(value);
-          } catch {
-            // If not JSON, treat as empty array
-            platforms = [];
-          }
-        }
-        return (
-          <PlatformsCheckboxGroup
-            values={platforms}
-            onChange={(vals) => onChange(JSON.stringify(vals))}
-          />
-        );
-      },
-      cols: 1,
-    },
-    {
       name: 'description',
       label: 'Description',
       type: 'textarea-with-attachments',
@@ -414,21 +389,6 @@ export function CreateTestCaseDialog({
 
     const estimatedTime = formData.estimatedTime ? parseInt(formData.estimatedTime) : undefined;
     const isAutomated = formData.isAutomated === 'true';
-    // Parse platforms from JSON string or use array directly
-    let platforms: Platform[] = [];
-    if (formData.platforms) {
-      if (typeof formData.platforms === 'string') {
-        try {
-          // Try parsing as JSON first
-          platforms = JSON.parse(formData.platforms);
-        } catch {
-          // If not JSON, treat as comma-separated string (fallback)
-          platforms = formData.platforms.split(',').map(p => p.trim()).filter(p => p.length > 0) as Platform[];
-        }
-      } else if (Array.isArray(formData.platforms)) {
-        platforms = formData.platforms as Platform[];
-      }
-    }
 
     const response = await fetch(`/api/projects/${projectId}/testcases`, {
       method: 'POST',
@@ -456,7 +416,6 @@ export function CreateTestCaseDialog({
         evidence: formData.evidence || undefined,
         notes: formData.notes || undefined,
         isAutomated,
-        platforms: platforms.length > 0 ? platforms : undefined,
         platform: formData.platform || undefined,
         device: formData.device || undefined,
         domain: formData.domain || undefined,

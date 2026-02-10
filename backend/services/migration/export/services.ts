@@ -103,7 +103,6 @@ export class ExportService {
         evidence: true,
         notes: true,
         isAutomated: true,
-        platforms: true,
         platform: true,
         device: true,
         domain: true,
@@ -199,11 +198,6 @@ export class ExportService {
       const linkedDefectIds = defectsByTestCaseId.get(tc.id) || [];
       const defectIds = linkedDefectIds.join(', ');
 
-      // Format platforms array to string (e.g., "IOS / ANDROID / WEB")
-      const platformsFormatted = tc.platforms && tc.platforms.length > 0
-        ? tc.platforms.join(' / ')
-        : '';
-
       // Format layer to display value
       const layerFormatted = tc.layer || '';
 
@@ -253,7 +247,6 @@ export class ExportService {
         '根拠（ドキュメント）': tc.evidence || '',
         '備考': tc.notes || '',
         '自動化': isAutomatedFormatted,
-        '環境（iOS / Android / Web）': platformsFormatted,
         'プラットフォーム': tc.platform || '',
         '端末': tc.device || '',
         'ドメイン': tc.domain || '',

@@ -87,9 +87,6 @@ export class ImportService {
       '自動化': 'isAutomated',
       'automation': 'isAutomated',
       'isautomated': 'isAutomated',
-      '環境': 'platforms',
-      '環境（ios / android / web）': 'platforms',
-      'platforms': 'platforms',
       '端末': 'device',
       'device': 'device',
       'プラットフォーム': 'platform',
@@ -286,14 +283,6 @@ export class ImportService {
         const evidence = this.getRowValue(row, 'evidence');
         const notes = this.getRowValue(row, 'notes');
         const isAutomated = this.getRowValue(row, 'isAutomated');
-        let platforms = this.getRowValue(row, 'platforms');
-        // CSVテンプレートの "Environment" 列（iOS/Android/Web）を platforms のフォールバックとして使用
-        if ((platforms === undefined || platforms === null || (typeof platforms === 'string' && !platforms.toString().trim())) && this.getRowValue(row, 'environment') != null) {
-          const envVal = this.getRowValue(row, 'environment');
-          if (typeof envVal === 'string' && envVal.toString().trim()) {
-            platforms = envVal;
-          }
-        }
         const testType = this.getRowValue(row, 'testType');
         const device = this.getRowValue(row, 'device');
         const platformCol = this.getRowValue(row, 'platform');
@@ -784,42 +773,6 @@ export class ImportService {
           }
         }
 
-        // Platforms (環境) - array: "iOS / Android / Web" -> ["IOS", "ANDROID", "WEB"]
-        // Supports: "/", ",", "、", and whitespace separators
-        // Removes duplicates automatically
-        const platformsValue: ('IOS' | 'ANDROID' | 'WEB')[] = [];
-        const platformsSet = new Set<'IOS' | 'ANDROID' | 'WEB'>();
-        
-        if (platforms && typeof platforms === 'string' && platforms.toString().trim()) {
-          const platformsStr = platforms.toString().trim();
-          // Split by "/", ",", "、", or whitespace (space, tab, newline)
-          const platformList = platformsStr.split(/[\/,、\s]+/).map(p => p.trim().toUpperCase()).filter(p => p);
-          for (const platform of platformList) {
-            if (platform === 'IOS' || platform === 'IPHONE' || platform === 'IPAD') {
-              platformsSet.add('IOS');
-            } else if (platform === 'ANDROID') {
-              platformsSet.add('ANDROID');
-            } else if (platform === 'WEB') {
-              platformsSet.add('WEB');
-            }
-          }
-        } else if (Array.isArray(platforms)) {
-          // If already an array
-          for (const platform of platforms) {
-            const platformStr = String(platform).trim().toUpperCase();
-            if (platformStr === 'IOS' || platformStr === 'IPHONE' || platformStr === 'IPAD') {
-              platformsSet.add('IOS');
-            } else if (platformStr === 'ANDROID') {
-              platformsSet.add('ANDROID');
-            } else if (platformStr === 'WEB') {
-              platformsSet.add('WEB');
-            }
-          }
-        }
-        
-        // Convert Set to Array (automatically removes duplicates)
-        platformsValue.push(...Array.from(platformsSet));
-
         // Test Type (テスト種別) - convert to standard values
         // Valid values: NORMAL, ABNORMAL, NON_FUNCTIONAL, REGRESSION, DATA_INTEGRITY, STATE_TRANSITION, OPERATIONAL, FAILURE
         let testTypeValue: string | null = null;
@@ -972,7 +925,6 @@ export class ImportService {
               evidence: evidenceValue,
               notes: notesValue,
               isAutomated: isAutomatedValue,
-              platforms: platformsValue.length > 0 ? platformsValue : [],
               platform: platformValue,
               device: deviceValue,
               domain: domainValue,
@@ -1052,7 +1004,6 @@ export class ImportService {
             evidence: evidenceValue,
             notes: notesValue,
             isAutomated: isAutomatedValue,
-            platforms: platformsValue.length > 0 ? platformsValue : [],
             platform: platformValue,
             device: deviceValue,
             domain: domainValue,
