@@ -177,13 +177,13 @@ export function FileImportDialog({
       }
 
       // The response structure is: { message: "...", data: { success, failed, skipped, ... } }
-      const resultData = data.data;
-      
+      const resultData = data.data as Record<string, unknown> | null | undefined;
+
       if (!resultData || typeof resultData !== 'object') {
         console.error('Unexpected response structure:', data);
         throw new Error('Invalid response format from server');
       }
-      
+
       // Ensure all required fields exist with defaults
       const finalResult: ImportResult = {
         success: Number(resultData.success) || 0,
@@ -193,11 +193,11 @@ export function FileImportDialog({
         skippedItems: Array.isArray(resultData.skippedItems) ? resultData.skippedItems : [],
         imported: Array.isArray(resultData.imported) ? resultData.imported : [],
       };
-      
+
       setResult(finalResult);
-      
+
       // Auto-refresh only if all items imported successfully (no failures or skips)
-      if (Number(resultData.success) > 0 && Number(resultData.failed) === 0 && Number(resultData.skipped) === 0) {
+      if (finalResult.success > 0 && finalResult.failed === 0 && finalResult.skipped === 0) {
         setTimeout(() => {
           onImportComplete();
           // Reset state before closing
