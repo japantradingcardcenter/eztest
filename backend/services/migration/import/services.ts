@@ -275,7 +275,14 @@ export class ImportService {
         const evidence = this.getRowValue(row, 'evidence');
         const notes = this.getRowValue(row, 'notes');
         const isAutomated = this.getRowValue(row, 'isAutomated');
-        const platforms = this.getRowValue(row, 'platforms');
+        let platforms = this.getRowValue(row, 'platforms');
+        // CSVテンプレートの "Environment" 列（iOS/Android/Web）を platforms のフォールバックとして使用
+        if ((platforms === undefined || platforms === null || (typeof platforms === 'string' && !platforms.toString().trim())) && this.getRowValue(row, 'environment') != null) {
+          const envVal = this.getRowValue(row, 'environment');
+          if (typeof envVal === 'string' && envVal.toString().trim()) {
+            platforms = envVal;
+          }
+        }
         const testType = this.getRowValue(row, 'testType');
 
         // Determine title: use title column if provided, otherwise use assertionId as fallback

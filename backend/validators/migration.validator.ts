@@ -109,6 +109,8 @@ export const TEST_CASE_IMPORT_COLUMNS = {
   '環境': { normalized: 'platforms', required: false },
   '環境（iOS / Android / Web）': { normalized: 'platforms', required: false },
   '環境（ios / android / web）': { normalized: 'platforms', required: false },
+  'Environment': { normalized: 'platforms', required: false },
+  'environment': { normalized: 'platforms', required: false },
   'Platforms': { normalized: 'platforms', required: false },
   'platforms': { normalized: 'platforms', required: false },
   
