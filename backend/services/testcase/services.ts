@@ -262,7 +262,7 @@ export class TestCaseService {
           select: { testCases: true }
         }
       },
-      orderBy: { updatedAt: 'desc' }
+      orderBy: { order: 'asc' }
     });
 
     if (groupBy === 'module') {
