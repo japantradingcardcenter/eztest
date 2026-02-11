@@ -12,7 +12,7 @@ export class MigrationController {
     try {
       const formData = await req.formData();
       const file = formData.get('file') as File;
-      const updateExisting = formData.get('updateExisting') === 'true' || formData.get('updateExisting') === true;
+      const updateExisting = formData.get('updateExisting') === 'true';
 
       if (!file) {
         throw new ValidationException('No file uploaded');
