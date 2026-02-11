@@ -83,13 +83,13 @@ export function TestCaseHeader({
       maxLength={200}
       badges={[
         { 
-          label: 'Priority', 
+          label: '優先度', 
           value: priorityLabel, 
           className: priorityBadgeProps.className,
           style: priorityBadgeProps.style 
         },
         { 
-          label: 'Status', 
+          label: '状態', 
           value: statusLabel, 
           className: statusBadgeProps.className,
           style: statusBadgeProps.style 

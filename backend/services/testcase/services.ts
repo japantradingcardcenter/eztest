@@ -23,12 +23,9 @@ interface CreateTestCaseInput {
   rtcId?: string | null;
   flowId?: string | null;
   layer?: 'SMOKE' | 'CORE' | 'EXTENDED' | 'UNKNOWN' | null;
-  targetType?: 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'PERFORMANCE' | 'SECURITY' | 'USABILITY' | 'COMPATIBILITY' | 'API' | 'SCREEN' | null;
   testType?: string | null;
   evidence?: string | null;
   notes?: string | null;
-  isAutomated?: boolean;
-  platforms?: ('IOS' | 'ANDROID' | 'WEB')[];
   platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
   device?: 'iPhone' | 'Android' | 'PC' | null;
   domain?: string | null;
@@ -53,12 +50,9 @@ interface UpdateTestCaseInput {
   rtcId?: string | null;
   flowId?: string | null;
   layer?: 'SMOKE' | 'CORE' | 'EXTENDED' | 'UNKNOWN' | null;
-  targetType?: 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'PERFORMANCE' | 'SECURITY' | 'USABILITY' | 'COMPATIBILITY' | 'API' | 'SCREEN' | null;
   testType?: string | null;
   evidence?: string | null;
   notes?: string | null;
-  isAutomated?: boolean;
-  platforms?: ('IOS' | 'ANDROID' | 'WEB')[];
   platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
   device?: 'iPhone' | 'Android' | 'PC' | null;
   domain?: string | null;
@@ -624,12 +618,9 @@ export class TestCaseService {
             rtcId: data.rtcId,
             flowId: data.flowId,
             layer: data.layer,
-            targetType: data.targetType,
             testType: data.testType,
             evidence: data.evidence,
             notes: data.notes,
-            isAutomated: data.isAutomated ?? false,
-            platforms: data.platforms || [],
             platform: data.platform ?? undefined,
             device: data.device ?? undefined,
             domain: data.domain ?? undefined,
@@ -783,12 +774,9 @@ export class TestCaseService {
     if (data.rtcId !== undefined) updateData.rtcId = data.rtcId;
     if (data.flowId !== undefined) updateData.flowId = data.flowId;
     if (data.layer !== undefined) updateData.layer = data.layer;
-    if (data.targetType !== undefined) updateData.targetType = data.targetType;
     if (data.testType !== undefined) updateData.testType = data.testType;
     if (data.evidence !== undefined) updateData.evidence = data.evidence;
     if (data.notes !== undefined) updateData.notes = data.notes;
-    if (data.isAutomated !== undefined) updateData.isAutomated = data.isAutomated;
-    if (data.platforms !== undefined) updateData.platforms = data.platforms;
     if (data.platform !== undefined) updateData.platform = data.platform;
     if (data.device !== undefined) updateData.device = data.device;
     if (data.domain !== undefined) updateData.domain = data.domain;

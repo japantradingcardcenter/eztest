@@ -98,7 +98,7 @@ export function TestCaseDetailsCard({
           {/* Priority and Status */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority">優先度</Label>
               <Select
                 value={formData.priority}
                 onValueChange={(value) => handleFieldChange('priority', value)}
@@ -124,7 +124,7 @@ export function TestCaseDetailsCard({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">状態</Label>
               <Select
                 value={formData.status}
                 onValueChange={(value) => handleFieldChange('status', value)}
@@ -212,27 +212,6 @@ export function TestCaseDetailsCard({
                     <SelectItem value="CORE">Core</SelectItem>
                     <SelectItem value="EXTENDED">Extended</SelectItem>
                     <SelectItem value="UNKNOWN">Unknown</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="targetType">対象</Label>
-                <Select
-                  value={formData.targetType || ''}
-                  onValueChange={(value) => handleFieldChange('targetType', value)}
-                >
-                  <SelectTrigger variant="glass" id="targetType">
-                    <SelectValue placeholder="Select target type" />
-                  </SelectTrigger>
-                  <SelectContent variant="glass">
-                    <SelectItem value="API">API</SelectItem>
-                    <SelectItem value="SCREEN">画面</SelectItem>
-                    <SelectItem value="FUNCTIONAL">Functional</SelectItem>
-                    <SelectItem value="NON_FUNCTIONAL">Non-Functional</SelectItem>
-                    <SelectItem value="PERFORMANCE">Performance</SelectItem>
-                    <SelectItem value="SECURITY">Security</SelectItem>
-                    <SelectItem value="USABILITY">Usability</SelectItem>
-                    <SelectItem value="COMPATIBILITY">Compatibility</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -350,7 +329,7 @@ export function TestCaseDetailsCard({
 
           {/* Estimated Time */}
           <div className="space-y-2 pt-6 mt-6 border-t border-white/10">
-            <Label htmlFor="estimatedTime">Estimated Time (minutes)</Label>
+            <Label htmlFor="estimatedTime">想定時間（分）</Label>
             <Input
               id="estimatedTime"
               variant="glass"
@@ -385,7 +364,7 @@ export function TestCaseDetailsCard({
 
           {/* Preconditions with Attachments */}
           <div className="space-y-2">
-            <Label htmlFor="preconditions">Preconditions</Label>
+            <Label htmlFor="preconditions">前提条件</Label>
             <TextareaWithAttachments
               fieldName="preconditions"
               variant="glass"
@@ -405,7 +384,7 @@ export function TestCaseDetailsCard({
 
           {/* Postconditions with Attachments */}
           <div className="space-y-2">
-            <Label htmlFor="postconditions">Postconditions</Label>
+            <Label htmlFor="postconditions">事後条件</Label>
             <TextareaWithAttachments
               fieldName="postconditions"
               variant="glass"
@@ -425,7 +404,7 @@ export function TestCaseDetailsCard({
 
           {/* Test Data */}
           <div className="space-y-2">
-            <Label htmlFor="testData">Test Data</Label>
+            <Label htmlFor="testData">テストデータ</Label>
             <Textarea
               id="testData"
               variant="glass"
@@ -438,26 +417,9 @@ export function TestCaseDetailsCard({
             {errors.testData && <p className="text-xs text-red-400">{errors.testData}</p>}
           </div>
 
-          {/* isAutomated */}
-          <div className="space-y-2">
-            <Label htmlFor="isAutomated">自動化</Label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="isAutomated"
-                checked={formData.isAutomated || false}
-                onChange={(e) => handleFieldChange('isAutomated', e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="isAutomated" className="text-sm text-white/70">
-                自動化テスト
-              </label>
-            </div>
-          </div>
-
           {/* Evidence */}
           <div className="space-y-2">
-            <Label htmlFor="evidence">根拠</Label>
+            <Label htmlFor="evidence">根拠コード</Label>
             <Textarea
               id="evidence"
               variant="glass"
@@ -493,7 +455,7 @@ export function TestCaseDetailsCard({
           )}
 
           {/* Custom Fields Section */}
-          {(testCase.rtcId || testCase.flowId || testCase.layer || testCase.targetType || testCase.testType || testCase.platform || testCase.device || testCase.domain || testCase.functionName || testCase.executionType || testCase.automationStatus) && (
+          {(testCase.rtcId || testCase.flowId || testCase.layer || testCase.testType || testCase.platform || testCase.device || testCase.domain || testCase.functionName || testCase.executionType || testCase.automationStatus) && (
             <div className="border-t border-white/10 pt-6">
               <h4 className="text-sm font-medium text-white/60 mb-3">
                 識別情報
@@ -523,12 +485,6 @@ export function TestCaseDetailsCard({
                     <p className="text-sm text-white/90">
                       {testTypeOptions.find(opt => opt.value === testCase.testType)?.label || testCase.testType}
                     </p>
-                  </div>
-                )}
-                {testCase.targetType && (
-                  <div>
-                    <span className="text-xs text-white/50">対象</span>
-                    <p className="text-sm text-white/90">{testCase.targetType}</p>
                   </div>
                 )}
                 {testCase.platform && (
@@ -571,41 +527,12 @@ export function TestCaseDetailsCard({
             </div>
           )}
 
-          {/* Platforms */}
-          {testCase.platforms && testCase.platforms.length > 0 && (
-            <div className="border-t border-white/10 pt-6">
-              <div>
-                <span className="text-xs text-white/50">環境</span>
-                <div className="flex gap-1 mt-1">
-                  {testCase.platforms.map((platform) => (
-                    <span
-                      key={platform}
-                      className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded"
-                    >
-                      {platform}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* isAutomated */}
-          <div className="border-t border-white/10 pt-6">
-            <h4 className="text-sm font-medium text-white/60 mb-2">
-              自動化
-            </h4>
-            <span className={`text-sm px-2 py-1 rounded ${testCase.isAutomated ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
-              {testCase.isAutomated ? '自動化済み' : '手動'}
-            </span>
-          </div>
-
           {/* Evidence */}
           {testCase.evidence && (
             <div className="border-t border-white/10 pt-6">
               <h4 className="text-sm font-medium text-white/60 mb-2">
-                根拠
-              </h4>
+根拠コード
+            </h4>
               <p className="text-white/90 whitespace-pre-wrap break-words">
                 {testCase.evidence}
               </p>
@@ -644,7 +571,7 @@ export function TestCaseDetailsCard({
           {testCase.estimatedTime && (
             <div className="border-t border-white/10 pt-6">
               <h4 className="text-sm font-medium text-white/60 mb-1">
-                Estimated Time
+                想定時間
               </h4>
               <div className="flex items-center gap-2 text-white/90">
                 <Clock className="w-4 h-4" />
@@ -657,7 +584,7 @@ export function TestCaseDetailsCard({
             <div className="border-t border-white/10 pt-6">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-medium text-white/60">
-                  Preconditions
+                  前提条件
                 </h4>
                 {preconditionAttachments.length > 0 ? (
                   <span className="text-xs text-white/50">{preconditionAttachments.length} Attachments</span>
@@ -690,7 +617,7 @@ export function TestCaseDetailsCard({
             <div className="border-t border-white/10 pt-6">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-medium text-white/60">
-                  Postconditions
+                  事後条件
                 </h4>
                 {postconditionAttachments.length > 0 ? (
                   <span className="text-xs text-white/50">{postconditionAttachments.length} Attachments</span>
@@ -722,7 +649,7 @@ export function TestCaseDetailsCard({
           {testCase.testData && (
             <div className="border-t border-white/10 pt-6">
               <h4 className="text-sm font-medium text-white/60 mb-2">
-                Test Data
+                テストデータ
               </h4>
               <p className="text-white/90 whitespace-pre-wrap break-words">
                 {testCase.testData}

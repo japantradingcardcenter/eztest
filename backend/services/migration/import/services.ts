@@ -35,7 +35,22 @@ export class ImportService {
     
     // Map export format column names to import format
     const columnMap: Record<string, string> = {
-      // New test case fields
+      // 日本語列名（CSV/画面）
+      'テストケースid': 'testCaseId',
+      'テストケース名': 'title',
+      'モジュール・機能': 'module',
+      '優先度': 'priority',
+      '前提条件': 'preconditions',
+      'テスト手順': 'testSteps',
+      'テストデータ': 'testData',
+      '期待結果': 'expectedResult',
+      '状態': 'status',
+      '不具合id': 'defectId',
+      '説明': 'description',
+      '想定時間（分）': 'estimatedTime',
+      '事後条件': 'postconditions',
+      'テストスイート': 'testsuite',
+      // English (backward compatibility)
       'test case id': 'testCaseId',
       'testcase id': 'testCaseId',
       'test case title': 'title',
@@ -54,11 +69,9 @@ export class ImportService {
       'expected result': 'expectedResult',
       'expectedresult': 'expectedResult',
       'status': 'status',
-      // Defect linking for test cases
       'defect id': 'defectId',
       'defectid': 'defectId',
       'defect': 'defectId',
-      // Older fields (kept for backward compatibility)
       'description': 'description',
       'estimated time (minutes)': 'estimatedTime',
       'estimated time': 'estimatedTime',
@@ -74,22 +87,12 @@ export class ImportService {
       'flow id': 'flowId',
       'flowid': 'flowId',
       'layer': 'layer',
-      '対象': 'targetType',
-      '対象（api/画面）': 'targetType',
-      '対象（api / 画面）': 'targetType',
-      'target type': 'targetType',
-      'targettype': 'targetType',
       '根拠': 'evidence',
       '根拠（ドキュメント）': 'evidence',
+      '根拠コード': 'evidence',
       'evidence': 'evidence',
       '備考': 'notes',
       'notes': 'notes',
-      '自動化': 'isAutomated',
-      'automation': 'isAutomated',
-      'isautomated': 'isAutomated',
-      '環境': 'platforms',
-      '環境（ios / android / web）': 'platforms',
-      'platforms': 'platforms',
       '端末': 'device',
       'device': 'device',
       'プラットフォーム': 'platform',
@@ -266,9 +269,10 @@ export class ImportService {
         const preconditions = this.getRowValue(row, 'preconditions');
         const postconditions = this.getRowValue(row, 'postconditions');
         const moduleValue = this.getRowValue(row, 'module');
-        // Test Suites 列: 正規化キーで取得、なければテンプレートでよく使う生ヘッダ名（Test Suites / Test Suite）で取得
+        // テストスイート列: 正規化キーで取得、なければ日本語/英語ヘッダ名で取得
         const testsuiteRaw =
           this.getRowValue(row, 'testsuite') ??
+          (row as Record<string, unknown>)['テストスイート'] ??
           (row as Record<string, unknown>)['Test Suites'] ??
           (row as Record<string, unknown>)['Test Suite'];
         const testsuite =
@@ -282,18 +286,8 @@ export class ImportService {
         const rtcId = this.getRowValue(row, 'rtcId');
         const flowId = this.getRowValue(row, 'flowId');
         const layer = this.getRowValue(row, 'layer');
-        const targetType = this.getRowValue(row, 'targetType');
         const evidence = this.getRowValue(row, 'evidence');
         const notes = this.getRowValue(row, 'notes');
-        const isAutomated = this.getRowValue(row, 'isAutomated');
-        let platforms = this.getRowValue(row, 'platforms');
-        // CSVテンプレートの "Environment" 列（iOS/Android/Web）を platforms のフォールバックとして使用
-        if ((platforms === undefined || platforms === null || (typeof platforms === 'string' && !platforms.toString().trim())) && this.getRowValue(row, 'environment') != null) {
-          const envVal = this.getRowValue(row, 'environment');
-          if (typeof envVal === 'string' && envVal.toString().trim()) {
-            platforms = envVal;
-          }
-        }
         const testType = this.getRowValue(row, 'testType');
         const device = this.getRowValue(row, 'device');
         const platformCol = this.getRowValue(row, 'platform');
@@ -302,12 +296,12 @@ export class ImportService {
         const executionTypeCol = this.getRowValue(row, 'executionType');
         const automationStatusCol = this.getRowValue(row, 'automationStatus');
 
-        // Determine title: Test Case Title is required
+        // 必須: テストケース名
         let testCaseTitle: string;
         if (title && typeof title === 'string' && title.toString().trim() !== '') {
           testCaseTitle = title.toString().trim();
         } else {
-          throw new Error('Test Case Title is required. Please provide "Test Case Title"');
+          throw new Error('必須列「テストケース名」がありません。');
         }
 
         // RTC-ID の文字列（既存テストケース判定に使用）
@@ -731,37 +725,7 @@ export class ImportService {
           }
         }
 
-        // Target Type (convert: "API" -> "API", "画面" -> "SCREEN", "API/画面" -> "API" or "SCREEN")
-        let targetTypeValue: 'API' | 'SCREEN' | 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'PERFORMANCE' | 'SECURITY' | 'USABILITY' | 'COMPATIBILITY' | null = null;
-        if (targetType && typeof targetType === 'string' && targetType.toString().trim()) {
-          const targetTypeStr = targetType.toString().trim();
-          const targetTypeUpper = targetTypeStr.toUpperCase();
-          
-          // Check for exact matches first
-          if (targetTypeUpper === 'API' || targetTypeUpper === 'SCREEN' ||
-              targetTypeUpper === 'FUNCTIONAL' || targetTypeUpper === 'NON_FUNCTIONAL' ||
-              targetTypeUpper === 'PERFORMANCE' || targetTypeUpper === 'SECURITY' ||
-              targetTypeUpper === 'USABILITY' || targetTypeUpper === 'COMPATIBILITY') {
-            targetTypeValue = targetTypeUpper as 'API' | 'SCREEN' | 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'PERFORMANCE' | 'SECURITY' | 'USABILITY' | 'COMPATIBILITY';
-          } else if (targetTypeStr.includes('API') || targetTypeStr.includes('画面')) {
-            // Handle "API/画面" or "API / 画面" - default to API if contains API, otherwise SCREEN
-            if (targetTypeStr.includes('API') || targetTypeStr.toUpperCase().includes('API')) {
-              targetTypeValue = 'API';
-            } else if (targetTypeStr.includes('画面') || targetTypeStr.toUpperCase().includes('SCREEN')) {
-              targetTypeValue = 'SCREEN';
-            }
-          } else if (targetTypeStr.startsWith('POST ') || targetTypeStr.startsWith('GET ') || 
-                     targetTypeStr.startsWith('PUT ') || targetTypeStr.startsWith('DELETE ') ||
-                     targetTypeStr.startsWith('PATCH ')) {
-            // If it starts with HTTP method, it's likely an API endpoint
-            targetTypeValue = 'API';
-          } else if (targetTypeStr.includes('画面') || targetTypeStr.includes('フロー')) {
-            // If it contains "画面" or "フロー", it's likely a screen/flow
-            targetTypeValue = 'SCREEN';
-          }
-        }
-
-        // Evidence (根拠)
+        // Evidence (根拠コード)
         const evidenceValue = evidence && typeof evidence === 'string' && evidence.toString().trim()
           ? evidence.toString().trim()
           : null;
@@ -770,55 +734,6 @@ export class ImportService {
         const notesValue = notes && typeof notes === 'string' && notes.toString().trim()
           ? notes.toString().trim()
           : null;
-
-        // Is Automated (自動化) - boolean
-        let isAutomatedValue = false;
-        if (isAutomated !== undefined && isAutomated !== null) {
-          if (typeof isAutomated === 'boolean') {
-            isAutomatedValue = isAutomated;
-          } else if (typeof isAutomated === 'string') {
-            const automatedStr = isAutomated.toString().trim().toLowerCase();
-            isAutomatedValue = automatedStr === 'true' || automatedStr === '1' || automatedStr === 'yes' || automatedStr === '自動化';
-          } else if (typeof isAutomated === 'number') {
-            isAutomatedValue = isAutomated !== 0;
-          }
-        }
-
-        // Platforms (環境) - array: "iOS / Android / Web" -> ["IOS", "ANDROID", "WEB"]
-        // Supports: "/", ",", "、", and whitespace separators
-        // Removes duplicates automatically
-        const platformsValue: ('IOS' | 'ANDROID' | 'WEB')[] = [];
-        const platformsSet = new Set<'IOS' | 'ANDROID' | 'WEB'>();
-        
-        if (platforms && typeof platforms === 'string' && platforms.toString().trim()) {
-          const platformsStr = platforms.toString().trim();
-          // Split by "/", ",", "、", or whitespace (space, tab, newline)
-          const platformList = platformsStr.split(/[\/,、\s]+/).map(p => p.trim().toUpperCase()).filter(p => p);
-          for (const platform of platformList) {
-            if (platform === 'IOS' || platform === 'IPHONE' || platform === 'IPAD') {
-              platformsSet.add('IOS');
-            } else if (platform === 'ANDROID') {
-              platformsSet.add('ANDROID');
-            } else if (platform === 'WEB') {
-              platformsSet.add('WEB');
-            }
-          }
-        } else if (Array.isArray(platforms)) {
-          // If already an array
-          for (const platform of platforms) {
-            const platformStr = String(platform).trim().toUpperCase();
-            if (platformStr === 'IOS' || platformStr === 'IPHONE' || platformStr === 'IPAD') {
-              platformsSet.add('IOS');
-            } else if (platformStr === 'ANDROID') {
-              platformsSet.add('ANDROID');
-            } else if (platformStr === 'WEB') {
-              platformsSet.add('WEB');
-            }
-          }
-        }
-        
-        // Convert Set to Array (automatically removes duplicates)
-        platformsValue.push(...Array.from(platformsSet));
 
         // Test Type (テスト種別) - convert to standard values
         // Valid values: NORMAL, ABNORMAL, NON_FUNCTIONAL, REGRESSION, DATA_INTEGRITY, STATE_TRANSITION, OPERATIONAL, FAILURE
@@ -967,12 +882,9 @@ export class ImportService {
               rtcId: rtcIdValue,
               flowId: flowIdValue,
               layer: layerValue,
-              targetType: targetTypeValue,
               testType: testTypeValue,
               evidence: evidenceValue,
               notes: notesValue,
-              isAutomated: isAutomatedValue,
-              platforms: platformsValue.length > 0 ? platformsValue : [],
               platform: platformValue,
               device: deviceValue,
               domain: domainValue,
@@ -1047,12 +959,9 @@ export class ImportService {
             rtcId: rtcIdValue,
             flowId: flowIdValue,
             layer: layerValue,
-            targetType: targetTypeValue,
             testType: testTypeValue,
             evidence: evidenceValue,
             notes: notesValue,
-            isAutomated: isAutomatedValue,
-            platforms: platformsValue.length > 0 ? platformsValue : [],
             platform: platformValue,
             device: deviceValue,
             domain: domainValue,

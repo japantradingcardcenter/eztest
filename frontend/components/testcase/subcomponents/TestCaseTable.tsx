@@ -103,7 +103,7 @@ export function TestCaseTable({
               {row.title && row.title.length > 40 && (
                 <HoverCardContent side="top" className="w-80">
                   <div className="space-y-2">
-                    <h4 className="text-sm font-semibold text-white">Test Case Title</h4>
+                    <h4 className="text-sm font-semibold text-white">テストケース名</h4>
                     <p className="text-sm text-white/80 break-words">{row.title}</p>
                     {row._count.defects > 0 && (
                       <div className="pt-2 border-t border-white/10">
@@ -181,23 +181,6 @@ export function TestCaseTable({
             className="w-fit text-xs px-2 py-0.5 bg-purple-500/10 text-purple-400 border-purple-500/20"
           >
             {row.layer}
-          </Badge>
-        ) : (
-          <span className="text-xs text-white/40">-</span>
-        )
-      ),
-    },
-    {
-      key: 'targetType',
-      label: '対象',
-      width: '80px',
-      render: (row) => (
-        row.targetType ? (
-          <Badge
-            variant="outline"
-            className="w-fit text-xs px-2 py-0.5 bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
-          >
-            {row.targetType}
           </Badge>
         ) : (
           <span className="text-xs text-white/40">-</span>
