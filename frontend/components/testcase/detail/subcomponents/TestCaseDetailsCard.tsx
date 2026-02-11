@@ -508,18 +508,15 @@ export function TestCaseDetailsCard({
                   <span className="text-xs text-white/50">機能</span>
                   <p className="text-sm text-white/90">{testCase.functionName || '（未設定）'}</p>
                 </div>
-                {testCase.executionType && (
-                  <div>
-                    <span className="text-xs text-white/50">実行方式</span>
-                    <p className="text-sm text-white/90">{testCase.executionType}</p>
-                  </div>
-                )}
-                {testCase.automationStatus && (
-                  <div>
-                    <span className="text-xs text-white/50">自動化状況</span>
-                    <p className="text-sm text-white/90">{testCase.automationStatus}</p>
-                  </div>
-                )}
+                {/* 実行方式と自動化状況は常に表示 */}
+                <div>
+                  <span className="text-xs text-white/50">実行方式</span>
+                  <p className="text-sm text-white/90">{testCase.executionType || '（未設定）'}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-white/50">自動化状況</span>
+                  <p className="text-sm text-white/90">{testCase.automationStatus || '（未設定）'}</p>
+                </div>
               </div>
             </div>
           )}
