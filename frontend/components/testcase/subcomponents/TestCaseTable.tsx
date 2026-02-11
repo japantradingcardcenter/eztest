@@ -163,44 +163,11 @@ export function TestCaseTable({
       ),
     },
     {
-      key: 'layer',
-      label: 'LAYER',
-      width: '80px',
-      render: (row) => (
-        row.layer ? (
-          <Badge
-            variant="outline"
-            className="w-fit text-xs px-2 py-0.5 bg-purple-500/10 text-purple-400 border-purple-500/20"
-          >
-            {row.layer}
-          </Badge>
-        ) : (
-          <span className="text-xs text-white/40">-</span>
-        )
-      ),
-    },
-    {
       key: 'platform',
       label: 'プラットフォーム',
       width: '100px',
       render: (row) => (
         <span className="text-xs text-white/70 truncate">{row.platform || '-'}</span>
-      ),
-    },
-    {
-      key: 'domain',
-      label: 'ドメイン',
-      width: '100px',
-      render: (row) => (
-        <span className="text-xs text-white/70 truncate">{row.domain || '-'}</span>
-      ),
-    },
-    {
-      key: 'functionName',
-      label: '機能',
-      width: '100px',
-      render: (row) => (
-        <span className="text-xs text-white/70 truncate">{row.functionName || '-'}</span>
       ),
     },
     {

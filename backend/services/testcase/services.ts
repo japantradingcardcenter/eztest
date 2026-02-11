@@ -1,5 +1,53 @@
 import { prisma } from '@/lib/prisma';
 
+/**
+ * TestCase 一覧取得用の select（platform, device 等が DB にない環境用）
+ * これらの列がある環境では通常の include が使われる
+ */
+const TEST_CASE_LIST_SELECT = {
+  id: true,
+  tcId: true,
+  projectId: true,
+  moduleId: true,
+  suiteId: true,
+  title: true,
+  description: true,
+  expectedResult: true,
+  priority: true,
+  status: true,
+  estimatedTime: true,
+  preconditions: true,
+  postconditions: true,
+  testData: true,
+  pendingDefectIds: true,
+  rtcId: true,
+  flowId: true,
+  layer: true,
+  testType: true,
+  evidence: true,
+  notes: true,
+  createdById: true,
+  createdAt: true,
+  updatedAt: true,
+  module: { select: { id: true, name: true, updatedAt: true } },
+  suite: { select: { id: true, name: true } },
+  createdBy: { select: { id: true, name: true, email: true, avatar: true } },
+  _count: {
+    select: {
+      steps: true,
+      results: true,
+      requirements: true,
+      defects: {
+        where: {
+          defect: {
+            status: { not: 'CLOSED' },
+          },
+        },
+      },
+    },
+  },
+} as const;
+
 interface CreateTestCaseInput {
   projectId: string;
   moduleId?: string;
@@ -151,35 +199,7 @@ export class TestCaseService {
 
     return await prisma.testCase.findMany({
       where,
-      include: {
-        suite: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        module: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-          },
-        },
-        _count: {
-          select: {
-            steps: true,
-            results: true,
-            requirements: true,
-          },
-        },
-      },
+      select: TEST_CASE_LIST_SELECT,
       orderBy: {
         createdAt: 'desc',
       },
@@ -251,25 +271,7 @@ export class TestCaseService {
       // Get all test cases for grouping, sorted by updatedAt DESC (most recent first)
       const allTestCases = await prisma.testCase.findMany({
         where,
-        include: {
-          module: { select: { id: true, name: true, updatedAt: true } },
-          suite: { select: { id: true, name: true } },
-          createdBy: { select: { id: true, name: true, email: true, avatar: true } },
-          _count: { 
-            select: { 
-              steps: true, 
-              results: true, 
-              requirements: true,
-              defects: {
-                where: {
-                  defect: {
-                    status: { not: 'CLOSED' } // Only count open defects
-                  }
-                }
-              }
-            } 
-          }
-        },
+        select: TEST_CASE_LIST_SELECT,
         orderBy: { updatedAt: 'desc' }  // Most recently updated test cases first
       });
 
@@ -397,25 +399,7 @@ export class TestCaseService {
         where,
         skip,
         take: limit,
-        include: {
-          module: { select: { id: true, name: true } },
-          suite: { select: { id: true, name: true } },
-          createdBy: { select: { id: true, name: true, email: true, avatar: true } },
-          _count: { 
-            select: { 
-              steps: true, 
-              results: true, 
-              requirements: true,
-              defects: {
-                where: {
-                  defect: {
-                    status: { not: 'CLOSED' } // Only count open defects
-                  }
-                }
-              }
-            } 
-          }
-        },
+        select: TEST_CASE_LIST_SELECT,
         orderBy: { updatedAt: 'desc' }  // Most recently updated first
       });
 
@@ -440,21 +424,26 @@ export class TestCaseService {
    * Get distinct domain and functionName values for a project (for filter dropdowns)
    */
   async getTestCaseFilterOptions(projectId: string): Promise<{ domains: string[]; functionNames: string[] }> {
-    const [domainRows, functionNameRows] = await Promise.all([
-      prisma.testCase.findMany({
-        where: { projectId, domain: { not: null } },
-        select: { domain: true },
-        distinct: ['domain'],
-      }),
-      prisma.testCase.findMany({
-        where: { projectId, functionName: { not: null } },
-        select: { functionName: true },
-        distinct: ['functionName'],
-      }),
-    ]);
-    const domains = domainRows.map(r => r.domain).filter((s): s is string => s != null && s.trim() !== '').sort();
-    const functionNames = functionNameRows.map(r => r.functionName).filter((s): s is string => s != null && s.trim() !== '').sort();
-    return { domains, functionNames };
+    try {
+      const [domainRows, functionNameRows] = await Promise.all([
+        prisma.testCase.findMany({
+          where: { projectId, domain: { not: null } },
+          select: { domain: true },
+          distinct: ['domain'],
+        }),
+        prisma.testCase.findMany({
+          where: { projectId, functionName: { not: null } },
+          select: { functionName: true },
+          distinct: ['functionName'],
+        }),
+      ]);
+      const domains = domainRows.map(r => r.domain).filter((s): s is string => s != null && s.trim() !== '').sort();
+      const functionNames = functionNameRows.map(r => r.functionName).filter((s): s is string => s != null && s.trim() !== '').sort();
+      return { domains, functionNames };
+    } catch {
+      // domain/functionName 列が DB にない環境では空配列を返す
+      return { domains: [], functionNames: [] };
+    }
   }
 
   /**
@@ -842,6 +831,7 @@ export class TestCaseService {
 
     const testCase = await prisma.testCase.findFirst({
       where: whereClause,
+      select: { id: true }, // 存在確認のみ。platform 等が DB にない環境でも動作するため
     });
 
     if (!testCase) {
