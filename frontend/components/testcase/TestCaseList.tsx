@@ -161,6 +161,13 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
     setCurrentPage(1); // Reset to first page when items per page changes
   };
 
+  // Check if any filters are active
+  const hasActiveFilters = 
+    searchQuery !== '' ||
+    statusFilter !== 'all' ||
+    domainFilter !== '' ||
+    functionNameFilter !== '';
+
   // Show modules that have test cases in the current page OR are truly empty (on last page only)
   const modulesForTable = testCases.length === 0 
     ? modules 
@@ -350,7 +357,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
           <>
             <TestCaseTable
               testCases={testCases}
-              groupedByModule={true}
+              groupedByModule={!hasActiveFilters}
               modules={modulesForTable}
               onDelete={handleDeleteClick}
               onClick={handleCardClick}
