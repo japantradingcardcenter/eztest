@@ -863,36 +863,52 @@ export class ImportService {
                 }))
             : [];
 
+        const baseUpdateData = {
+          title: testCaseTitle,
+          description: description ? description.toString().trim() : null,
+          expectedResult: finalExpectedResult,
+          priority: priorityValue,
+          status: statusValue,
+          estimatedTime: estimatedTimeValue,
+          preconditions: preconditions ? preconditions.toString().trim() : null,
+          postconditions: postconditions ? postconditions.toString().trim() : null,
+          testData: testDataValue,
+          pendingDefectIds: pendingDefectIds.length > 0 ? pendingDefectIds.join(', ') : null,
+          moduleId: moduleId ?? null,
+          suiteId: suiteId ?? null,
+          rtcId: rtcIdValue,
+          flowId: flowIdValue,
+          layer: layerValue,
+          testType: testTypeValue,
+          evidence: evidenceValue,
+          notes: notesValue,
+        };
+        const extendedUpdateData = {
+          platform: platformValue,
+          device: deviceValue,
+          domain: domainValue,
+          functionName: functionNameValue,
+          executionType: executionTypeValue,
+          automationStatus: automationStatusValue,
+        };
+
         if (existingTestCaseToUpdate) {
-          await prisma.testCase.update({
-            where: { id: existingTestCaseToUpdate.id },
-            data: {
-              title: testCaseTitle,
-              description: description ? description.toString().trim() : null,
-              expectedResult: finalExpectedResult,
-              priority: priorityValue,
-              status: statusValue,
-              estimatedTime: estimatedTimeValue,
-              preconditions: preconditions ? preconditions.toString().trim() : null,
-              postconditions: postconditions ? postconditions.toString().trim() : null,
-              testData: testDataValue,
-              pendingDefectIds: pendingDefectIds.length > 0 ? pendingDefectIds.join(', ') : null,
-              moduleId: moduleId ?? null,
-              suiteId: suiteId ?? null,
-              rtcId: rtcIdValue,
-              flowId: flowIdValue,
-              layer: layerValue,
-              testType: testTypeValue,
-              evidence: evidenceValue,
-              notes: notesValue,
-              platform: platformValue,
-              device: deviceValue,
-              domain: domainValue,
-              functionName: functionNameValue,
-              executionType: executionTypeValue,
-              automationStatus: automationStatusValue,
-            },
-          });
+          try {
+            await prisma.testCase.update({
+              where: { id: existingTestCaseToUpdate.id },
+              data: { ...baseUpdateData, ...extendedUpdateData },
+            });
+          } catch (extendedErr) {
+            const errMsg = extendedErr instanceof Error ? extendedErr.message : '';
+            if (errMsg.includes('Unknown argument')) {
+              await prisma.testCase.update({
+                where: { id: existingTestCaseToUpdate.id },
+                data: baseUpdateData,
+              });
+            } else {
+              throw extendedErr;
+            }
+          }
           await prisma.testStep.deleteMany({ where: { testCaseId: existingTestCaseToUpdate.id } });
           if (filteredSteps.length > 0) {
             await prisma.testStep.createMany({
@@ -931,9 +947,7 @@ export class ImportService {
           existingTcIds.add(tcId);
 
           // Create test case
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const testCase = await (prisma.testCase.create as any)({
-          data: {
+          const baseCreateData = {
             tcId,
             projectId,
             title: testCaseTitle,
@@ -955,22 +969,38 @@ export class ImportService {
             moduleId,
             suiteId,
             createdById: userId,
-            // New fields for enhanced test case management
             rtcId: rtcIdValue,
             flowId: flowIdValue,
             layer: layerValue,
             testType: testTypeValue,
             evidence: evidenceValue,
             notes: notesValue,
+            steps: filteredSteps.length > 0 ? { create: filteredSteps } : undefined,
+          };
+          const extendedCreateData = {
             platform: platformValue,
             device: deviceValue,
             domain: domainValue,
             functionName: functionNameValue,
             executionType: executionTypeValue,
             automationStatus: automationStatusValue,
-            steps: filteredSteps.length > 0 ? { create: filteredSteps } : undefined,
-          },
-        });
+          };
+
+          let testCase;
+          try {
+            testCase = await prisma.testCase.create({
+              data: { ...baseCreateData, ...extendedCreateData },
+            });
+          } catch (extendedErr) {
+            const errMsg = extendedErr instanceof Error ? extendedErr.message : '';
+            if (errMsg.includes('Unknown argument')) {
+              testCase = await prisma.testCase.create({
+                data: baseCreateData,
+              });
+            } else {
+              throw extendedErr;
+            }
+          }
 
           if (suiteId) {
             await prisma.testCaseSuite.create({
