@@ -29,9 +29,11 @@ export interface MigrationResult {
 export class ImportService {
   /**
    * Normalize column names to handle both export format and import format
+   * _2, _3 等の重複サフィックスを除去（Excel等で全列に _2 が付く場合に対応）
    */
   private normalizeColumnName(columnName: string): string {
-    const normalized = columnName.trim().toLowerCase();
+    const base = columnName.trim().replace(/_[0-9]+$/, '');
+    const normalized = base.toLowerCase();
     
     // Map export format column names to import format
     const columnMap: Record<string, string> = {

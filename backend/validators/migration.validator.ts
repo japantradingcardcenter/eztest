@@ -119,6 +119,11 @@ export const TEST_CASE_IMPORT_COLUMNS = {
   'automation status': { normalized: 'automationStatus', required: false },
 } as const;
 
+/** _2, _3 などの重複サフィックスを除去（Excel等で全列に _2 が付く場合に対応） */
+function stripDuplicateSuffix(s: string): string {
+  return s.replace(/_[0-9]+$/, '');
+}
+
 /**
  * Validate test case import columns
  */
@@ -136,14 +141,16 @@ export function validateTestCaseImportColumns(data: ParsedRow[]): string[] {
   const normalize = (s: string) => s.replace(/^\uFEFF/, '').trim();
   const normalizedFields = availableFields.map((f) => normalize(f));
 
-  // Check for required field: テストケース名 / Test Case Title (正規化後のキーで判定)
-  const hasTitle = normalizedFields.some(
-    (n) =>
-      n === 'テストケース名' ||
-      n.toLowerCase() === 'title' ||
-      n.toLowerCase() === 'test case title' ||
-      n.toLowerCase() === 'testcase title'
-  );
+  // Check for required field: テストケース名 / Test Case Title（_2 サフィックス除去後に判定）
+  const hasTitle = normalizedFields.some((n) => {
+    const base = stripDuplicateSuffix(n);
+    return (
+      base === 'テストケース名' ||
+      base.toLowerCase() === 'title' ||
+      base.toLowerCase() === 'test case title' ||
+      base.toLowerCase() === 'testcase title'
+    );
+  });
 
   if (!hasTitle) {
     const availableFieldNames = availableFields.join(', ');
@@ -163,23 +170,26 @@ export function validateTestCaseImportColumns(data: ParsedRow[]): string[] {
 
 /**
  * Get normalized column name from template column name (case-insensitive)
+ * _2, _3 等の重複サフィックスを除去してから照合
  */
 export function getNormalizedColumnName(columnName: string): string | null {
-  const normalized = columnName.trim().toLowerCase();
+  const base = stripDuplicateSuffix(columnName.trim());
+  const normalized = base.toLowerCase();
   // Create a case-insensitive lookup
   const columnEntries = Object.entries(TEST_CASE_IMPORT_COLUMNS);
-  const found = columnEntries.find(([key]) => key.toLowerCase() === normalized);
+  const found = columnEntries.find(([key]) => key.toLowerCase() === normalized || key === base);
   return found ? found[1].normalized : null;
 }
 
 /**
  * Check if a column is required (case-insensitive)
+ * _2, _3 等の重複サフィックスを除去してから照合
  */
 export function isColumnRequired(columnName: string): boolean {
-  const normalized = columnName.trim().toLowerCase();
-  // Create a case-insensitive lookup
+  const base = stripDuplicateSuffix(columnName.trim());
+  const normalized = base.toLowerCase();
   const columnEntries = Object.entries(TEST_CASE_IMPORT_COLUMNS);
-  const found = columnEntries.find(([key]) => key.toLowerCase() === normalized);
+  const found = columnEntries.find(([key]) => key.toLowerCase() === normalized || key === base);
   return found ? found[1].required : false;
 }
 
@@ -239,6 +249,7 @@ export const DEFECT_IMPORT_COLUMNS = {
 
 /**
  * Validate defect import columns
+ * _2, _3 等の重複サフィックスを除去してから照合
  */
 export function validateDefectImportColumns(data: ParsedRow[]): string[] {
   const errors: string[] = [];
@@ -251,7 +262,7 @@ export function validateDefectImportColumns(data: ParsedRow[]): string[] {
   const firstRow = data[0];
   const availableFields = Object.keys(firstRow);
   const availableFieldsLower = new Map(
-    availableFields.map((field) => [field.toLowerCase().trim(), field])
+    availableFields.map((field) => [stripDuplicateSuffix(field).toLowerCase().trim(), field])
   );
 
   // Check for required field: Title (in any variation)

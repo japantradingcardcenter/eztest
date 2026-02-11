@@ -10,16 +10,24 @@ export interface ParseResult {
   errors: string[];
 }
 
-/** 必須列「テストケース名」がヘッダーに含まれるか判定 */
+/** _2, _3 等の重複サフィックスを除去 */
+function stripDuplicateSuffix(s: string): string {
+  return s.replace(/_[0-9]+$/, '');
+}
+
+/** 必須列「テストケース名」がヘッダーに含まれるか判定（_2 サフィックス対応） */
 function hasRequiredTitleColumn(headers: string[]): boolean {
   const normalize = (s: string) => s.replace(/^\uFEFF/, '').trim();
-  return headers.some(
-    (h) =>
-      normalize(h) === 'テストケース名' ||
-      normalize(h).toLowerCase() === 'title' ||
-      normalize(h).toLowerCase() === 'test case title' ||
-      normalize(h).toLowerCase() === 'testcase title'
-  );
+  return headers.some((h) => {
+    const n = normalize(h);
+    const base = stripDuplicateSuffix(n);
+    return (
+      base === 'テストケース名' ||
+      base.toLowerCase() === 'title' ||
+      base.toLowerCase() === 'test case title' ||
+      base.toLowerCase() === 'testcase title'
+    );
+  });
 }
 
 /** 指定区切りでパースして結果を返す */
