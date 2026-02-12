@@ -135,6 +135,18 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
           postconditions: data.data.postconditions || '',
           suiteId: data.data.suiteId || null,
           moduleId: data.data.moduleId || null,
+          rtcId: data.data.rtcId || undefined,
+          flowId: data.data.flowId || undefined,
+          layer: data.data.layer || undefined,
+          testType: data.data.testType || undefined,
+          evidence: data.data.evidence || undefined,
+          notes: data.data.notes || undefined,
+          platform: data.data.platform || undefined,
+          device: data.data.device || undefined,
+          domain: data.data.domain || undefined,
+          functionName: data.data.functionName || undefined,
+          executionType: data.data.executionType || undefined,
+          automationStatus: data.data.automationStatus || undefined,
         });
 
         // Initialize steps and ensure the test case level expected result is

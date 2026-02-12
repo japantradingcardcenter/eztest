@@ -10,18 +10,50 @@ export interface ParseResult {
   errors: string[];
 }
 
+/** _2, _3 等の重複サフィックスを除去（Excel等で全列に _2 が付く場合に対応） */
+function stripDuplicateSuffix(s: string): string {
+  return s.replace(/_[0-9]+$/, '').trim();
+}
+
+/**
+ * パース済みデータのキーから _2, _3 を除去して正規化
+ * 同一ベース名が複数ある場合は先に出現したものを採用
+ */
+function normalizeRowKeys(data: ParsedRow[]): ParsedRow[] {
+  return data.map((row) => {
+    const normalizedRow: ParsedRow = {};
+    for (const key of Object.keys(row)) {
+      const baseKey = stripDuplicateSuffix(key);
+      if (baseKey && !(baseKey in normalizedRow)) {
+        normalizedRow[baseKey] = row[key];
+      }
+    }
+    return normalizedRow;
+  });
+}
+
 /**
  * Parse CSV file from buffer or string.
  * Duplicate headers are made unique by appending _2, _3, ... so the first column's value is preserved.
+ *
+ * 対応形式:
+ * - 1行目が正式ヘッダー（テストケース名、モジュール・機能、...）→ そのままパース
+ * - 1行目が Column1,Column2,... のときは2行目をヘッダーとして使用（テンプレートCSV対応）
  */
 export function parseCSV(content: string): ParseResult {
   const errors: string[] = [];
   const headerCount = new Map<string, number>();
 
   try {
+    // BOM を除去（Excel 等で保存した CSV で必須列が認識されない問題を防ぐ）
+    content = content.replace(/^\uFEFF/, '');
+    // 先頭の空行を除去（一部エクスポートで先頭に空行が付く場合に対応）
+    content = content.replace(/^\s*[\r\n]+/, '');
+
     // 1行目が Column1,Column2,... の場合は2行目をヘッダーとして使う（テンプレートCSV対応）
     const lines = content.split(/\r?\n/).filter((line) => line.length > 0);
-    if (lines.length >= 2 && /^Column\d+/.test(lines[0].trim())) {
+    const firstLine = lines[0]?.replace(/^\uFEFF/, '').trim() ?? '';
+    if (lines.length >= 2 && /^Column\d+/.test(firstLine)) {
       content = lines.slice(1).join('\n');
     }
 
@@ -29,7 +61,7 @@ export function parseCSV(content: string): ParseResult {
       header: true,
       skipEmptyLines: true,
       transformHeader: (header: string) => {
-        const trimmed = header.trim();
+        const trimmed = header.replace(/^\uFEFF/, '').trim();
         const key = trimmed.toLowerCase();
         const count = (headerCount.get(key) ?? 0) + 1;
         headerCount.set(key, count);
@@ -44,8 +76,9 @@ export function parseCSV(content: string): ParseResult {
       });
     }
 
+    const parsedData = result.data as ParsedRow[];
     return {
-      data: result.data as ParsedRow[],
+      data: normalizeRowKeys(parsedData),
       errors,
     };
   } catch (error) {
@@ -94,7 +127,7 @@ export function parseExcel(buffer: Buffer): ParseResult {
     });
 
     return {
-      data: cleanedData,
+      data: normalizeRowKeys(cleanedData),
       errors,
     };
   } catch (error) {

@@ -22,23 +22,6 @@ enum TestLayer {
   UNKNOWN
 }
 
-enum TargetType {
-  FUNCTIONAL
-  NON_FUNCTIONAL
-  PERFORMANCE
-  SECURITY
-  USABILITY
-  COMPATIBILITY
-  API
-  SCREEN
-}
-
-enum Platform {
-  IOS
-  ANDROID
-  WEB
-}
-
 // ====================================
 // User Management
 // ====================================
@@ -229,16 +212,18 @@ model TestCase {
   testData      String?  // Test data/input values for the test case
   pendingDefectIds String?  // Comma-separated defect IDs that don't exist yet (e.g., "DEF-1, DEF-2")
   // New fields for enhanced test case management
-  assertionId   String?  // Assertion-ID
   rtcId         String?  // RTC-ID
   flowId        String?  // Flow-ID
   layer         TestLayer?  // Layer
-  targetType    TargetType?  // 対象
   testType      String?  // テスト種別（正常系、異常系、非機能、回帰、データ整合性確認、状態遷移確認、運用確認、障害時確認）
-  evidence      String?  // 根拠
+  evidence      String?  // 根拠コード
   notes         String?  // 備考
-  isAutomated   Boolean  @default(false)  // 自動化
-  platforms     Platform[] @default([])  // 環境 (複数環境を保存: IOS / ANDROID / WEB)
+  platform      String?   // プラットフォーム: Web, Web(SP), iOS Native, Android Native（単一選択）
+  device        String?   // 端末: iPhone, Android, PC
+  domain        String?   // ドメイン
+  functionName  String?   @map("function") // 機能（DB予約語のため functionName）
+  executionType String?   // 実行方式: 手動 / 自動
+  automationStatus String? // 自動化状況: 自動化済 / 自動化対象 / 自動化対象外 / 検討中
   createdById   String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

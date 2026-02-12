@@ -35,7 +35,22 @@ export class ImportService {
     
     // Map export format column names to import format
     const columnMap: Record<string, string> = {
-      // New test case fields
+      // 日本語列名（CSV/画面）
+      'テストケースid': 'testCaseId',
+      'テストケース名': 'title',
+      'モジュール・機能': 'module',
+      '優先度': 'priority',
+      '前提条件': 'preconditions',
+      'テスト手順': 'testSteps',
+      'テストデータ': 'testData',
+      '期待結果': 'expectedResult',
+      '状態': 'status',
+      '不具合id': 'defectId',
+      '説明': 'description',
+      '想定時間（分）': 'estimatedTime',
+      '事後条件': 'postconditions',
+      'テストスイート': 'testsuite',
+      // English (backward compatibility)
       'test case id': 'testCaseId',
       'testcase id': 'testCaseId',
       'test case title': 'title',
@@ -54,11 +69,9 @@ export class ImportService {
       'expected result': 'expectedResult',
       'expectedresult': 'expectedResult',
       'status': 'status',
-      // Defect linking for test cases
       'defect id': 'defectId',
       'defectid': 'defectId',
       'defect': 'defectId',
-      // Older fields (kept for backward compatibility)
       'description': 'description',
       'estimated time (minutes)': 'estimatedTime',
       'estimated time': 'estimatedTime',
@@ -67,9 +80,6 @@ export class ImportService {
       'testsuite': 'testsuite',
       'test suite': 'testsuite',
       // New test case fields for enhanced test case management
-      'assertion-id': 'assertionId',
-      'assertion id': 'assertionId',
-      'assertionid': 'assertionId',
       'rtc-id': 'rtcId',
       'rtc id': 'rtcId',
       'rtcid': 'rtcId',
@@ -77,22 +87,27 @@ export class ImportService {
       'flow id': 'flowId',
       'flowid': 'flowId',
       'layer': 'layer',
-      '対象': 'targetType',
-      '対象（api/画面）': 'targetType',
-      '対象（api / 画面）': 'targetType',
-      'target type': 'targetType',
-      'targettype': 'targetType',
       '根拠': 'evidence',
       '根拠（ドキュメント）': 'evidence',
+      '根拠コード': 'evidence',
       'evidence': 'evidence',
       '備考': 'notes',
       'notes': 'notes',
-      '自動化': 'isAutomated',
-      'automation': 'isAutomated',
-      'isautomated': 'isAutomated',
-      '環境': 'platforms',
-      '環境（ios / android / web）': 'platforms',
-      'platforms': 'platforms',
+      '端末': 'device',
+      'device': 'device',
+      'プラットフォーム': 'platform',
+      'platform': 'platform',
+      'ドメイン': 'domain',
+      'domain': 'domain',
+      '機能': 'functionName',
+      'functionname': 'functionName',
+      'function name': 'functionName',
+      '実行方式': 'executionType',
+      'executiontype': 'executionType',
+      'execution type': 'executionType',
+      '自動化状況': 'automationStatus',
+      'automationstatus': 'automationStatus',
+      'automation status': 'automationStatus',
       // Test Type (テスト種別)
       'テスト種別': 'testType',
       'test type': 'testType',
@@ -254,9 +269,10 @@ export class ImportService {
         const preconditions = this.getRowValue(row, 'preconditions');
         const postconditions = this.getRowValue(row, 'postconditions');
         const moduleValue = this.getRowValue(row, 'module');
-        // Test Suites 列: 正規化キーで取得、なければテンプレートでよく使う生ヘッダ名（Test Suites / Test Suite）で取得
+        // テストスイート列: 正規化キーで取得、なければ日本語/英語ヘッダ名で取得
         const testsuiteRaw =
           this.getRowValue(row, 'testsuite') ??
+          (row as Record<string, unknown>)['テストスイート'] ??
           (row as Record<string, unknown>)['Test Suites'] ??
           (row as Record<string, unknown>)['Test Suite'];
         const testsuite =
@@ -267,32 +283,25 @@ export class ImportService {
         const testData = this.getRowValue(row, 'testData');
         const defectId = this.getRowValue(row, 'defectId');
         // New fields for enhanced test case management
-        const assertionId = this.getRowValue(row, 'assertionId');
         const rtcId = this.getRowValue(row, 'rtcId');
         const flowId = this.getRowValue(row, 'flowId');
         const layer = this.getRowValue(row, 'layer');
-        const targetType = this.getRowValue(row, 'targetType');
         const evidence = this.getRowValue(row, 'evidence');
         const notes = this.getRowValue(row, 'notes');
-        const isAutomated = this.getRowValue(row, 'isAutomated');
-        let platforms = this.getRowValue(row, 'platforms');
-        // CSVテンプレートの "Environment" 列（iOS/Android/Web）を platforms のフォールバックとして使用
-        if ((platforms === undefined || platforms === null || (typeof platforms === 'string' && !platforms.toString().trim())) && this.getRowValue(row, 'environment') != null) {
-          const envVal = this.getRowValue(row, 'environment');
-          if (typeof envVal === 'string' && envVal.toString().trim()) {
-            platforms = envVal;
-          }
-        }
         const testType = this.getRowValue(row, 'testType');
+        const device = this.getRowValue(row, 'device');
+        const platformCol = this.getRowValue(row, 'platform');
+        const domainCol = this.getRowValue(row, 'domain');
+        const functionNameCol = this.getRowValue(row, 'functionName');
+        const executionTypeCol = this.getRowValue(row, 'executionType');
+        const automationStatusCol = this.getRowValue(row, 'automationStatus');
 
-        // Determine title: use title column if provided, otherwise use assertionId as fallback
+        // 必須: テストケース名
         let testCaseTitle: string;
         if (title && typeof title === 'string' && title.toString().trim() !== '') {
           testCaseTitle = title.toString().trim();
-        } else if (assertionId && typeof assertionId === 'string' && assertionId.toString().trim() !== '') {
-          testCaseTitle = assertionId.toString().trim();
         } else {
-          throw new Error('Test Case Title is required. Please provide "Test Case Title" or "Assertion-ID"');
+          throw new Error('必須列「テストケース名」がありません。');
         }
 
         // RTC-ID の文字列（既存テストケース判定に使用）
@@ -690,10 +699,7 @@ export class ImportService {
           : null;
 
         // Parse new fields for enhanced test case management
-        // Assertion-ID, RTC-ID, Flow-ID (strings)
-        const assertionIdValue = assertionId && typeof assertionId === 'string' && assertionId.toString().trim()
-          ? assertionId.toString().trim()
-          : null;
+        // RTC-ID, Flow-ID (strings)
         const rtcIdValue = rtcId && typeof rtcId === 'string' && rtcId.toString().trim()
           ? rtcId.toString().trim()
           : null;
@@ -719,37 +725,7 @@ export class ImportService {
           }
         }
 
-        // Target Type (convert: "API" -> "API", "画面" -> "SCREEN", "API/画面" -> "API" or "SCREEN")
-        let targetTypeValue: 'API' | 'SCREEN' | 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'PERFORMANCE' | 'SECURITY' | 'USABILITY' | 'COMPATIBILITY' | null = null;
-        if (targetType && typeof targetType === 'string' && targetType.toString().trim()) {
-          const targetTypeStr = targetType.toString().trim();
-          const targetTypeUpper = targetTypeStr.toUpperCase();
-          
-          // Check for exact matches first
-          if (targetTypeUpper === 'API' || targetTypeUpper === 'SCREEN' ||
-              targetTypeUpper === 'FUNCTIONAL' || targetTypeUpper === 'NON_FUNCTIONAL' ||
-              targetTypeUpper === 'PERFORMANCE' || targetTypeUpper === 'SECURITY' ||
-              targetTypeUpper === 'USABILITY' || targetTypeUpper === 'COMPATIBILITY') {
-            targetTypeValue = targetTypeUpper as 'API' | 'SCREEN' | 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'PERFORMANCE' | 'SECURITY' | 'USABILITY' | 'COMPATIBILITY';
-          } else if (targetTypeStr.includes('API') || targetTypeStr.includes('画面')) {
-            // Handle "API/画面" or "API / 画面" - default to API if contains API, otherwise SCREEN
-            if (targetTypeStr.includes('API') || targetTypeStr.toUpperCase().includes('API')) {
-              targetTypeValue = 'API';
-            } else if (targetTypeStr.includes('画面') || targetTypeStr.toUpperCase().includes('SCREEN')) {
-              targetTypeValue = 'SCREEN';
-            }
-          } else if (targetTypeStr.startsWith('POST ') || targetTypeStr.startsWith('GET ') || 
-                     targetTypeStr.startsWith('PUT ') || targetTypeStr.startsWith('DELETE ') ||
-                     targetTypeStr.startsWith('PATCH ')) {
-            // If it starts with HTTP method, it's likely an API endpoint
-            targetTypeValue = 'API';
-          } else if (targetTypeStr.includes('画面') || targetTypeStr.includes('フロー')) {
-            // If it contains "画面" or "フロー", it's likely a screen/flow
-            targetTypeValue = 'SCREEN';
-          }
-        }
-
-        // Evidence (根拠)
+        // Evidence (根拠コード)
         const evidenceValue = evidence && typeof evidence === 'string' && evidence.toString().trim()
           ? evidence.toString().trim()
           : null;
@@ -759,91 +735,41 @@ export class ImportService {
           ? notes.toString().trim()
           : null;
 
-        // Is Automated (自動化) - boolean
-        let isAutomatedValue = false;
-        if (isAutomated !== undefined && isAutomated !== null) {
-          if (typeof isAutomated === 'boolean') {
-            isAutomatedValue = isAutomated;
-          } else if (typeof isAutomated === 'string') {
-            const automatedStr = isAutomated.toString().trim().toLowerCase();
-            isAutomatedValue = automatedStr === 'true' || automatedStr === '1' || automatedStr === 'yes' || automatedStr === '自動化';
-          } else if (typeof isAutomated === 'number') {
-            isAutomatedValue = isAutomated !== 0;
-          }
-        }
-
-        // Platforms (環境) - array: "iOS / Android / Web" -> ["IOS", "ANDROID", "WEB"]
-        // Supports: "/", ",", "、", and whitespace separators
-        // Removes duplicates automatically
-        const platformsValue: ('IOS' | 'ANDROID' | 'WEB')[] = [];
-        const platformsSet = new Set<'IOS' | 'ANDROID' | 'WEB'>();
-        
-        if (platforms && typeof platforms === 'string' && platforms.toString().trim()) {
-          const platformsStr = platforms.toString().trim();
-          // Split by "/", ",", "、", or whitespace (space, tab, newline)
-          const platformList = platformsStr.split(/[\/,、\s]+/).map(p => p.trim().toUpperCase()).filter(p => p);
-          for (const platform of platformList) {
-            if (platform === 'IOS' || platform === 'IPHONE' || platform === 'IPAD') {
-              platformsSet.add('IOS');
-            } else if (platform === 'ANDROID') {
-              platformsSet.add('ANDROID');
-            } else if (platform === 'WEB') {
-              platformsSet.add('WEB');
-            }
-          }
-        } else if (Array.isArray(platforms)) {
-          // If already an array
-          for (const platform of platforms) {
-            const platformStr = String(platform).trim().toUpperCase();
-            if (platformStr === 'IOS' || platformStr === 'IPHONE' || platformStr === 'IPAD') {
-              platformsSet.add('IOS');
-            } else if (platformStr === 'ANDROID') {
-              platformsSet.add('ANDROID');
-            } else if (platformStr === 'WEB') {
-              platformsSet.add('WEB');
-            }
-          }
-        }
-        
-        // Convert Set to Array (automatically removes duplicates)
-        platformsValue.push(...Array.from(platformsSet));
-
-        // Test Type (テスト種別) - convert to standard values
-        // Valid values: NORMAL, ABNORMAL, NON_FUNCTIONAL, REGRESSION, DATA_INTEGRITY, STATE_TRANSITION, OPERATIONAL, FAILURE
+        // Test Type (テスト種別) - preserve Japanese labels, normalize English to Japanese
         let testTypeValue: string | null = null;
         if (testType && typeof testType === 'string' && testType.toString().trim()) {
           const testTypeStr = testType.toString().trim();
           const testTypeUpper = testTypeStr.toUpperCase();
           
-          // Map Japanese labels and variations to standard values
+          // Map to Japanese labels (CSV の日本語値はそのまま保持)
           const testTypeMap: Record<string, string> = {
-            // English values
-            'NORMAL': 'NORMAL',
-            'ABNORMAL': 'ABNORMAL',
-            'NON_FUNCTIONAL': 'NON_FUNCTIONAL',
-            'NONFUNCTIONAL': 'NON_FUNCTIONAL',
-            'NON-FUNCTIONAL': 'NON_FUNCTIONAL',
-            'REGRESSION': 'REGRESSION',
-            'DATA_INTEGRITY': 'DATA_INTEGRITY',
-            'DATAINTEGRITY': 'DATA_INTEGRITY',
-            'DATA-INTEGRITY': 'DATA_INTEGRITY',
-            'STATE_TRANSITION': 'STATE_TRANSITION',
-            'STATETRANSITION': 'STATE_TRANSITION',
-            'STATE-TRANSITION': 'STATE_TRANSITION',
-            'OPERATIONAL': 'OPERATIONAL',
-            'FAILURE': 'FAILURE',
-            // Japanese labels
-            '正常系': 'NORMAL',
-            '異常系': 'ABNORMAL',
-            '非機能': 'NON_FUNCTIONAL',
-            '回帰': 'REGRESSION',
-            'データ整合性確認': 'DATA_INTEGRITY',
-            '状態遷移確認': 'STATE_TRANSITION',
-            '運用確認': 'OPERATIONAL',
-            '障害時確認': 'FAILURE',
+            // English values → Japanese labels
+            'NORMAL': '正常系',
+            'ABNORMAL': '異常系',
+            'NON_FUNCTIONAL': '非機能',
+            'NONFUNCTIONAL': '非機能',
+            'NON-FUNCTIONAL': '非機能',
+            'REGRESSION': '回帰',
+            'DATA_INTEGRITY': 'データ整合性確認',
+            'DATAINTEGRITY': 'データ整合性確認',
+            'DATA-INTEGRITY': 'データ整合性確認',
+            'STATE_TRANSITION': '状態遷移確認',
+            'STATETRANSITION': '状態遷移確認',
+            'STATE-TRANSITION': '状態遷移確認',
+            'OPERATIONAL': '運用確認',
+            'FAILURE': '障害時確認',
+            // Japanese labels → そのまま保持
+            '正常系': '正常系',
+            '異常系': '異常系',
+            '非機能': '非機能',
+            '回帰': '回帰',
+            'データ整合性確認': 'データ整合性確認',
+            '状態遷移確認': '状態遷移確認',
+            '運用確認': '運用確認',
+            '障害時確認': '障害時確認',
           };
           
-          // Try direct match first
+          // Try direct match first (English uppercase)
           if (testTypeMap[testTypeUpper]) {
             testTypeValue = testTypeMap[testTypeUpper];
           } else if (testTypeMap[testTypeStr]) {
@@ -851,6 +777,56 @@ export class ImportService {
             testTypeValue = testTypeMap[testTypeStr];
           }
           // If no match found, leave as null (don't import invalid values)
+        }
+
+        // Device (端末) - iPhone, Android, PC
+        let deviceValue: 'iPhone' | 'Android' | 'PC' | null = null;
+        if (device != null && typeof device === 'string' && device.toString().trim()) {
+          const deviceStr = device.toString().trim();
+          const deviceLower = deviceStr.toLowerCase();
+          if (deviceLower === 'iphone' || deviceStr === 'iPhone') deviceValue = 'iPhone';
+          else if (deviceLower === 'android' || deviceStr === 'Android') deviceValue = 'Android';
+          else if (deviceLower === 'pc' || deviceStr === 'PC') deviceValue = 'PC';
+        }
+
+        // Platform (プラットフォーム) - single: Web, Web(SP), iOS Native, Android Native
+        let platformValue: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null = null;
+        if (platformCol != null && typeof platformCol === 'string' && platformCol.toString().trim()) {
+          const platformStr = platformCol.toString().trim();
+          const platformLower = platformStr.toLowerCase();
+          if (platformLower === 'web(sp)' || platformStr === 'Web(SP)' || platformLower === 'web (sp)') platformValue = 'Web(SP)';
+          else if (platformLower === 'ios native' || platformStr === 'iOS Native' || platformLower === 'ios') platformValue = 'iOS Native';
+          else if (platformLower === 'android native' || platformStr === 'Android Native' || platformLower === 'android') platformValue = 'Android Native';
+          else if (platformLower === 'web' || platformStr === 'Web') platformValue = 'Web';
+        }
+
+        // Domain (ドメイン) and Function (機能) - free text
+        console.log(`[Import Row ${rowNumber}] domainCol raw:`, JSON.stringify(domainCol), `type: ${typeof domainCol}`);
+        console.log(`[Import Row ${rowNumber}] functionNameCol raw:`, JSON.stringify(functionNameCol), `type: ${typeof functionNameCol}`);
+        console.log(`[Import Row ${rowNumber}] Row keys:`, Object.keys(row).join(', '));
+        const domainValue = domainCol != null && String(domainCol).trim()
+          ? String(domainCol).trim()
+          : null;
+        const functionNameValue = functionNameCol != null && String(functionNameCol).trim()
+          ? String(functionNameCol).trim()
+          : null;
+        console.log(`[Import Row ${rowNumber}] domainValue:`, JSON.stringify(domainValue), `functionNameValue:`, JSON.stringify(functionNameValue));
+
+        // 実行方式: 手動 / 自動
+        let executionTypeValue: '手動' | '自動' | null = null;
+        if (executionTypeCol != null && typeof executionTypeCol === 'string' && executionTypeCol.toString().trim()) {
+          const s = executionTypeCol.toString().trim();
+          if (s === '手動') executionTypeValue = '手動';
+          else if (s === '自動') executionTypeValue = '自動';
+        }
+        // 自動化状況: 自動化済 / 自動化対象 / 自動化対象外 / 検討中
+        let automationStatusValue: '自動化済' | '自動化対象' | '自動化対象外' | '検討中' | null = null;
+        if (automationStatusCol != null && typeof automationStatusCol === 'string' && automationStatusCol.toString().trim()) {
+          const s = automationStatusCol.toString().trim();
+          if (s === '自動化済') automationStatusValue = '自動化済';
+          else if (s === '自動化対象') automationStatusValue = '自動化対象';
+          else if (s === '自動化対象外') automationStatusValue = '自動化対象外';
+          else if (s === '検討中') automationStatusValue = '検討中';
         }
 
         // Determine the expected result value to use for the test case
@@ -890,38 +866,66 @@ export class ImportService {
                 }))
             : [];
 
+        // DB の一意制約 (testCaseId, stepNumber) に抵触しないよう、
+        // 取り込み時は空行除去後の順序で手順番号を連番に正規化する
+        const normalizedSteps = filteredSteps.map((step, index) => ({
+          stepNumber: index + 1,
+          action: step.action,
+          expectedResult: step.expectedResult,
+        }));
+
+        const baseUpdateData = {
+          title: testCaseTitle,
+          description: description ? description.toString().trim() : null,
+          expectedResult: finalExpectedResult,
+          priority: priorityValue,
+          status: statusValue,
+          estimatedTime: estimatedTimeValue,
+          preconditions: preconditions ? preconditions.toString().trim() : null,
+          postconditions: postconditions ? postconditions.toString().trim() : null,
+          testData: testDataValue,
+          pendingDefectIds: pendingDefectIds.length > 0 ? pendingDefectIds.join(', ') : null,
+          moduleId: moduleId ?? null,
+          suiteId: suiteId ?? null,
+          rtcId: rtcIdValue,
+          flowId: flowIdValue,
+          layer: layerValue,
+          testType: testTypeValue,
+          evidence: evidenceValue,
+          notes: notesValue,
+          domain: domainValue,
+          functionName: functionNameValue,
+        };
+        const extendedUpdateData = {
+          platform: platformValue,
+          device: deviceValue,
+          executionType: executionTypeValue,
+          automationStatus: automationStatusValue,
+        };
+
         if (existingTestCaseToUpdate) {
-          await prisma.testCase.update({
-            where: { id: existingTestCaseToUpdate.id },
-            data: {
-              title: testCaseTitle,
-              description: description ? description.toString().trim() : null,
-              expectedResult: finalExpectedResult,
-              priority: priorityValue,
-              status: statusValue,
-              estimatedTime: estimatedTimeValue,
-              preconditions: preconditions ? preconditions.toString().trim() : null,
-              postconditions: postconditions ? postconditions.toString().trim() : null,
-              testData: testDataValue,
-              pendingDefectIds: pendingDefectIds.length > 0 ? pendingDefectIds.join(', ') : null,
-              moduleId: moduleId ?? null,
-              suiteId: suiteId ?? null,
-              assertionId: assertionIdValue,
-              rtcId: rtcIdValue,
-              flowId: flowIdValue,
-              layer: layerValue,
-              targetType: targetTypeValue,
-              testType: testTypeValue,
-              evidence: evidenceValue,
-              notes: notesValue,
-              isAutomated: isAutomatedValue,
-              platforms: platformsValue.length > 0 ? platformsValue : [],
-            },
-          });
+          try {
+            await prisma.testCase.update({
+              where: { id: existingTestCaseToUpdate.id },
+              data: { ...baseUpdateData, ...extendedUpdateData },
+            });
+          } catch (extendedErr) {
+            const errMsg = extendedErr instanceof Error ? extendedErr.message : '';
+            console.warn(`Failed to update test case with extended fields:`, errMsg);
+            if (errMsg.includes('Unknown argument')) {
+              console.warn('Retrying update without extended fields...');
+              await prisma.testCase.update({
+                where: { id: existingTestCaseToUpdate.id },
+                data: baseUpdateData,
+              });
+            } else {
+              throw extendedErr;
+            }
+          }
           await prisma.testStep.deleteMany({ where: { testCaseId: existingTestCaseToUpdate.id } });
-          if (filteredSteps.length > 0) {
+          if (normalizedSteps.length > 0) {
             await prisma.testStep.createMany({
-              data: filteredSteps.map((step) => ({
+              data: normalizedSteps.map((step) => ({
                 testCaseId: existingTestCaseToUpdate!.id,
                 stepNumber: step.stepNumber,
                 action: step.action,
@@ -956,9 +960,7 @@ export class ImportService {
           existingTcIds.add(tcId);
 
           // Create test case
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const testCase = await (prisma.testCase.create as any)({
-          data: {
+          const baseCreateData = {
             tcId,
             projectId,
             title: testCaseTitle,
@@ -980,20 +982,39 @@ export class ImportService {
             moduleId,
             suiteId,
             createdById: userId,
-            // New fields for enhanced test case management
-            assertionId: assertionIdValue,
             rtcId: rtcIdValue,
             flowId: flowIdValue,
             layer: layerValue,
-            targetType: targetTypeValue,
             testType: testTypeValue,
             evidence: evidenceValue,
             notes: notesValue,
-            isAutomated: isAutomatedValue,
-            platforms: platformsValue.length > 0 ? platformsValue : [],
-            steps: filteredSteps.length > 0 ? { create: filteredSteps } : undefined,
-          },
-        });
+            domain: domainValue,
+            functionName: functionNameValue,
+            steps: normalizedSteps.length > 0 ? { create: normalizedSteps } : undefined,
+          };
+          // platform, device 等は Prisma クライアントが未対応の環境で
+          // Unknown argument エラーになるため、まず基本フィールドのみで作成し、
+          // 続けて update で拡張フィールドを反映する（両方とも Unknown argument 時はスキップ）
+          let testCase = await prisma.testCase.create({ data: baseCreateData });
+
+          const extendedUpdateData = {
+            platform: platformValue,
+            device: deviceValue,
+            executionType: executionTypeValue,
+            automationStatus: automationStatusValue,
+          };
+          const hasExtended = Object.values(extendedUpdateData).some((v) => v != null);
+          if (hasExtended) {
+            try {
+              await prisma.testCase.update({
+                where: { id: testCase.id },
+                data: extendedUpdateData,
+              });
+              console.log(`[Import Row ${rowNumber}] Extended fields updated successfully for test case ${testCase.id}`);
+            } catch (updateErr) {
+              console.error(`[Import Row ${rowNumber}] Failed to update extended fields for test case ${testCase.id}:`, updateErr);
+            }
+          }
 
           if (suiteId) {
             await prisma.testCaseSuite.create({

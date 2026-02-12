@@ -1,14 +1,12 @@
 'use client';
 
 import { BaseDialog, BaseDialogField, BaseDialogConfig } from '@/frontend/reusable-components/dialogs/BaseDialog';
-import { TestCase, Module, Platform } from '../types';
+import { TestCase, Module } from '../types';
 import React, { useEffect, useState } from 'react';
 import { attachmentStorage } from '@/lib/attachment-storage';
 import type { Attachment } from '@/lib/s3';
 import { uploadFileToS3 } from '@/lib/s3';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
-import { PlatformsCheckboxGroup } from './PlatformsCheckboxGroup';
-
 interface CreateTestCaseDialogProps {
   projectId: string;
   defaultModuleId?: string;
@@ -86,7 +84,7 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'priority',
-      label: 'Priority',
+      label: '優先度',
       type: 'select',
       defaultValue: 'MEDIUM',
       options: priorityOptions.map(opt => ({ value: opt.value, label: opt.label })),
@@ -94,7 +92,7 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'status',
-      label: 'Status',
+      label: '状態',
       type: 'select',
       defaultValue: 'DRAFT',
       options: statusOptions.map(opt => ({ value: opt.value, label: opt.label })),
@@ -107,23 +105,16 @@ export function CreateTestCaseDialog({
       placeholder: 'Select a module',
       defaultValue: defaultModuleId || 'none',
       options: [
-        { value: 'none', label: 'None (No Module)' },
+        { value: 'none', label: 'なし（モジュールに属さない）' },
         ...moduleOptions,
       ],
       cols: 1,
     },
     {
       name: 'estimatedTime',
-      label: 'Estimated Time (minutes)',
+      label: '想定時間（分）',
       type: 'number',
       placeholder: 'Enter estimated time',
-      cols: 1,
-    },
-    {
-      name: 'assertionId',
-      label: 'Assertion-ID',
-      type: 'text',
-      placeholder: 'Enter assertion ID',
       cols: 1,
     },
     {
@@ -154,23 +145,6 @@ export function CreateTestCaseDialog({
       cols: 1,
     },
     {
-      name: 'targetType',
-      label: '対象',
-      type: 'select',
-      placeholder: 'Select target type',
-      options: [
-        { value: 'API', label: 'API' },
-        { value: 'SCREEN', label: '画面' },
-        { value: 'FUNCTIONAL', label: 'Functional' },
-        { value: 'NON_FUNCTIONAL', label: 'Non-Functional' },
-        { value: 'PERFORMANCE', label: 'Performance' },
-        { value: 'SECURITY', label: 'Security' },
-        { value: 'USABILITY', label: 'Usability' },
-        { value: 'COMPATIBILITY', label: 'Compatibility' },
-      ],
-      cols: 1,
-    },
-    {
       name: 'testType',
       label: 'テスト種別',
       type: 'select',
@@ -188,46 +162,66 @@ export function CreateTestCaseDialog({
       cols: 1,
     },
     {
-      name: 'isAutomated',
-      label: '自動化',
-      type: 'custom',
-      customRender: (value: string, onChange: (value: string) => void) => (
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="isAutomated"
-            checked={value === 'true'}
-            onChange={(e) => onChange(e.target.checked ? 'true' : 'false')}
-            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-          />
-          <label htmlFor="isAutomated" className="text-sm font-medium text-gray-700">
-            自動化テスト
-          </label>
-        </div>
-      ),
+      name: 'platform',
+      label: 'プラットフォーム',
+      type: 'select',
+      placeholder: 'プラットフォームを選択',
+      options: [
+        { value: 'Web', label: 'Web' },
+        { value: 'Web(SP)', label: 'Web(SP)' },
+        { value: 'iOS Native', label: 'iOS Native' },
+        { value: 'Android Native', label: 'Android Native' },
+      ],
       cols: 1,
     },
     {
-      name: 'platforms',
-      label: '環境',
-      type: 'custom',
-      customRender: (value: string, onChange: (value: string) => void) => {
-        let platforms: Platform[] = [];
-        if (value) {
-          try {
-            platforms = JSON.parse(value);
-          } catch {
-            // If not JSON, treat as empty array
-            platforms = [];
-          }
-        }
-        return (
-          <PlatformsCheckboxGroup
-            values={platforms}
-            onChange={(vals) => onChange(JSON.stringify(vals))}
-          />
-        );
-      },
+      name: 'device',
+      label: '端末',
+      type: 'select',
+      placeholder: '端末を選択',
+      options: [
+        { value: 'iPhone', label: 'iPhone' },
+        { value: 'Android', label: 'Android' },
+        { value: 'PC', label: 'PC' },
+      ],
+      cols: 1,
+    },
+    {
+      name: 'domain',
+      label: 'ドメイン',
+      type: 'text',
+      placeholder: 'ドメインを入力',
+      cols: 1,
+    },
+    {
+      name: 'functionName',
+      label: '機能',
+      type: 'text',
+      placeholder: '機能を入力',
+      cols: 1,
+    },
+    {
+      name: 'executionType',
+      label: '実行方式',
+      type: 'select',
+      placeholder: '実行方式を選択',
+      options: [
+        { value: '手動', label: '手動' },
+        { value: '自動', label: '自動' },
+      ],
+      cols: 1,
+    },
+    {
+      name: 'automationStatus',
+      label: '自動化状況',
+      type: 'select',
+      placeholder: '自動化状況を選択',
+      options: [
+        { value: '自動化済', label: '自動化済' },
+        { value: '自動化対象', label: '自動化対象' },
+        { value: '自動化対象外', label: '自動化対象外' },
+        { value: '検討中', label: '検討中' },
+      ],
       cols: 1,
     },
     {
@@ -253,7 +247,7 @@ export function CreateTestCaseDialog({
     // },
     {
       name: 'evidence',
-      label: '根拠',
+      label: '根拠コード',
       type: 'textarea',
       placeholder: 'Enter evidence',
       rows: 3,
@@ -261,7 +255,7 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'preconditions',
-      label: 'Preconditions',
+      label: '前提条件',
       type: 'textarea-with-attachments',
       placeholder: 'Enter preconditions',
       rows: 3,
@@ -271,7 +265,7 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'postconditions',
-      label: 'Postconditions',
+      label: '事後条件',
       type: 'textarea-with-attachments',
       placeholder: 'Enter postconditions',
       rows: 3,
@@ -281,7 +275,7 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'testData',
-      label: 'Test Data',
+      label: 'テストデータ',
       type: 'textarea',
       placeholder: 'Enter test data or input values',
       rows: 3,
@@ -357,22 +351,6 @@ export function CreateTestCaseDialog({
     const uploadedAttachments = await uploadPendingAttachments();
 
     const estimatedTime = formData.estimatedTime ? parseInt(formData.estimatedTime) : undefined;
-    const isAutomated = formData.isAutomated === 'true';
-    // Parse platforms from JSON string or use array directly
-    let platforms: Platform[] = [];
-    if (formData.platforms) {
-      if (typeof formData.platforms === 'string') {
-        try {
-          // Try parsing as JSON first
-          platforms = JSON.parse(formData.platforms);
-        } catch {
-          // If not JSON, treat as comma-separated string (fallback)
-          platforms = formData.platforms.split(',').map(p => p.trim()).filter(p => p.length > 0) as Platform[];
-        }
-      } else if (Array.isArray(formData.platforms)) {
-        platforms = formData.platforms as Platform[];
-      }
-    }
 
     const response = await fetch(`/api/projects/${projectId}/testcases`, {
       method: 'POST',
@@ -392,16 +370,18 @@ export function CreateTestCaseDialog({
         postconditions: formData.postconditions || undefined,
         moduleId: formData.moduleId !== 'none' ? formData.moduleId : undefined,
         // New fields
-        assertionId: formData.assertionId || undefined,
         rtcId: formData.rtcId || undefined,
         flowId: formData.flowId || undefined,
         layer: formData.layer || undefined,
-        targetType: formData.targetType || undefined,
         testType: formData.testType || undefined,
         evidence: formData.evidence || undefined,
         notes: formData.notes || undefined,
-        isAutomated,
-        platforms: platforms.length > 0 ? platforms : undefined,
+        platform: formData.platform || undefined,
+        device: formData.device || undefined,
+        domain: formData.domain || undefined,
+        functionName: formData.functionName || undefined,
+        executionType: formData.executionType || undefined,
+        automationStatus: formData.automationStatus || undefined,
       }),
     });
 
@@ -476,11 +456,11 @@ export function CreateTestCaseDialog({
   };
 
   const config: BaseDialogConfig<TestCase> = {
-    title: 'Create Test Case',
-    description: 'Add a new test case to this project. Fill in the details to get started.',
+    title: 'テストケースを作成',
+    description: 'このプロジェクトに新しいテストケースを追加します。詳細を入力してください。',
     fields,
-    submitLabel: 'Create Test Case',
-    cancelLabel: 'Cancel',
+    submitLabel: 'テストケースを作成',
+    cancelLabel: 'キャンセル',
     triggerOpen: open !== undefined ? open : triggerOpen,
     onOpenChange,
     onSubmit: handleSubmit,

@@ -46,12 +46,13 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [domainFilter, setDomainFilter] = useState<string>('');
+  const [functionNameFilter, setFunctionNameFilter] = useState<string>('');
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
   const [totalPagesCount, setTotalPagesCount] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [isPaginationChange, setIsPaginationChange] = useState(false);
@@ -73,7 +74,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
   useEffect(() => {
     fetchTestCases();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, currentPage, itemsPerPage, searchQuery, priorityFilter, statusFilter]);
+  }, [projectId, currentPage, itemsPerPage, searchQuery, statusFilter, domainFilter, functionNameFilter]);
 
   useEffect(() => {
     if (project) {
@@ -110,8 +111,9 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
       });
       
       if (searchQuery) params.append('search', searchQuery);
-      if (priorityFilter !== 'all') params.append('priority', priorityFilter);
       if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (domainFilter) params.append('domain', domainFilter);
+      if (functionNameFilter) params.append('functionName', functionNameFilter);
       
       const response = await fetch(`/api/projects/${projectId}/testcases?${params}`);
       const data = await response.json();
@@ -158,6 +160,13 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
     setItemsPerPage(items);
     setCurrentPage(1); // Reset to first page when items per page changes
   };
+
+  // Check if any filters are active
+  const hasActiveFilters = 
+    searchQuery !== '' ||
+    statusFilter !== 'all' ||
+    domainFilter !== '' ||
+    functionNameFilter !== '';
 
   // Show modules that have test cases in the current page OR are truly empty (on last page only)
   const modulesForTable = testCases.length === 0 
@@ -219,7 +228,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
         const data = await response.json();
         setAlert({
           type: 'error',
-          title: 'Failed to Delete Test Case',
+          title: 'テストケースの削除に失敗しました',
           message: data.error || 'Failed to delete test case',
         });
       }
@@ -245,7 +254,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
 
 
   if (loading || permissionsLoading) {
-    return <Loader fullScreen text="Loading test cases..." />;
+    return <Loader fullScreen text="テストケースを読み込み中..." />;
   }
 
   // Check permissions
@@ -260,9 +269,9 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
 
       <TopBar 
         breadcrumbs={[
-          { label: 'Projects', href: '/projects' },
-          { label: project?.name || 'Loading...', href: `/projects/${projectId}` },
-          { label: 'Test Cases' }
+          { label: 'プロジェクト', href: '/projects' },
+          { label: project?.name || '読み込み中...', href: `/projects/${projectId}` },
+          { label: 'テストケース' }
         ]}
         actions={
           canCreateTestCase ? (
@@ -271,29 +280,29 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
                 <>
                   <ButtonSecondary onClick={() => setImportDialogOpen(true)} className="cursor-pointer flex-shrink-0">
                     <Import className="w-4 h-4 mr-2" />
-                    Import
+                    インポート
                   </ButtonSecondary>
                   <ButtonSecondary 
                     onClick={() => setExportDialogOpen(true)} 
                     className="cursor-pointer flex-shrink-0"
-                    title="Export test cases"
+                    title="テストケースをエクスポート"
                   >
                     <Upload className="w-4 h-4 mr-2" />
-                    Export
+                    エクスポート
                   </ButtonSecondary>
                 </>
               )}
               <ActionButtonGroup
                 buttons={[
                   {
-                    label: 'New Module',
+                    label: '新規モジュール',
                     icon: FolderPlus,
                     onClick: () => setCreateModuleDialogOpen(true),
                     variant: 'secondary',
                     buttonName: 'Test Case List - New Module',
                   },
                   {
-                    label: 'New Test Case',
+                    label: '新規テストケース',
                     icon: Plus,
                     onClick: () => setCreateDialogOpen(true),
                     variant: 'primary',
@@ -312,7 +321,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
           header={
             <PageHeaderWithBadge
               badge={project?.key}
-              title="Test Cases"
+              title="テストケース"
               description={project?.name}
             />
           }
@@ -320,11 +329,13 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
             mounted ? (
               <TestCaseFilters
                 searchQuery={searchQuery}
-                priorityFilter={priorityFilter}
                 statusFilter={statusFilter}
+                domainFilter={domainFilter}
+                functionNameFilter={functionNameFilter}
                 onSearchChange={setSearchQuery}
-                onPriorityChange={setPriorityFilter}
                 onStatusChange={setStatusFilter}
+                onDomainChange={setDomainFilter}
+                onFunctionNameChange={setFunctionNameFilter}
               />
             ) : null
           }
@@ -335,7 +346,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
       <div className="max-w-7xl mx-auto px-8 py-4">
         {/* Test Cases List */}
         {loading ? (
-          <Loader fullScreen={false} text="Loading test cases..." />
+          <Loader fullScreen={false} text="テストケースを読み込み中..." />
         ) : testCases.length === 0 && totalItems === 0 ? (
           <EmptyTestCaseState
             hasFilters={false}
@@ -346,7 +357,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
           <>
             <TestCaseTable
               testCases={testCases}
-              groupedByModule={true}
+              groupedByModule={!hasActiveFilters}
               modules={modulesForTable}
               onDelete={handleDeleteClick}
               onClick={handleCardClick}
@@ -426,7 +437,6 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
               moduleId: undefined,
               suiteId: undefined,
               status: statusFilter !== 'all' ? statusFilter : undefined,
-              priority: priorityFilter !== 'all' ? priorityFilter : undefined,
             },
           }}
           itemName="test cases"

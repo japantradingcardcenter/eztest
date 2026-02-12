@@ -1,5 +1,4 @@
 export type TestLayer = 'SMOKE' | 'CORE' | 'EXTENDED' | 'UNKNOWN';
-export type TargetType = 'API' | 'SCREEN' | 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'PERFORMANCE' | 'SECURITY' | 'USABILITY' | 'COMPATIBILITY';
 export type Platform = 'IOS' | 'ANDROID' | 'WEB';
 export type TestType = 'NORMAL' | 'ABNORMAL' | 'NON_FUNCTIONAL' | 'REGRESSION' | 'DATA_INTEGRITY' | 'STATE_TRANSITION' | 'OPERATIONAL' | 'FAILURE';
 
@@ -19,19 +18,21 @@ export interface TestCase {
   suiteId?: string;
   moduleId?: string;
 
-  assertionId?: string;
   rtcId?: string;
   flowId?: string;
 
   layer?: TestLayer;
-  targetType?: TargetType;
   testType?: TestType;
 
   evidence?: string;
   notes?: string;
 
-  isAutomated?: boolean;
-  platforms?: Platform[];
+  platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
+  device?: 'iPhone' | 'Android' | 'PC' | null;
+  domain?: string | null;
+  functionName?: string | null;
+  executionType?: '手動' | '自動' | null;
+  automationStatus?: '自動化済' | '自動化対象' | '自動化対象外' | '検討中' | null;
 
   createdBy: {
     id: string;
@@ -63,19 +64,21 @@ export interface TestCaseFormData {
   suiteId: string | null;
   moduleId: string | null;
 
-  assertionId?: string;
   rtcId?: string;
   flowId?: string;
 
   layer?: TestLayer | string;
-  targetType?: TargetType | string;
   testType?: TestType | string;
 
   evidence?: string;
   notes?: string;
 
-  isAutomated?: boolean;
-  platforms?: Platform[];
+  platform?: 'Web' | 'Web(SP)' | 'iOS Native' | 'Android Native' | null;
+  device?: 'iPhone' | 'Android' | 'PC' | null;
+  domain?: string | null;
+  functionName?: string | null;
+  executionType?: '手動' | '自動' | null;
+  automationStatus?: '自動化済' | '自動化対象' | '自動化対象外' | '検討中' | null;
 }
 
 export interface TestSuite {

@@ -47,15 +47,17 @@ export const createTestCaseSchema = z.object({
   postconditions: z.string().optional(),
   steps: z.array(testStepSchema).optional(),
   // New fields for enhanced test case management
-  assertionId: z.string().optional().nullable(),
   rtcId: z.string().optional().nullable(),
   flowId: z.string().optional().nullable(),
   layer: z.enum(['SMOKE', 'CORE', 'EXTENDED', 'UNKNOWN']).optional().nullable(),
-  targetType: z.enum(['FUNCTIONAL', 'NON_FUNCTIONAL', 'PERFORMANCE', 'SECURITY', 'USABILITY', 'COMPATIBILITY', 'API', 'SCREEN']).optional().nullable(),
   evidence: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
-  isAutomated: z.boolean().optional().default(false),
-  platforms: z.array(z.enum(['IOS', 'ANDROID', 'WEB'])).optional().default([]),
+  platform: z.enum(['Web', 'Web(SP)', 'iOS Native', 'Android Native']).optional().nullable(),
+  device: z.enum(['iPhone', 'Android', 'PC']).optional().nullable(),
+  domain: z.string().optional().nullable(),
+  functionName: z.string().optional().nullable(),
+  executionType: z.enum(['手動', '自動']).optional().nullable(),
+  automationStatus: z.enum(['自動化済', '自動化対象', '自動化対象外', '検討中']).optional().nullable(),
 });
 
 /**
@@ -77,15 +79,17 @@ export const updateTestCaseSchema = z.object({
   moduleId: z.string().optional().nullable(),
   suiteId: z.string().optional().nullable(),
   // New fields for enhanced test case management
-  assertionId: z.string().optional().nullable(),
   rtcId: z.string().optional().nullable(),
   flowId: z.string().optional().nullable(),
   layer: z.enum(['SMOKE', 'CORE', 'EXTENDED', 'UNKNOWN']).optional().nullable(),
-  targetType: z.enum(['FUNCTIONAL', 'NON_FUNCTIONAL', 'PERFORMANCE', 'SECURITY', 'USABILITY', 'COMPATIBILITY', 'API', 'SCREEN']).optional().nullable(),
   evidence: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
-  isAutomated: z.boolean().optional(),
-  platforms: z.array(z.enum(['IOS', 'ANDROID', 'WEB'])).optional(),
+  platform: z.enum(['Web', 'Web(SP)', 'iOS Native', 'Android Native']).optional().nullable(),
+  device: z.enum(['iPhone', 'Android', 'PC']).optional().nullable(),
+  domain: z.string().optional().nullable(),
+  functionName: z.string().optional().nullable(),
+  executionType: z.enum(['手動', '自動']).optional().nullable(),
+  automationStatus: z.enum(['自動化済', '自動化対象', '自動化対象外', '検討中']).optional().nullable(),
 });
 
 /**
@@ -106,6 +110,8 @@ export const testCaseQuerySchema = z.object({
   priority: z.string().optional(),
   status: z.string().optional(),
   search: z.string().optional(),
+  domain: z.string().optional(),
+  functionName: z.string().optional(),
 });
 
 /**

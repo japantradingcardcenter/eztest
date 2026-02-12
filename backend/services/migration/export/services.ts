@@ -95,16 +95,18 @@ export class ExportService {
         postconditions: true,
         testData: true,
         // New fields for enhanced test case management
-        assertionId: true,
         rtcId: true,
         flowId: true,
         layer: true,
-        targetType: true,
         testType: true,
         evidence: true,
         notes: true,
-        isAutomated: true,
-        platforms: true,
+        platform: true,
+        device: true,
+        domain: true,
+        functionName: true,
+        executionType: true,
+        automationStatus: true,
         module: {
           select: {
             name: true,
@@ -194,23 +196,8 @@ export class ExportService {
       const linkedDefectIds = defectsByTestCaseId.get(tc.id) || [];
       const defectIds = linkedDefectIds.join(', ');
 
-      // Format platforms array to string (e.g., "IOS / ANDROID / WEB")
-      const platformsFormatted = tc.platforms && tc.platforms.length > 0
-        ? tc.platforms.join(' / ')
-        : '';
-
       // Format layer to display value
       const layerFormatted = tc.layer || '';
-
-      // Format targetType to display value (API or 画面)
-      let targetTypeFormatted = '';
-      if (tc.targetType === 'API') {
-        targetTypeFormatted = 'API';
-      } else if (tc.targetType === 'SCREEN') {
-        targetTypeFormatted = '画面';
-      } else if (tc.targetType) {
-        targetTypeFormatted = tc.targetType;
-      }
 
       // Format testType to Japanese display value
       const testTypeMap: Record<string, string> = {
@@ -225,36 +212,35 @@ export class ExportService {
       };
       const testTypeFormatted = tc.testType ? (testTypeMap[tc.testType] || tc.testType) : '';
 
-      // Format isAutomated to display value
-      const isAutomatedFormatted = tc.isAutomated ? 'true' : '';
-
       return {
-        'Test Case ID': tc.tcId,
-        'Test Case Title': tc.title,
-        'Module / Feature': tc.module?.name || '',
-        'Priority': tc.priority,
-        'Preconditions': tc.preconditions || '',
-        'Test Steps': testStepsFormatted,
-        'Test Data': testData,
-        'Expected Result': expectedResultFormatted,
-        'Status': tc.status,
-        'Defect ID': defectIds,
+        'テストケースID': tc.tcId,
+        'テストケース名': tc.title,
+        'モジュール・機能': tc.module?.name || '',
+        '優先度': tc.priority,
+        '前提条件': tc.preconditions || '',
+        'テスト手順': testStepsFormatted,
+        'テストデータ': testData,
+        '期待結果': expectedResultFormatted,
+        '状態': tc.status,
+        '不具合ID': defectIds,
         // New fields for enhanced test case management
-        'Assertion-ID': tc.assertionId || '',
         'RTC-ID': tc.rtcId || '',
         'Flow-ID': tc.flowId || '',
         'Layer': layerFormatted,
-        '対象（API/画面）': targetTypeFormatted,
         'テスト種別': testTypeFormatted,
-        '根拠（ドキュメント）': tc.evidence || '',
+        '根拠コード': tc.evidence || '',
         '備考': tc.notes || '',
-        '自動化': isAutomatedFormatted,
-        '環境（iOS / Android / Web）': platformsFormatted,
+        'プラットフォーム': tc.platform || '',
+        '端末': tc.device || '',
+        'ドメイン': tc.domain || '',
+        '機能': tc.functionName || '',
+        '実行方式': tc.executionType || '',
+        '自動化状況': tc.automationStatus || '',
         // Older fields (for backward compatibility)
-        'Description': tc.description || '',
-        'Estimated Time (minutes)': tc.estimatedTime || '',
-        'Postconditions': tc.postconditions || '',
-        'Test Suites': suites,
+        '説明': tc.description || '',
+        '想定時間（分）': tc.estimatedTime || '',
+        '事後条件': tc.postconditions || '',
+        'テストスイート': suites,
       };
     });
 

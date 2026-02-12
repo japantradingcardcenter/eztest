@@ -42,6 +42,15 @@ export class TestCaseController {
   }
 
   /**
+   * Get distinct domain and functionName values for filter dropdowns
+   * Access already checked by route wrapper
+   */
+  async getTestCaseFilterOptions(_req: CustomRequest, projectId: string) {
+    const options = await testCaseService.getTestCaseFilterOptions(projectId);
+    return { data: options };
+  }
+
+  /**
    * Get test cases with pagination and module grouping
    * Access already checked by route wrapper
    */
@@ -63,6 +72,8 @@ export class TestCaseController {
       status: searchParams.get('status') || undefined,
       search: searchParams.get('search') || undefined,
       moduleId: searchParams.get('moduleId') || undefined,
+      domain: searchParams.get('domain') || undefined,
+      functionName: searchParams.get('functionName') || undefined,
     };
 
     // Validation with Zod
@@ -137,15 +148,17 @@ export class TestCaseController {
       createdById: req.userInfo.id,
       steps: validatedData.steps,
       // New fields for enhanced test case management
-      assertionId: validatedData.assertionId ?? undefined,
       rtcId: validatedData.rtcId ?? undefined,
       flowId: validatedData.flowId ?? undefined,
       layer: validatedData.layer ?? undefined,
-      targetType: validatedData.targetType ?? undefined,
-      evidence: validatedData.evidence ?? undefined,
+evidence: validatedData.evidence ?? undefined,
       notes: validatedData.notes ?? undefined,
-      isAutomated: validatedData.isAutomated ?? undefined,
-      platforms: validatedData.platforms ?? undefined,
+      platform: validatedData.platform ?? undefined,
+      device: validatedData.device ?? undefined,
+      domain: validatedData.domain ?? undefined,
+      functionName: validatedData.functionName ?? undefined,
+      executionType: validatedData.executionType ?? undefined,
+      automationStatus: validatedData.automationStatus ?? undefined,
     });
 
     return { data: testCase, statusCode: 201 };
@@ -213,15 +226,17 @@ export class TestCaseController {
           suiteId: validatedData.suiteId,
           moduleId: validatedData.moduleId,
           // New fields for enhanced test case management
-          assertionId: validatedData.assertionId,
           rtcId: validatedData.rtcId,
           flowId: validatedData.flowId,
           layer: validatedData.layer,
-          targetType: validatedData.targetType,
-          evidence: validatedData.evidence,
+evidence: validatedData.evidence,
           notes: validatedData.notes,
-          isAutomated: validatedData.isAutomated,
-          platforms: validatedData.platforms,
+          platform: validatedData.platform,
+          device: validatedData.device,
+          domain: validatedData.domain,
+          functionName: validatedData.functionName,
+          executionType: validatedData.executionType,
+          automationStatus: validatedData.automationStatus,
         }
       );
 
