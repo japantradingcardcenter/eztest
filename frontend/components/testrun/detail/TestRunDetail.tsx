@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { Breadcrumbs } from '@/frontend/reusable-components/layout/Breadcrumbs';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
@@ -300,6 +300,39 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       });
     }
   };
+
+  // RTC-ID昇順にソートしたテストケースリスト（ナビゲーション用）
+  const sortedTestCases = useMemo(() => {
+    if (!testRun?.results) return [];
+    return [...testRun.results]
+      .filter((r) => r.testCase)
+      .map((r) => r.testCase)
+      .sort((a, b) =>
+        (a.rtcId || '').localeCompare(b.rtcId || '', undefined, { numeric: true })
+      );
+  }, [testRun?.results]);
+
+  const navigateTestCase = useCallback((direction: 'prev' | 'next') => {
+    if (!selectedTestCase || sortedTestCases.length === 0) return;
+    const currentIndex = sortedTestCases.findIndex(tc => tc.id === selectedTestCase.testCaseId);
+    if (currentIndex === -1) return;
+    const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= sortedTestCases.length) return;
+
+    const newTestCase = sortedTestCases[newIndex];
+    const existingResult = testRun?.results.find((r) => r.testCaseId === newTestCase.id);
+
+    setSelectedTestCase({
+      testCaseId: newTestCase.id,
+      testCaseName: newTestCase.title || newTestCase.name || '',
+    });
+    setResultForm({
+      status: existingResult?.status || '',
+      comment: existingResult?.comment || '',
+    });
+    // タイマーをリセットして再スタート
+    setExecutionStartTime(Date.now());
+  }, [selectedTestCase, sortedTestCases, testRun?.results, setResultForm]);
 
   const handleOpenResultDialog = (testCase: TestCase) => {
     const existingResult = testRun?.results.find(
@@ -810,6 +843,12 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           onSubmit={handleSubmitResult}
           refreshTrigger={defectRefreshTrigger}
           executionStartTime={executionStartTime}
+          onNavigate={navigateTestCase}
+          hasPrev={sortedTestCases.findIndex(tc => tc.id === selectedTestCase?.testCaseId) > 0}
+          hasNext={(() => {
+            const idx = sortedTestCases.findIndex(tc => tc.id === selectedTestCase?.testCaseId);
+            return idx >= 0 && idx < sortedTestCases.length - 1;
+          })()}
         />
 
         <AddTestCasesDialog

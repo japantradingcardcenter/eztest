@@ -299,12 +299,19 @@ export function TestCasesListCard({
     return Number.isNaN(lastNum) ? 0 : lastNum;
   };
 
-  const tableDataSortedByModule = [...tableData].sort((a, b) => {
-    const keyA = getModuleSortKey(a);
-    const keyB = getModuleSortKey(b);
-    if (keyA !== keyB) return keyA - keyB;
-    return (a.testCase.rtcId || '').localeCompare(b.testCase.rtcId || '', undefined, { numeric: true });
-  });
+  // IN_PROGRESS時はRTC-ID昇順のフラットリスト、それ以外はモジュールグループ表示
+  const isInProgress = testRunStatus === 'IN_PROGRESS';
+
+  const tableDataSorted = isInProgress
+    ? [...tableData].sort((a, b) =>
+        (a.testCase.rtcId || '').localeCompare(b.testCase.rtcId || '', undefined, { numeric: true })
+      )
+    : [...tableData].sort((a, b) => {
+        const keyA = getModuleSortKey(a);
+        const keyB = getModuleSortKey(b);
+        if (keyA !== keyB) return keyA - keyB;
+        return (a.testCase.rtcId || '').localeCompare(b.testCase.rtcId || '', undefined, { numeric: true });
+      });
 
   return (
     <DetailCard
@@ -363,9 +370,9 @@ export function TestCasesListCard({
         </div>
       ) : (
         <GroupedDataTable
-          data={tableDataSortedByModule}
+          data={tableDataSorted}
           columns={columns}
-          grouped={true}
+          grouped={!isInProgress}
           groupConfig={groupConfig}
           defaultExpanded={true}
           onRowClick={(row) => router.push(`/projects/${projectId}/testcases/${row.testCase.id}`)}

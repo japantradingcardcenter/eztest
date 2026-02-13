@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/frontend/reusable-elements/selects/Select';
 import { Checkbox } from '@/frontend/reusable-elements/checkboxes/Checkbox';
-import { CheckCircle, XCircle, AlertCircle, Circle, Bug, Timer, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, Circle, Bug, Timer, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ResultFormData } from '../types';
 import { CreateDefectDialog } from '@/frontend/components/defect/subcomponents/CreateDefectDialog';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
@@ -71,6 +71,9 @@ interface RecordResultDialogProps {
   onSubmit: () => void;
   refreshTrigger?: number; // Trigger to refresh defects after creation
   executionStartTime?: number | null; // タイマー開始時刻 (Date.now())
+  onNavigate?: (direction: 'prev' | 'next') => void;
+  hasPrev?: boolean;
+  hasNext?: boolean;
 }
 
 export function RecordResultDialog({
@@ -85,6 +88,9 @@ export function RecordResultDialog({
   onSubmit,
   refreshTrigger,
   executionStartTime,
+  onNavigate,
+  hasPrev = false,
+  hasNext = false,
 }: RecordResultDialogProps) {
   const [existingDefects, setExistingDefects] = useState<Defect[]>([]);
   const [otherDefects, setOtherDefects] = useState<Defect[]>([]);
@@ -293,6 +299,30 @@ export function RecordResultDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex flex-col max-h-[90vh]">
+        {/* ◀▶ ナビゲーションボタン */}
+        {onNavigate && (
+          <>
+            <button
+              type="button"
+              disabled={!hasPrev}
+              onClick={() => onNavigate('prev')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[calc(100%+8px)] z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 border border-white/20 text-white/70 hover:bg-white/20 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-white/10 disabled:hover:text-white/70"
+              aria-label="前のテストケース"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              disabled={!hasNext}
+              onClick={() => onNavigate('next')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-[calc(100%+8px)] z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 border border-white/20 text-white/70 hover:bg-white/20 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-white/10 disabled:hover:text-white/70"
+              aria-label="次のテストケース"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </>
+        )}
+
         <DialogHeader className="mb-4 flex-shrink-0">
           <DialogTitle>テスト結果を記録</DialogTitle>
           <DialogDescription>{testCaseName}</DialogDescription>
