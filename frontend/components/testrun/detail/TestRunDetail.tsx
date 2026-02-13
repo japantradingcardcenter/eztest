@@ -379,10 +379,26 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       const data = await response.json();
 
       if (data.data) {
-        setResultDialogOpen(false);
-        setSelectedTestCase(null);
-        clearResultForm(); // Clear persisted form data after successful submission
+        clearResultForm();
         fetchTestRun();
+
+        // 次のテストケースがあれば自動的に切り替え、なければダイアログを閉じる
+        const currentIndex = sortedTestCases.findIndex(tc => tc.id === selectedTestCase.testCaseId);
+        if (currentIndex >= 0 && currentIndex < sortedTestCases.length - 1) {
+          const nextTestCase = sortedTestCases[currentIndex + 1];
+          const nextResult = testRun?.results.find((r) => r.testCaseId === nextTestCase.id);
+          setSelectedTestCase({
+            testCaseId: nextTestCase.id,
+            testCaseName: nextTestCase.title || nextTestCase.name || '',
+          });
+          setResultForm({
+            status: nextResult?.status || '',
+            comment: nextResult?.comment || '',
+          });
+        } else {
+          setResultDialogOpen(false);
+          setSelectedTestCase(null);
+        }
       } else {
         alert(data.error || '結果の保存に失敗しました');
       }
