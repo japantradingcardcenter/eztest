@@ -815,13 +815,12 @@ export class TestRunService {
       console.warn('[TestRunService] Failed to reflect platform/device onto test case:', error instanceof Error ? error.message : error);
     }
 
-    // 計測時間をTestCaseのテスト実行時間（分）に反映
+    // 計測時間をTestCaseのテスト実行時間（秒）に反映
     if (data.duration && data.duration > 0) {
       try {
-        const estimatedTimeMinutes = Math.max(1, Math.round(data.duration / 60));
         await prisma.testCase.update({
           where: { id: testCaseId },
-          data: { estimatedTime: estimatedTimeMinutes },
+          data: { estimatedTime: data.duration },
         });
       } catch (error) {
         console.warn('[TestRunService] Failed to update estimatedTime on test case:', error instanceof Error ? error.message : error);

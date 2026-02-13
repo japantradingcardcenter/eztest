@@ -112,7 +112,7 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'estimatedTime',
-      label: 'テスト実行時間（分）',
+      label: 'テスト実行時間（秒）',
       type: 'number',
       placeholder: 'Enter estimated time',
       cols: 1,

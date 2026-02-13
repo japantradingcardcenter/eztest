@@ -292,8 +292,8 @@ export function RecordResultDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader className="mb-4">
+      <DialogContent className="flex flex-col max-h-[90vh]">
+        <DialogHeader className="mb-4 flex-shrink-0">
           <DialogTitle>テスト結果を記録</DialogTitle>
           <DialogDescription>{testCaseName}</DialogDescription>
           {executionStartTime && (
@@ -307,6 +307,7 @@ export function RecordResultDialog({
           )}
         </DialogHeader>
 
+        <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
         {/* テストケース詳細表示 */}
         {loadingTestCase ? (
           <div className="mb-4 p-4 rounded-lg bg-white/5 border border-white/10">
@@ -365,7 +366,11 @@ export function RecordResultDialog({
                   {testCaseDetail.estimatedTime != null && (
                     <div>
                       <span className="text-white/40">テスト実行時間:</span>{' '}
-                      <span className="text-white/80">{testCaseDetail.estimatedTime}分</span>
+                      <span className="text-white/80 font-mono">
+                        {String(Math.floor(testCaseDetail.estimatedTime / 3600)).padStart(2, '0')}:
+                        {String(Math.floor((testCaseDetail.estimatedTime % 3600) / 60)).padStart(2, '0')}:
+                        {String(testCaseDetail.estimatedTime % 60).padStart(2, '0')}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -589,8 +594,9 @@ export function RecordResultDialog({
             </div>
           )}
         </div>
+        </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0">
           <Button 
             variant="glass" 
             onClick={() => onOpenChange(false)}

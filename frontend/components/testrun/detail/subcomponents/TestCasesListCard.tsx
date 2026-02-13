@@ -116,13 +116,18 @@ export function TestCasesListCard({
       key: 'estimatedTime',
       label: 'テスト実行時間',
       width: '100px',
-      render: (row: ResultRow) => (
-        <span className="text-white/70 text-sm">
-          {row.testCase.estimatedTime != null && Number.isFinite(row.testCase.estimatedTime)
-            ? `${row.testCase.estimatedTime}m`
-            : '-'}
-        </span>
-      ),
+      render: (row: ResultRow) => {
+        const t = row.testCase.estimatedTime;
+        if (t == null || !Number.isFinite(t)) return <span className="text-white/70 text-sm">-</span>;
+        const h = Math.floor(t / 3600);
+        const m = Math.floor((t % 3600) / 60);
+        const s = t % 60;
+        return (
+          <span className="text-white/70 text-sm font-mono">
+            {String(h).padStart(2, '0')}:{String(m).padStart(2, '0')}:{String(s).padStart(2, '0')}
+          </span>
+        );
+      },
     },
     {
       key: 'priority',
