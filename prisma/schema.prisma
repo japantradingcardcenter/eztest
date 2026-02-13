@@ -485,6 +485,8 @@ model Defect {
   assignedToId  String?
   testRunId     String?       // Optional link to test run
   environment   String?       // Dynamic dropdown value e.g., "Production", "Staging", "QA"
+  platform      String?       // プラットフォーム: Web, Web(SP), iOS Native, Android Native
+  device        String?       // 端末: iPhone, Android, PC
   dueDate       DateTime?     // Optional due date for the defect
   progressPercentage Int?      // Optional progress percentage (0-100)
   createdById   String

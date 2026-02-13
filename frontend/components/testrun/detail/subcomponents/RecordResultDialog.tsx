@@ -65,6 +65,8 @@ interface RecordResultDialogProps {
   testCaseId: string;
   projectId: string;
   testRunEnvironment?: string; // Environment from test run
+  testRunPlatform?: string;
+  testRunDevice?: string;
   formData: ResultFormData;
   onOpenChange: (open: boolean) => void;
   onFormChange: (data: Partial<ResultFormData>) => void;
@@ -81,6 +83,8 @@ export function RecordResultDialog({
   testCaseId,
   projectId,
   testRunEnvironment,
+  testRunPlatform,
+  testRunDevice,
   formData,
   onOpenChange,
   onFormChange,
@@ -661,6 +665,8 @@ export function RecordResultDialog({
         onDefectCreated={handleCreateDefect}
         testCaseId={testCaseId}
         testRunEnvironment={testRunEnvironment}
+        testRunPlatform={testRunPlatform}
+        testRunDevice={testRunDevice}
       />
     </Dialog>
   );

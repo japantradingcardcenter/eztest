@@ -854,6 +854,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           testCaseId={selectedTestCase?.testCaseId || ''}
           projectId={testRun.project?.id || ''}
           testRunEnvironment={testRun.environment}
+          testRunPlatform={testRun.platform}
+          testRunDevice={testRun.device}
           formData={resultForm}
           onOpenChange={setResultDialogOpen}
           onFormChange={(data) => {
@@ -928,6 +930,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
             onDefectCreated={handleDefectCreated}
             testCaseId={selectedTestCaseForDefect}
             testRunEnvironment={testRun.environment}
+            testRunPlatform={testRun.platform}
+            testRunDevice={testRun.device}
           />
         )}
 

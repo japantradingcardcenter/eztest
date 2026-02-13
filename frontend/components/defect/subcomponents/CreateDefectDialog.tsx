@@ -23,6 +23,8 @@ interface CreateDefectDialogProps {
   // Context-specific props for auto-population
   testCaseId?: string; // When creating from test run with failed test case
   testRunEnvironment?: string; // When creating from test run, auto-populate environment
+  testRunPlatform?: string; // When creating from test run, auto-populate platform
+  testRunDevice?: string; // When creating from test run, auto-populate device
 }
 
 export function CreateDefectDialog({
@@ -32,6 +34,8 @@ export function CreateDefectDialog({
   onDefectCreated,
   testCaseId,
   testRunEnvironment,
+  testRunPlatform,
+  testRunDevice,
 }: CreateDefectDialogProps) {
   const [alert, setAlert] = useState<FloatingAlertMessage | null>(null);
   const [assignees, setAssignees] = useState<Array<{ id: string; name: string }>>([]);
@@ -173,6 +177,26 @@ export function CreateDefectDialog({
       cols: 1,
     },
     {
+      name: 'platform',
+      label: testRunPlatform ? 'プラットフォーム（自動入力）' : 'プラットフォーム',
+      type: 'text',
+      placeholder: testRunPlatform || 'Web, iOS Native, Android Native など',
+      defaultValue: testRunPlatform,
+      readOnly: !!testRunPlatform,
+      maxLength: 100,
+      cols: 1,
+    },
+    {
+      name: 'device',
+      label: testRunDevice ? '端末（自動入力）' : '端末',
+      type: 'text',
+      placeholder: testRunDevice || 'iPhone, Android, PC など',
+      defaultValue: testRunDevice,
+      readOnly: !!testRunDevice,
+      maxLength: 100,
+      cols: 1,
+    },
+    {
       name: 'dueDate',
       label: '期限（任意）',
       type: 'date',
@@ -277,6 +301,8 @@ export function CreateDefectDialog({
         priority: formData.priority,
         assignedToId: formData.assignedToId && formData.assignedToId.trim() !== '' ? formData.assignedToId : null,
         environment: formData.environment && formData.environment.trim() !== '' ? formData.environment : null,
+        platform: formData.platform && formData.platform.trim() !== '' ? formData.platform : null,
+        device: formData.device && formData.device.trim() !== '' ? formData.device : null,
         dueDate: formData.dueDate ? new Date(formData.dueDate as string).toISOString() : undefined,
         progressPercentage: formData.progressPercentage ? Number(formData.progressPercentage) : undefined,
         status: 'NEW', // Always start as NEW as per lifecycle requirements

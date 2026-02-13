@@ -14,6 +14,8 @@ interface CreateDefectInput {
   assignedToId?: string | null;
   createdById: string;
   environment?: string | null;
+  platform?: string | null;
+  device?: string | null;
   dueDate?: string | null;
   progressPercentage?: number | null;
   testCaseIds?: string[];
@@ -239,6 +241,8 @@ export class DefectService {
         assignedToId: data.assignedToId,
         createdById: data.createdById,
         environment: data.environment,
+        platform: data.platform,
+        device: data.device,
         dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
         progressPercentage: data.progressPercentage,
         // Create DefectTestCase links if testCaseIds provided
