@@ -68,9 +68,8 @@ interface RecordResultDialogProps {
   formData: ResultFormData;
   onOpenChange: (open: boolean) => void;
   onFormChange: (data: Partial<ResultFormData>) => void;
-  onSubmit: () => void;
+  onSubmit: (durationSeconds?: number) => void;
   refreshTrigger?: number; // Trigger to refresh defects after creation
-  executionStartTime?: number | null; // タイマー開始時刻 (Date.now())
   onNavigate?: (direction: 'prev' | 'next') => void;
   hasPrev?: boolean;
   hasNext?: boolean;
@@ -87,7 +86,6 @@ export function RecordResultDialog({
   onFormChange,
   onSubmit,
   refreshTrigger,
-  executionStartTime,
   onNavigate,
   hasPrev = false,
   hasNext = false,
@@ -105,13 +103,18 @@ export function RecordResultDialog({
   const [loadingTestCase, setLoadingTestCase] = useState(false);
   const [testCaseExpanded, setTestCaseExpanded] = useState(true);
 
-  // 経過時間タイマー
+  // 経過時間タイマー（テストケース読み込み完了後に開始）
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [timerStartTime, setTimerStartTime] = useState<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // ダイアログが開いたらテストケース詳細を取得
+  // ダイアログが開いたらテストケース詳細を取得し、読み込み完了後にタイマー開始
   useEffect(() => {
     if (open && testCaseId) {
+      // タイマーをリセット
+      setTimerStartTime(null);
+      setElapsedSeconds(0);
+
       const fetchTestCaseDetail = async () => {
         setLoadingTestCase(true);
         try {
@@ -124,30 +127,31 @@ export function RecordResultDialog({
           console.error('Error fetching test case detail:', error);
         } finally {
           setLoadingTestCase(false);
+          // テストケース読み込み完了後にタイマー開始
+          setTimerStartTime(Date.now());
         }
       };
       fetchTestCaseDetail();
       setTestCaseExpanded(true);
     } else {
       setTestCaseDetail(null);
+      setTimerStartTime(null);
+      setElapsedSeconds(0);
     }
   }, [open, testCaseId]);
 
   useEffect(() => {
-    if (open && executionStartTime) {
-      // タイマー開始
+    if (open && timerStartTime) {
       const updateElapsed = () => {
-        setElapsedSeconds(Math.floor((Date.now() - executionStartTime) / 1000));
+        setElapsedSeconds(Math.floor((Date.now() - timerStartTime) / 1000));
       };
       updateElapsed();
       timerRef.current = setInterval(updateElapsed, 1000);
     } else {
-      // タイマー停止・リセット
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
-      setElapsedSeconds(0);
     }
     return () => {
       if (timerRef.current) {
@@ -155,7 +159,7 @@ export function RecordResultDialog({
         timerRef.current = null;
       }
     };
-  }, [open, executionStartTime]);
+  }, [open, timerStartTime]);
 
   const formatElapsedTime = (totalSeconds: number): string => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -255,8 +259,9 @@ export function RecordResultDialog({
           console.error('Error linking defects:', error);
         }
       }
-      // Wait for onSubmit to complete successfully
-      await onSubmit();
+      // 計測した経過秒数を渡して保存
+      const duration = timerStartTime ? Math.round((Date.now() - timerStartTime) / 1000) : undefined;
+      await onSubmit(duration);
     } catch (error) {
       throw error;
     }
@@ -326,7 +331,7 @@ export function RecordResultDialog({
         <DialogHeader className="mb-4 flex-shrink-0">
           <DialogTitle>テスト結果を記録</DialogTitle>
           <DialogDescription>{testCaseName}</DialogDescription>
-          {executionStartTime && (
+          {timerStartTime && (
             <div className="flex items-center gap-2 mt-2 px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
               <Timer className="w-4 h-4 text-blue-400" />
               <span className="text-sm text-blue-300">経過時間:</span>
