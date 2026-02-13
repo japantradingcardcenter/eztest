@@ -92,7 +92,7 @@ export function TestCasesListCard({
     {
       key: 'rtcId',
       label: 'RTC-ID',
-      width: '100px',
+      width: '160px',
       render: (row: ResultRow) => (
         <p className="text-xs font-mono text-white/70 truncate">{row.testCase.rtcId || '-'}</p>
       ),
@@ -381,7 +381,7 @@ export function TestCasesListCard({
           groupConfig={groupConfig}
           defaultExpanded={true}
           onRowClick={(row) => router.push(`/projects/${projectId}/testcases/${row.testCase.id}`)}
-          gridTemplateColumns="70px 100px 1fr 100px 90px 120px 120px 140px 140px"
+          gridTemplateColumns="70px 160px 1fr 100px 90px 120px 120px 140px 140px"
           emptyMessage="テストケースはありません"
         />
       )}
