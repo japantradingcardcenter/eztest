@@ -795,6 +795,10 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           onStartTestRun={handleStartTestRun}
           onCompleteTestRun={handleCompleteTestRun}
           onReopenTestRun={handleReopenTestRun}
+          totalExecutionTime={
+            testRun.results
+              ?.reduce((sum, r) => sum + (r.testCase?.estimatedTime || 0), 0) || 0
+          }
         />
 
         <TestRunStatsCards

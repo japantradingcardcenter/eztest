@@ -1,7 +1,7 @@
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
 import { DetailCard } from '@/frontend/reusable-components/cards/DetailCard';
 import { ActionButtonGroup } from '@/frontend/reusable-components/layout/ActionButtonGroup';
-import { Play, Square, RotateCcw, User } from 'lucide-react';
+import { Play, Square, RotateCcw, User, Timer } from 'lucide-react';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 import { getDynamicBadgeProps } from '@/lib/badge-color-utils';
 
@@ -28,6 +28,7 @@ interface TestRunHeaderProps {
   onStartTestRun: () => void;
   onCompleteTestRun: () => void;
   onReopenTestRun?: () => void;
+  totalExecutionTime?: number; // 秒単位の総計
 }
 
 export function TestRunHeader({
@@ -38,6 +39,7 @@ export function TestRunHeader({
   onStartTestRun,
   onCompleteTestRun,
   onReopenTestRun,
+  totalExecutionTime = 0,
 }: TestRunHeaderProps) {
   const { options: statusOptions } = useDropdownOptions('TestRun', 'status');
   const { options: environmentOptions } = useDropdownOptions('TestRun', 'environment');
@@ -134,6 +136,17 @@ export function TestRunHeader({
               <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
                 <User className="w-3 h-3 mr-1" />
                 {testRun.assignedTo.name}
+              </Badge>
+            </div>
+          )}
+          {testRun.status === 'COMPLETED' && totalExecutionTime > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-white/60">テスト実行時間（総計）:</span>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                <Timer className="w-3 h-3 mr-1" />
+                {String(Math.floor(totalExecutionTime / 3600)).padStart(2, '0')}:
+                {String(Math.floor((totalExecutionTime % 3600) / 60)).padStart(2, '0')}:
+                {String(totalExecutionTime % 60).padStart(2, '0')}
               </Badge>
             </div>
           )}
