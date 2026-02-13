@@ -522,14 +522,13 @@ export class TestRunService {
       testCaseIds = [...new Set([...testCaseIds, ...suiteTestCaseIds])]; // Remove duplicates
     }
 
-    // Create the test run (without platform/device in Prisma data to avoid client validation issues)
+    // Create the test run (without executionType/platform/device in Prisma data to avoid client validation issues)
     const status = data.status || 'PLANNED';
     const testRun = await prisma.testRun.create({
       data: {
         projectId: data.projectId,
         name: data.name,
         description: data.description,
-        executionType: data.executionType || 'MANUAL',
         assignedToId: data.assignedToId || null,
         environment: data.environment,
         status,
@@ -548,19 +547,23 @@ export class TestRunService {
       },
     });
 
-    // Set platform and device via raw SQL (bypasses Prisma client field validation)
-    if (data.platform || data.device) {
-      try {
-        if (data.platform && data.device) {
-          await prisma.$executeRaw`UPDATE "TestRun" SET "platform" = ${data.platform}, "device" = ${data.device} WHERE "id" = ${testRun.id}`;
-        } else if (data.platform) {
-          await prisma.$executeRaw`UPDATE "TestRun" SET "platform" = ${data.platform} WHERE "id" = ${testRun.id}`;
-        } else if (data.device) {
-          await prisma.$executeRaw`UPDATE "TestRun" SET "device" = ${data.device} WHERE "id" = ${testRun.id}`;
-        }
-      } catch (error) {
-        console.warn('[TestRunService] Failed to set platform/device on test run (columns may not exist yet):', error instanceof Error ? error.message : error);
+    // Set executionType, platform, and device via raw SQL (bypasses Prisma client field validation)
+    // These columns may not exist in the database if migrations haven't been applied yet
+    try {
+      const execType = data.executionType || 'MANUAL';
+
+      // Build and execute the UPDATE query
+      if (data.platform && data.device) {
+        await prisma.$executeRaw`UPDATE "TestRun" SET "executionType" = ${execType}, "platform" = ${data.platform}, "device" = ${data.device} WHERE "id" = ${testRun.id}`;
+      } else if (data.platform) {
+        await prisma.$executeRaw`UPDATE "TestRun" SET "executionType" = ${execType}, "platform" = ${data.platform} WHERE "id" = ${testRun.id}`;
+      } else if (data.device) {
+        await prisma.$executeRaw`UPDATE "TestRun" SET "executionType" = ${execType}, "device" = ${data.device} WHERE "id" = ${testRun.id}`;
+      } else {
+        await prisma.$executeRaw`UPDATE "TestRun" SET "executionType" = ${execType} WHERE "id" = ${testRun.id}`;
       }
+    } catch (error) {
+      console.warn('[TestRunService] Failed to set executionType/platform/device on test run (columns may not exist yet):', error instanceof Error ? error.message : error);
     }
 
     // If test case IDs are provided, create placeholder results
@@ -601,8 +604,8 @@ export class TestRunService {
    * Update a test run
    */
   async updateTestRun(testRunId: string, data: UpdateTestRunInput) {
-    // Extract platform and device to handle via raw SQL
-    const { platform, device, ...prismaData } = data;
+    // Extract executionType, platform and device to handle via raw SQL (columns may not exist in DB)
+    const { executionType, platform, device, ...prismaData } = data;
 
     const testRun = await prisma.testRun.update({
       where: { id: testRunId },
@@ -624,18 +627,28 @@ export class TestRunService {
       },
     });
 
-    // Set platform and device via raw SQL (bypasses Prisma client field validation)
-    if (platform !== undefined || device !== undefined) {
+    // Set executionType, platform and device via raw SQL (bypasses Prisma client field validation)
+    // These columns may not exist in the database if migrations haven't been applied yet
+    if (executionType !== undefined || platform !== undefined || device !== undefined) {
       try {
-        if (platform !== undefined && device !== undefined) {
+        // Use explicit combinations to leverage tagged template literals safely
+        if (executionType !== undefined && platform !== undefined && device !== undefined) {
+          await prisma.$executeRaw`UPDATE "TestRun" SET "executionType" = ${executionType || 'MANUAL'}, "platform" = ${platform || null}, "device" = ${device || null} WHERE "id" = ${testRunId}`;
+        } else if (executionType !== undefined && platform !== undefined) {
+          await prisma.$executeRaw`UPDATE "TestRun" SET "executionType" = ${executionType || 'MANUAL'}, "platform" = ${platform || null} WHERE "id" = ${testRunId}`;
+        } else if (executionType !== undefined && device !== undefined) {
+          await prisma.$executeRaw`UPDATE "TestRun" SET "executionType" = ${executionType || 'MANUAL'}, "device" = ${device || null} WHERE "id" = ${testRunId}`;
+        } else if (platform !== undefined && device !== undefined) {
           await prisma.$executeRaw`UPDATE "TestRun" SET "platform" = ${platform || null}, "device" = ${device || null} WHERE "id" = ${testRunId}`;
+        } else if (executionType !== undefined) {
+          await prisma.$executeRaw`UPDATE "TestRun" SET "executionType" = ${executionType || 'MANUAL'} WHERE "id" = ${testRunId}`;
         } else if (platform !== undefined) {
           await prisma.$executeRaw`UPDATE "TestRun" SET "platform" = ${platform || null} WHERE "id" = ${testRunId}`;
         } else if (device !== undefined) {
           await prisma.$executeRaw`UPDATE "TestRun" SET "device" = ${device || null} WHERE "id" = ${testRunId}`;
         }
       } catch (error) {
-        console.warn('[TestRunService] Failed to update platform/device on test run:', error instanceof Error ? error.message : error);
+        console.warn('[TestRunService] Failed to update executionType/platform/device on test run:', error instanceof Error ? error.message : error);
       }
     }
 
