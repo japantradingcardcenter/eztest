@@ -277,7 +277,7 @@ export function CreateDefectDialog({
 
   const config: BaseDialogConfig = {
     title: '新規欠陥を作成',
-    description: '欠陥の詳細を入力してください。ステータスはデフォルトで「新規」になります。',
+    description: 'バグの内容を入力してください。ステータスはデフォルトで「新規」になります。',
     fields,
     submitLabel: '欠陥を作成',
     cancelLabel: 'キャンセル',
