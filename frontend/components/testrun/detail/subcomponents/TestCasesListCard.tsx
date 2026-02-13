@@ -367,6 +367,7 @@ export function TestCasesListCard({
           columns={columns}
           grouped={true}
           groupConfig={groupConfig}
+          defaultExpanded={true}
           onRowClick={(row) => router.push(`/projects/${projectId}/testcases/${row.testCase.id}`)}
           gridTemplateColumns="70px 100px 1fr 100px 90px 120px 120px 140px 140px"
           emptyMessage="テストケースはありません"
