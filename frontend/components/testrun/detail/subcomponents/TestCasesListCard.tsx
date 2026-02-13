@@ -303,7 +303,7 @@ export function TestCasesListCard({
     const keyA = getModuleSortKey(a);
     const keyB = getModuleSortKey(b);
     if (keyA !== keyB) return keyA - keyB;
-    return (a.testCase.tcId || '').localeCompare(b.testCase.tcId || '', undefined, { numeric: true });
+    return (a.testCase.rtcId || '').localeCompare(b.testCase.rtcId || '', undefined, { numeric: true });
   });
 
   return (
