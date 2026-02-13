@@ -1006,6 +1006,28 @@ export class ImportService {
       }
     }
 
+    // Cleanup: Delete modules that have no test cases
+    try {
+      const emptyModules = await prisma.module.findMany({
+        where: {
+          projectId,
+          testCases: { none: {} },
+        },
+        select: { id: true, name: true },
+      });
+
+      if (emptyModules.length > 0) {
+        await prisma.module.deleteMany({
+          where: {
+            id: { in: emptyModules.map((m) => m.id) },
+          },
+        });
+        console.log(`[Import] Deleted ${emptyModules.length} empty module(s):`, emptyModules.map((m) => m.name));
+      }
+    } catch (error) {
+      console.warn('[Import] Failed to clean up empty modules:', error instanceof Error ? error.message : error);
+    }
+
     // Debug: Log the test case import result before returning
     console.log('Test case import result:', {
       success: result.success,
