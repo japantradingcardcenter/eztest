@@ -43,6 +43,8 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
     searchQuery: '',
     statusFilter: 'all',
     environmentFilter: 'all',
+    platformFilter: 'all',
+    deviceFilter: 'all',
   });
 
   const [alert, setAlert] = useState<FloatingAlertMessage | null>(null);
@@ -113,6 +115,20 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
     if (filters.environmentFilter !== 'all') {
       filtered = filtered.filter(
         (tr) => tr.environment === filters.environmentFilter
+      );
+    }
+
+    // Platform filter
+    if (filters.platformFilter !== 'all') {
+      filtered = filtered.filter(
+        (tr) => tr.platform === filters.platformFilter
+      );
+    }
+
+    // Device filter
+    if (filters.deviceFilter !== 'all') {
+      filtered = filtered.filter(
+        (tr) => tr.device === filters.deviceFilter
       );
     }
 
@@ -245,6 +261,12 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
               }
               onEnvironmentFilterChange={(environmentFilter) =>
                 setFilters({ ...filters, environmentFilter })
+              }
+              onPlatformFilterChange={(platformFilter) =>
+                setFilters({ ...filters, platformFilter })
+              }
+              onDeviceFilterChange={(deviceFilter) =>
+                setFilters({ ...filters, deviceFilter })
               }
             />
           }

@@ -43,4 +43,6 @@ export interface TestRunFilters {
   searchQuery: string;
   statusFilter: string;
   environmentFilter: string;
+  platformFilter: string;
+  deviceFilter: string;
 }
