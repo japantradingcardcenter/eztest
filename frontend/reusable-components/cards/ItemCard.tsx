@@ -56,7 +56,7 @@ export const ItemCard = ({
       <div className="relative rounded-3xl h-full" style={{ backgroundColor: '#0a1628' }}>
         <Card
           variant="glass"
-          className="!border-0 !rounded-3xl !bg-transparent before:!bg-none !overflow-visible hover:shadow-xl hover:shadow-primary/10 transition-all flex flex-col h-full"
+          className="!border-0 !rounded-3xl !bg-transparent before:!bg-none overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all flex flex-col h-full"
         >
         <CardHeader className="pb-1 pt-2.5 px-3.5">
           <div className="flex items-start justify-between gap-2">
