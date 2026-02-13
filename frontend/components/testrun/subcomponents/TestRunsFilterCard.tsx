@@ -7,20 +7,24 @@ import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 
 interface TestRunsFilterCardProps {
   filters: TestRunFilters;
+  testerOptions: FilterOption[];
   onSearchChange: (search: string) => void;
   onStatusFilterChange: (status: string) => void;
   onEnvironmentFilterChange: (environment: string) => void;
   onPlatformFilterChange: (platform: string) => void;
   onDeviceFilterChange: (device: string) => void;
+  onAssignedToFilterChange: (assignedTo: string) => void;
 }
 
 export function TestRunsFilterCard({
   filters,
+  testerOptions,
   onSearchChange,
   onStatusFilterChange,
   onEnvironmentFilterChange,
   onPlatformFilterChange,
   onDeviceFilterChange,
+  onAssignedToFilterChange,
 }: TestRunsFilterCardProps) {
   // Fetch dynamic dropdown options
   const { options: statusOptionsData } = useDropdownOptions('TestRun', 'status');
@@ -54,8 +58,8 @@ export function TestRunsFilterCard({
 
   return (
     <div className="mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-        <div className="md:col-span-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="col-span-2 md:col-span-4">
           <SearchInput
             value={filters.searchQuery}
             onChange={onSearchChange}
@@ -96,6 +100,15 @@ export function TestRunsFilterCard({
             onValueChange={onDeviceFilterChange}
             placeholder="端末"
             options={deviceOptions}
+          />
+        </div>
+
+        <div>
+          <FilterDropdown
+            value={filters.assignedToFilter}
+            onValueChange={onAssignedToFilterChange}
+            placeholder="テスター"
+            options={testerOptions}
           />
         </div>
       </div>

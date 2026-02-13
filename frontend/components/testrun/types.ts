@@ -45,4 +45,5 @@ export interface TestRunFilters {
   environmentFilter: string;
   platformFilter: string;
   deviceFilter: string;
+  assignedToFilter: string;
 }
