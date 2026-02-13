@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { Breadcrumbs } from '@/frontend/reusable-components/layout/Breadcrumbs';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
@@ -270,6 +270,44 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     }
   };
 
+  // RTC-ID昇順にソートしたテストケースリスト
+  const sortedTestCases = useMemo(() => {
+    if (!testRun?.results) return [];
+    return [...testRun.results]
+      .filter((r) => r.testCase)
+      .map((r) => r.testCase)
+      .sort((a, b) =>
+        (a.rtcId || '').localeCompare(b.rtcId || '', undefined, { numeric: true })
+      );
+  }, [testRun?.results]);
+
+  // 次のテストケースに遷移するヘルパー
+  const navigateToNextTestCase = useCallback(() => {
+    if (!selectedTestCase || sortedTestCases.length === 0) {
+      setResultDialogOpen(false);
+      setSelectedTestCase(null);
+      return;
+    }
+    const currentIndex = sortedTestCases.findIndex(tc => tc.id === selectedTestCase.testCaseId);
+    if (currentIndex >= 0 && currentIndex < sortedTestCases.length - 1) {
+      const nextTestCase = sortedTestCases[currentIndex + 1];
+      const nextResult = testRun?.results.find((r) => r.testCaseId === nextTestCase.id);
+      setSelectedTestCase({
+        testCaseId: nextTestCase.id,
+        testCaseName: nextTestCase.title || nextTestCase.name || '',
+      });
+      setResultForm({
+        status: nextResult?.status || '',
+        comment: nextResult?.comment || '',
+      });
+      setResultDialogOpen(true);
+    } else {
+      // 最後のテストケース → ダイアログを閉じる
+      setResultDialogOpen(false);
+      setSelectedTestCase(null);
+    }
+  }, [selectedTestCase, sortedTestCases, testRun?.results, setResultForm]);
+
   const handleOpenResultDialog = (testCase: TestCase) => {
     const existingResult = testRun?.results.find(
       (r) => r.testCaseId === testCase.id
@@ -316,10 +354,18 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       const data = await response.json();
 
       if (data.data) {
-        setResultDialogOpen(false);
-        setSelectedTestCase(null);
-        clearResultForm(); // Clear persisted form data after successful submission
+        clearResultForm();
         fetchTestRun();
+
+        if (resultForm.status === 'FAILED' && selectedTestCase) {
+          // FAILED → 結果記録を閉じて新規欠陥作成ダイアログを開く
+          setResultDialogOpen(false);
+          setSelectedTestCaseForDefect(selectedTestCase.testCaseId);
+          setCreateDefectDialogOpen(true);
+        } else {
+          // FAILED以外 → 次のテストケースへ遷移
+          navigateToNextTestCase();
+        }
       } else {
         alert(data.error || '結果の保存に失敗しました');
       }
@@ -598,10 +644,11 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const handleDefectCreated = () => {
     setCreateDefectDialogOpen(false);
     setSelectedTestCaseForDefect(null);
-    // Trigger defect list refresh in RecordResultDialog
     setDefectRefreshTrigger(prev => prev + 1);
-    // Optionally refresh test run data if needed
     fetchTestRun();
+
+    // 欠陥作成後、次のテストケースの結果記録ダイアログを開く
+    navigateToNextTestCase();
   };
 
   const getResultIcon = (status?: string) => {
