@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { XMLParser } from 'fast-xml-parser';
 import dropdownOptionService from '@/backend/services/dropdown-option/dropdown-option.service';
 
@@ -302,6 +303,8 @@ interface CreateTestRunInput {
   executionType?: 'MANUAL' | 'AUTOMATION';
   assignedToId?: string;
   environment?: string;
+  platform?: string;
+  device?: string;
   status?: string;
   testCaseIds?: string[];
   testSuiteIds?: string[];
@@ -315,6 +318,8 @@ interface UpdateTestRunInput {
   status?: string;
   assignedToId?: string;
   environment?: string;
+  platform?: string;
+  device?: string;
   startedAt?: Date;
   completedAt?: Date;
 }
@@ -354,7 +359,7 @@ export class TestRunService {
       ];
     }
 
-    return await prisma.testRun.findMany({
+    const testRuns = await prisma.testRun.findMany({
       where,
       include: {
         assignedTo: {
@@ -380,13 +385,33 @@ export class TestRunService {
         createdAt: 'desc',
       },
     });
+
+    // Augment with platform/device from raw SQL (bypasses Prisma client field validation)
+    if (testRuns.length > 0) {
+      try {
+        const ids = testRuns.map(tr => tr.id);
+        const rows = await prisma.$queryRaw<Array<{ id: string; platform: string | null; device: string | null }>>`
+          SELECT "id", "platform", "device" FROM "TestRun" WHERE "id" IN (${Prisma.join(ids)})
+        `;
+        const platformDeviceMap = new Map(rows.map(r => [r.id, { platform: r.platform, device: r.device }]));
+        return testRuns.map(tr => ({
+          ...tr,
+          platform: platformDeviceMap.get(tr.id)?.platform || null,
+          device: platformDeviceMap.get(tr.id)?.device || null,
+        }));
+      } catch {
+        // Columns may not exist yet - return without platform/device
+      }
+    }
+
+    return testRuns;
   }
 
   /**
    * Get a single test run by ID
    */
   async getTestRunById(testRunId: string) {
-    return await prisma.testRun.findUnique({
+    const testRun = await prisma.testRun.findUnique({
       where: { id: testRunId },
       include: {
         project: {
@@ -454,6 +479,22 @@ export class TestRunService {
         },
       },
     });
+
+    if (!testRun) return null;
+
+    // Fetch platform and device via raw SQL (bypasses Prisma client field validation)
+    try {
+      const rows = await prisma.$queryRaw<Array<{ platform: string | null; device: string | null }>>`
+        SELECT "platform", "device" FROM "TestRun" WHERE "id" = ${testRunId} LIMIT 1
+      `;
+      if (rows[0]) {
+        return { ...testRun, platform: rows[0].platform, device: rows[0].device };
+      }
+    } catch {
+      // Columns may not exist yet - return without platform/device
+    }
+
+    return testRun;
   }
 
   /**
@@ -481,7 +522,7 @@ export class TestRunService {
       testCaseIds = [...new Set([...testCaseIds, ...suiteTestCaseIds])]; // Remove duplicates
     }
 
-    // Create the test run
+    // Create the test run (without platform/device in Prisma data to avoid client validation issues)
     const status = data.status || 'PLANNED';
     const testRun = await prisma.testRun.create({
       data: {
@@ -507,6 +548,21 @@ export class TestRunService {
       },
     });
 
+    // Set platform and device via raw SQL (bypasses Prisma client field validation)
+    if (data.platform || data.device) {
+      try {
+        if (data.platform && data.device) {
+          await prisma.$executeRaw`UPDATE "TestRun" SET "platform" = ${data.platform}, "device" = ${data.device} WHERE "id" = ${testRun.id}`;
+        } else if (data.platform) {
+          await prisma.$executeRaw`UPDATE "TestRun" SET "platform" = ${data.platform} WHERE "id" = ${testRun.id}`;
+        } else if (data.device) {
+          await prisma.$executeRaw`UPDATE "TestRun" SET "device" = ${data.device} WHERE "id" = ${testRun.id}`;
+        }
+      } catch (error) {
+        console.warn('[TestRunService] Failed to set platform/device on test run (columns may not exist yet):', error instanceof Error ? error.message : error);
+      }
+    }
+
     // If test case IDs are provided, create placeholder results
     if (testCaseIds.length > 0) {
       await prisma.testResult.createMany({
@@ -518,6 +574,24 @@ export class TestRunService {
         })),
         skipDuplicates: true,
       });
+
+      // Update platform and device on the test cases if specified on the test run
+      if (data.platform || data.device) {
+        try {
+          const updateData: Record<string, string> = {};
+          if (data.platform) updateData.platform = data.platform;
+          if (data.device) updateData.device = data.device;
+
+          await prisma.testCase.updateMany({
+            where: {
+              id: { in: testCaseIds },
+            },
+            data: updateData,
+          });
+        } catch (error) {
+          console.warn('[TestRunService] Failed to reflect platform/device onto test cases:', error instanceof Error ? error.message : error);
+        }
+      }
     }
 
     return testRun;
@@ -527,9 +601,12 @@ export class TestRunService {
    * Update a test run
    */
   async updateTestRun(testRunId: string, data: UpdateTestRunInput) {
-    return await prisma.testRun.update({
+    // Extract platform and device to handle via raw SQL
+    const { platform, device, ...prismaData } = data;
+
+    const testRun = await prisma.testRun.update({
       where: { id: testRunId },
-      data,
+      data: prismaData,
       include: {
         assignedTo: {
           select: {
@@ -546,6 +623,23 @@ export class TestRunService {
         },
       },
     });
+
+    // Set platform and device via raw SQL (bypasses Prisma client field validation)
+    if (platform !== undefined || device !== undefined) {
+      try {
+        if (platform !== undefined && device !== undefined) {
+          await prisma.$executeRaw`UPDATE "TestRun" SET "platform" = ${platform || null}, "device" = ${device || null} WHERE "id" = ${testRunId}`;
+        } else if (platform !== undefined) {
+          await prisma.$executeRaw`UPDATE "TestRun" SET "platform" = ${platform || null} WHERE "id" = ${testRunId}`;
+        } else if (device !== undefined) {
+          await prisma.$executeRaw`UPDATE "TestRun" SET "device" = ${device || null} WHERE "id" = ${testRunId}`;
+        }
+      } catch (error) {
+        console.warn('[TestRunService] Failed to update platform/device on test run:', error instanceof Error ? error.message : error);
+      }
+    }
+
+    return testRun;
   }
 
   /**
@@ -658,7 +752,7 @@ export class TestRunService {
       stackTrace?: string;
     }
   ) {
-    return await prisma.testResult.upsert({
+    const result = await prisma.testResult.upsert({
       where: {
         testRunId_testCaseId: {
           testRunId,
@@ -703,6 +797,31 @@ export class TestRunService {
         },
       },
     });
+
+    // Reflect test run's platform and device onto the test case
+    // Uses raw SQL to avoid Prisma client validation issues when fields are not yet generated
+    try {
+      const testRunRows = await prisma.$queryRaw<Array<{ platform: string | null; device: string | null }>>`
+        SELECT "platform", "device" FROM "TestRun" WHERE "id" = ${testRunId} LIMIT 1
+      `;
+
+      const testRunData = testRunRows[0];
+      if (testRunData && (testRunData.platform || testRunData.device)) {
+        const updateData: Record<string, string> = {};
+        if (testRunData.platform) updateData.platform = testRunData.platform;
+        if (testRunData.device) updateData.device = testRunData.device;
+
+        await prisma.testCase.update({
+          where: { id: testCaseId },
+          data: updateData,
+        });
+      }
+    } catch (error) {
+      // Log but don't fail the main operation - platform/device reflection is a side effect
+      console.warn('[TestRunService] Failed to reflect platform/device onto test case:', error instanceof Error ? error.message : error);
+    }
+
+    return result;
   }
 
   /**

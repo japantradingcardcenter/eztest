@@ -11,6 +11,8 @@ interface TestRunHeaderProps {
     description?: string;
     status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
     environment?: string;
+    platform?: string;
+    device?: string;
     project: {
       id: string;
     };
@@ -100,6 +102,22 @@ export function TestRunHeader({
                 style={environmentBadgeProps.style}
               >
                 {environmentLabel}
+              </Badge>
+            </div>
+          )}
+          {testRun.platform && (
+            <div className="flex items-center gap-2">
+              <span className="text-white/60">プラットフォーム:</span>
+              <Badge variant="outline" className="bg-cyan-500/10 text-cyan-500 border-cyan-500/20">
+                {testRun.platform}
+              </Badge>
+            </div>
+          )}
+          {testRun.device && (
+            <div className="flex items-center gap-2">
+              <span className="text-white/60">端末:</span>
+              <Badge variant="outline" className="bg-teal-500/10 text-teal-500 border-teal-500/20">
+                {testRun.device}
               </Badge>
             </div>
           )}

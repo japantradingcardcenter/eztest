@@ -5,6 +5,8 @@ export interface TestRun {
   executionType?: 'MANUAL' | 'AUTOMATION' | string;
   status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   environment?: string;
+  platform?: string;
+  device?: string;
   assignedTo?: {
     id: string;
     name: string;
@@ -32,6 +34,8 @@ export interface TestRunFormData {
   name: string;
   description: string;
   environment: string;
+  platform: string;
+  device: string;
   assignedToId: string;
 }
 
