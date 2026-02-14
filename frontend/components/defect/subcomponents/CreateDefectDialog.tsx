@@ -94,6 +94,7 @@ export function CreateDefectDialog({
     value: assignee.id,
     label: assignee.name,
   }));
+  const validAssigneeIds = new Set(assignees.map((assignee) => assignee.id));
 
   // Map dropdown options to the format expected by BaseDialog
   const SEVERITY_OPTIONS = severityOptions.map(opt => ({ value: opt.value, label: opt.label }));
@@ -316,12 +317,17 @@ export function CreateDefectDialog({
       // Get test case ID from prop (passed when creating from test run) or from form data (selected from dropdown)
       const finalTestCaseId = testCaseId || formData.testCaseId || null;
       
+      const rawAssignedToId = typeof formData.assignedToId === 'string' ? formData.assignedToId.trim() : '';
+      const normalizedAssignedToId = rawAssignedToId !== '' && validAssigneeIds.has(rawAssignedToId)
+        ? rawAssignedToId
+        : null;
+
       const payload = {
         title: formData.title,
         description: formData.description || null,
         severity: formData.severity,
         priority: formData.priority,
-        assignedToId: formData.assignedToId && formData.assignedToId.trim() !== '' ? formData.assignedToId : null,
+        assignedToId: normalizedAssignedToId,
         environment: formData.environment && formData.environment.trim() !== '' ? formData.environment : null,
         platform: formData.platform && formData.platform.trim() !== '' && formData.platform !== 'none' ? formData.platform : null,
         device: formData.device && formData.device.trim() !== '' && formData.device !== 'none' ? formData.device : null,

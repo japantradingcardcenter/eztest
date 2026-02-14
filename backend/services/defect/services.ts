@@ -228,6 +228,18 @@ export class DefectService {
       defectId = await this.generateDefectId(data.projectId);
     }
 
+    let assignedToId = data.assignedToId ?? null;
+    if (assignedToId) {
+      const assignee = await prisma.user.findUnique({
+        where: { id: assignedToId },
+        select: { id: true },
+      });
+      if (!assignee) {
+        console.warn(`Invalid assignedToId detected and ignored: ${assignedToId}`);
+        assignedToId = null;
+      }
+    }
+
     const defect = await prisma.defect.create({
       data: {
         defectId,
@@ -238,7 +250,7 @@ export class DefectService {
         severity: data.severity,
         priority: data.priority,
         status: data.status || 'NEW',
-        assignedToId: data.assignedToId,
+        assignedToId,
         createdById: data.createdById,
         environment: data.environment,
         platform: data.platform,
