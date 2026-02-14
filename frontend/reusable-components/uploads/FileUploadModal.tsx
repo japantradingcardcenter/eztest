@@ -62,6 +62,31 @@ export function FileUploadModal({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
+  const fetchAttachmentUrl = async (attachment: Attachment): Promise<string | null> => {
+    const candidateEndpoints: string[] = [];
+    if (attachment.entityType === 'defect') {
+      candidateEndpoints.push(`/api/defect-attachments/${attachment.id}`);
+      candidateEndpoints.push(`/api/attachments/${attachment.id}`);
+    } else if (attachment.entityType === 'comment') {
+      candidateEndpoints.push(`/api/comment-attachments/${attachment.id}`);
+      candidateEndpoints.push(`/api/attachments/${attachment.id}`);
+    } else {
+      candidateEndpoints.push(`/api/attachments/${attachment.id}`);
+    }
+
+    for (const endpoint of candidateEndpoints) {
+      try {
+        const response = await fetch(endpoint);
+        if (!response.ok) continue;
+        const result = await response.json();
+        if (result.data?.url) return result.data.url;
+      } catch {
+        // try next endpoint
+      }
+    }
+    return null;
+  };
+
   // Mount portal on client side only
   useEffect(() => {
     setMounted(true);
@@ -90,20 +115,9 @@ export function FileUploadModal({
               urls[attachment.id] = objectUrl;
             }
           } else {
-            try {
-              const endpoint = attachment.entityType === 'defect' 
-                ? `/api/defect-attachments/${attachment.id}`
-                : `/api/attachments/${attachment.id}`;
-              
-              const response = await fetch(endpoint);
-              if (response.ok) {
-                const result = await response.json();
-                if (result.data?.url) {
-                  urls[attachment.id] = result.data.url;
-                }
-              }
-            } catch (error) {
-              console.error('Error fetching image URL:', error);
+            const url = await fetchAttachmentUrl(attachment);
+            if (url) {
+              urls[attachment.id] = url;
             }
           }
         }

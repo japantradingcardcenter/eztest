@@ -67,6 +67,31 @@ function TextareaWithAttachments({
   const [markedForDeletion, setMarkedForDeletion] = React.useState<string[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  const fetchAttachmentUrl = React.useCallback(async (attachment: Attachment): Promise<string | null> => {
+    const candidateEndpoints: string[] = [];
+    if (attachment.entityType === 'defect') {
+      candidateEndpoints.push(`/api/defect-attachments/${attachment.id}`);
+      candidateEndpoints.push(`/api/attachments/${attachment.id}`);
+    } else if (attachment.entityType === 'comment') {
+      candidateEndpoints.push(`/api/comment-attachments/${attachment.id}`);
+      candidateEndpoints.push(`/api/attachments/${attachment.id}`);
+    } else {
+      candidateEndpoints.push(`/api/attachments/${attachment.id}`);
+    }
+
+    for (const endpoint of candidateEndpoints) {
+      try {
+        const response = await fetch(endpoint);
+        if (!response.ok) continue;
+        const result = await response.json();
+        if (result.data?.url) return result.data.url;
+      } catch {
+        // Try next endpoint
+      }
+    }
+    return null;
+  }, []);
+
   // Fetch attachment feature status from server
   React.useEffect(() => {
     isAttachmentsEnabledClient().then(enabled => {
@@ -105,27 +130,13 @@ function TextareaWithAttachments({
               console.warn(`No file found for pending attachment ${attachment.id}`);
             }
           } else {
-            // For uploaded attachments, fetch from server
-            try {
-              // Use different endpoint based on entity type
-              const endpoint = attachment.entityType === 'defect' 
-                ? `/api/defect-attachments/${attachment.id}`
-                : `/api/attachments/${attachment.id}`;
-              
-              const response = await fetch(endpoint);
-              if (response.ok) {
-                const result = await response.json();
-                // API returns { data: { url, ... } }
-                if (result.data?.url) {
-                  urls[attachment.id] = result.data.url;
-                } else {
-                  console.warn(`[TextareaWithAttachments] No URL in response for ${attachment.id}`, result);
-                }
-              } else {
-                console.warn(`[TextareaWithAttachments] Failed to fetch image URL for ${attachment.id}:`, response.status);
-              }
-            } catch (error) {
-              console.error('[TextareaWithAttachments] Error fetching image URL:', error);
+            // For uploaded attachments, fetch from server.
+            // Try entity-specific endpoint first, then fall back to generic attachment endpoint.
+            const url = await fetchAttachmentUrl(attachment);
+            if (url) {
+              urls[attachment.id] = url;
+            } else {
+              console.warn(`[TextareaWithAttachments] Failed to resolve image URL for ${attachment.id}`);
             }
           }
         }
@@ -150,7 +161,7 @@ function TextareaWithAttachments({
       });
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attachments]);
+  }, [attachments, fetchAttachmentUrl]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange?.(e.target.value);
@@ -365,6 +376,28 @@ function TextareaWithAttachments({
                   )}
                 </div>
               ))}
+              {attachments.some((att) => att.mimeType.startsWith('image/')) && (
+                <div className="pt-2 grid grid-cols-4 gap-2">
+                  {attachments
+                    .filter((att) => att.mimeType.startsWith('image/'))
+                    .map((att) => (
+                      <div key={`preview-${att.id}`} className="w-full aspect-square rounded overflow-hidden border border-white/15 bg-white/5">
+                        {imageUrls[att.id] ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={imageUrls[att.id]}
+                            alt={att.originalName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-white/40 text-[10px]">
+                            読み込み中
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           )}
         </div>
