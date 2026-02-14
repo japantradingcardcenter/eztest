@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/frontend/reusable-elements/selects/Select';
 import { Checkbox } from '@/frontend/reusable-elements/checkboxes/Checkbox';
-import { CheckCircle, XCircle, AlertCircle, Circle, Bug, Timer, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, Circle, Bug, Timer, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { ResultFormData } from '../types';
 import { CreateDefectDialog } from '@/frontend/components/defect/subcomponents/CreateDefectDialog';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
@@ -349,7 +349,8 @@ export function RecordResultDialog({
         <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
         {/* テストケース詳細表示 */}
         {loadingTestCase ? (
-          <div className="mb-4 p-4 rounded-lg bg-white/5 border border-white/10">
+          <div className="mb-4 py-12 flex flex-col items-center justify-center gap-3">
+            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
             <p className="text-sm text-white/50">テストケースを読み込み中...</p>
           </div>
         ) : testCaseDetail && (
@@ -544,7 +545,10 @@ export function RecordResultDialog({
               </div>
 
               {loadingDefects ? (
-                <p className="text-sm text-white/50">欠陥を読み込み中...</p>
+                <div className="py-6 flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+                  <p className="text-sm text-white/50">欠陥を読み込み中...</p>
+                </div>
               ) : (
                 <div className="space-y-4">
                   {/* Filter Buttons */}
