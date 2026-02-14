@@ -307,7 +307,7 @@ export function FileUploadModal({
                 multiple
                 onChange={handleFileSelect}
                 className="hidden"
-                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar,.png,.jpg,.jpeg"
+                accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar,.png,.jpg,.jpeg"
               />
               
               {/* Single Drag & Drop Area */}

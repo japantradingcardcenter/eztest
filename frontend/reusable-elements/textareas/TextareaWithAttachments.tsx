@@ -329,20 +329,44 @@ function TextareaWithAttachments({
       
       {/* Attachment Display and Button - Below textarea */}
       {shouldShowAttachments && (
-        <div className="flex items-center justify-between w-full px-3 py-2 rounded-[10px] bg-[#101a2b]/70 border border-white/20 text-sm shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
-          {/* Left side - Attachment count display (non-clickable) */}
-          <span className="text-white/60">{attachments.length} Attachment{attachments.length !== 1 ? 's' : ''}</span>
-          
-          {/* Right side - Clickable button with paperclip icon */}
-          <button
-            type="button"
-            onClick={() => setFileModalOpen(true)}
-            disabled={uploading}
-            className="p-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/15 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-white/60 hover:text-white/80"
-            title={attachments.length > 0 ? `Manage ${attachments.length} file${attachments.length !== 1 ? 's' : ''}` : 'Attach Files'}
-          >
-            <Paperclip className="w-4 h-4" />
-          </button>
+        <div className="w-full rounded-[10px] bg-[#101a2b]/70 border border-white/20 text-sm shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] overflow-hidden">
+          <div className="flex items-center justify-between px-3 py-2">
+            <span className="text-white/60">{attachments.length} 件のファイル</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="px-2 py-1 rounded-md bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-blue-400 hover:text-blue-300 text-xs"
+              >
+                ファイルを追加
+              </button>
+              <button
+                type="button"
+                onClick={() => setFileModalOpen(true)}
+                disabled={uploading}
+                className="p-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/15 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-white/60 hover:text-white/80"
+                title="ファイルを管理"
+              >
+                <Paperclip className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          {/* 添付ファイル一覧 */}
+          {attachments.length > 0 && (
+            <div className="px-3 pb-2 space-y-1">
+              {attachments.map((att) => (
+                <div key={att.id} className="flex items-center gap-2 px-2 py-1 rounded bg-white/5 text-xs">
+                  {getFileIcon(att.mimeType, "w-3 h-3 text-white/50 flex-shrink-0")}
+                  <span className="text-white/70 truncate flex-1">{att.originalName}</span>
+                  <span className="text-white/40 flex-shrink-0">{formatFileSize(att.size)}</span>
+                  {att.id.startsWith('pending-') && (
+                    <span className="text-yellow-400 flex-shrink-0">保存待ち</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
       
