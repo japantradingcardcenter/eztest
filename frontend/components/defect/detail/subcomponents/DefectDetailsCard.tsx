@@ -6,6 +6,7 @@ import { SelectOption } from '@/frontend/reusable-components';
 import { useEffect, useState } from 'react';
 import { Label } from '@/frontend/reusable-elements/labels/Label';
 import { Input } from '@/frontend/reusable-elements/inputs/Input';
+import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import { type Attachment } from '@/lib/s3';
 import { AttachmentDisplay } from '@/frontend/reusable-components/attachments/AttachmentDisplay';
 import { DefectDescriptionAttachmentField } from '@/frontend/components/defect/shared/DefectDescriptionAttachmentField';
@@ -27,6 +28,8 @@ interface DefectDetailsCardProps {
   onFieldChange?: (field: keyof DefectFormData, value: string | number | null) => void;
   projectId?: string;
   defectId?: string;
+  onSave?: () => void;
+  saving?: boolean;
   // Attachments
   descriptionAttachments?: Attachment[];
   onDescriptionAttachmentsChange?: (attachments: Attachment[]) => void;
@@ -47,6 +50,8 @@ export function DefectDetailsCard({
   onFieldChange,
   projectId,
   defectId,
+  onSave,
+  saving = false,
   descriptionAttachments = [],
   onDescriptionAttachmentsChange,
 }: DefectDetailsCardProps) {
@@ -274,6 +279,17 @@ export function DefectDetailsCard({
               onChange={(e) => handleFieldChange('environment', e.target.value)}
               placeholder="例: Production, Staging, Development"
             />
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <ButtonPrimary
+              type="button"
+              onClick={onSave}
+              disabled={saving}
+              className="cursor-pointer"
+            >
+              {saving ? '保存中...' : '保存する'}
+            </ButtonPrimary>
           </div>
         </div>
       ) : (

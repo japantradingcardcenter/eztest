@@ -450,6 +450,8 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
               onFormChange={setFormData}
               projectId={projectId}
               defectId={defectId}
+              onSave={handleSave}
+              saving={saving}
               descriptionAttachments={descriptionAttachments}
               onDescriptionAttachmentsChange={setDescriptionAttachments}
             />
