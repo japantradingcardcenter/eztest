@@ -2,6 +2,7 @@
 
 import { BaseDialog, BaseDialogField, BaseDialogConfig } from '@/frontend/reusable-components/dialogs/BaseDialog';
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { SearchableSelect } from '@/frontend/reusable-elements/selects/SearchableSelect';
 import { FloatingAlert, type FloatingAlertMessage } from '@/frontend/reusable-components/alerts/FloatingAlert';
 import { type Attachment } from '@/lib/s3';
@@ -37,6 +38,7 @@ export function CreateDefectDialog({
   testRunPlatform,
   testRunDevice,
 }: CreateDefectDialogProps) {
+  const { data: session } = useSession();
   const [alert, setAlert] = useState<FloatingAlertMessage | null>(null);
   const [assignees, setAssignees] = useState<Array<{ id: string; name: string }>>([]);
   const [testCases, setTestCases] = useState<Array<{ id: string; testCaseId: string; title: string }>>([]);
@@ -158,9 +160,10 @@ export function CreateDefectDialog({
     },
     {
       name: 'assignedToId',
-      label: '担当者',
+      label: '担当者（自動入力）',
       type: 'select',
       placeholder: '担当者を選択',
+      defaultValue: session?.user?.id || '',
       options: assigneeOptions,
       cols: 1,
     },

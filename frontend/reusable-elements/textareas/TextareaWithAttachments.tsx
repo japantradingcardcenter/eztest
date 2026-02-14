@@ -529,6 +529,7 @@ function TextareaWithAttachments({
           projectId={projectId}
           entityType={entityType}
           title={`Manage Files - ${fieldName}`}
+          forceShow={forceShowAttachments}
         />
       )}
     </div>

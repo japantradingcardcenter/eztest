@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -35,6 +35,7 @@ interface FileUploadModalProps {
   title?: string;
   maxFiles?: number;
   onDeleteMarked?: (deletedIds: string[]) => void;
+  forceShow?: boolean;
 }
 
 export function FileUploadModal({
@@ -49,6 +50,7 @@ export function FileUploadModal({
   title = 'Manage Files',
   maxFiles = 20,
   onDeleteMarked,
+  forceShow = false,
 }: FileUploadModalProps) {
   const [attachmentsEnabled, setAttachmentsEnabled] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -242,7 +244,7 @@ export function FileUploadModal({
     ? title.replace(fieldName, formatFieldName(fieldName))
     : title;
 
-  if (!attachmentsEnabled || !isOpen) return null;
+  if ((!attachmentsEnabled && !forceShow) || !isOpen) return null;
 
   // Don't render on server side
   if (!mounted) return null;
