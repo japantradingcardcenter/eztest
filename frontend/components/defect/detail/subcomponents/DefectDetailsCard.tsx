@@ -26,6 +26,7 @@ interface DefectDetailsCardProps {
   onFormChange: (data: DefectFormData) => void;
   onFieldChange?: (field: keyof DefectFormData, value: string | number | null) => void;
   projectId?: string;
+  defectId?: string;
   // Attachments
   descriptionAttachments?: Attachment[];
   onDescriptionAttachmentsChange?: (attachments: Attachment[]) => void;
@@ -45,6 +46,7 @@ export function DefectDetailsCard({
   onFormChange,
   onFieldChange,
   projectId,
+  defectId,
   descriptionAttachments = [],
   onDescriptionAttachmentsChange,
 }: DefectDetailsCardProps) {
@@ -259,9 +261,11 @@ export function DefectDetailsCard({
               showCharCount={true}
               attachments={descriptionAttachments}
               onAttachmentsChange={handleDescriptionAttachmentsChange}
+              entityId={defectId}
               entityType="defect"
               projectId={projectId}
               showAttachments={true}
+              forceShowAttachments={true}
             />
             {errors.description && <p className="text-xs text-red-400">{errors.description}</p>}
           </div>
