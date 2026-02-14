@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
+import { prisma } from '@/lib/prisma';
 
 /**
  * POST /api/attachments/upload-local
@@ -42,17 +43,31 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(filePath, buffer);
 
+    const relativePath = `${entityType}/${projectId || 'general'}/${uniqueFilename}`;
+
+    // Persist metadata so the file can be associated later (e.g., defect creation)
+    const attachmentRecord = await prisma.attachment.create({
+      data: {
+        filename: relativePath,
+        originalName: file.name,
+        mimeType: file.type,
+        size: file.size,
+        path: relativePath,
+        fieldName,
+      },
+    });
+
     // Return attachment info
     const attachment = {
-      id: `local-${timestamp}-${randomHash}`,
-      filename: uniqueFilename,
-      originalName: file.name,
-      size: file.size,
-      mimeType: file.type,
-      uploadedAt: new Date().toISOString(),
+      id: attachmentRecord.id,
+      filename: attachmentRecord.filename,
+      originalName: attachmentRecord.originalName,
+      size: attachmentRecord.size,
+      mimeType: attachmentRecord.mimeType,
+      uploadedAt: attachmentRecord.uploadedAt.toISOString(),
       fieldName,
       entityType,
-      path: `/${entityType}/${projectId || 'general'}/${uniqueFilename}`,
+      path: attachmentRecord.path,
     };
 
     return Response.json({ success: true, attachment }, { status: 200 });

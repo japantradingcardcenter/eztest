@@ -306,13 +306,31 @@ export function CreateDefectDialog({
     submitButtonName: 'Create Defect Dialog - Create Defect',
     cancelButtonName: 'Create Defect Dialog - Cancel',
     onSubmit: async (formData) => {
+      // Collect already-uploaded attachments (immediate upload mode)
+      const existingUploadedAttachments: Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }> =
+        descriptionAttachments
+          .filter((att) => !att.id.startsWith('pending-'))
+          .map((att) => ({
+            id: att.id,
+            s3Key: att.filename,
+            fileName: att.originalName,
+            mimeType: att.mimeType,
+            fieldName: att.fieldName,
+          }));
+
       // Upload pending attachments first (failure doesn't block defect creation)
-      let uploadedAttachments: Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }> = [];
+      let uploadedPendingAttachments: Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }> = [];
       try {
-        uploadedAttachments = await uploadPendingAttachments();
+        uploadedPendingAttachments = await uploadPendingAttachments();
       } catch (error) {
         console.warn('Attachment upload failed, continuing with defect creation:', error);
       }
+
+      // Merge attachments and dedupe by id/s3Key
+      const uploadedAttachments = [...existingUploadedAttachments, ...uploadedPendingAttachments].filter(
+        (att, index, arr) =>
+          arr.findIndex((x) => (x.id ? x.id === att.id : x.s3Key === att.s3Key)) === index
+      );
 
       // Get test case ID from prop (passed when creating from test run) or from form data (selected from dropdown)
       const finalTestCaseId = testCaseId || formData.testCaseId || null;
