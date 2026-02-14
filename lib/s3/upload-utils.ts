@@ -111,19 +111,26 @@ export async function uploadFileToS3({
 }: UploadOptions): Promise<UploadResult> {
   try {
     // Step 1: Initialize multipart upload and get presigned URLs
-    const initResponse = await fetch('/api/attachments/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        fieldName,
-        entityType,
-        entityId,
-        projectId,
-      }),
-    });
+    let initResponse: Response;
+    try {
+      initResponse = await fetch('/api/attachments/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+          fieldName,
+          entityType,
+          entityId,
+          projectId,
+        }),
+      });
+    } catch {
+      // ネットワークエラーやサーバーエラーの場合はローカルにフォールバック
+      console.warn('S3 upload request failed, falling back to local storage');
+      return uploadFileLocal(file, fieldName, entityType, projectId, onProgress);
+    }
 
     if (!initResponse.ok) {
       // S3が利用できない場合はローカルストレージにフォールバック

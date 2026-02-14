@@ -286,7 +286,7 @@ export function CreateDefectDialog({
         }
       } catch (error) {
         console.error('Failed to upload attachment:', error);
-        throw error;
+        // 個別ファイルの失敗は無視して続行
       }
     }
 
@@ -306,8 +306,13 @@ export function CreateDefectDialog({
     submitButtonName: 'Create Defect Dialog - Create Defect',
     cancelButtonName: 'Create Defect Dialog - Cancel',
     onSubmit: async (formData) => {
-      // Upload pending attachments first
-      const uploadedAttachments = await uploadPendingAttachments();
+      // Upload pending attachments first (failure doesn't block defect creation)
+      let uploadedAttachments: Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }> = [];
+      try {
+        uploadedAttachments = await uploadPendingAttachments();
+      } catch (error) {
+        console.warn('Attachment upload failed, continuing with defect creation:', error);
+      }
 
       // Get test case ID from prop (passed when creating from test run) or from form data (selected from dropdown)
       const finalTestCaseId = testCaseId || formData.testCaseId || null;
