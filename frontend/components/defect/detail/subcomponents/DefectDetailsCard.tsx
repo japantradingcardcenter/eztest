@@ -6,9 +6,9 @@ import { SelectOption } from '@/frontend/reusable-components';
 import { useEffect, useState } from 'react';
 import { Label } from '@/frontend/reusable-elements/labels/Label';
 import { Input } from '@/frontend/reusable-elements/inputs/Input';
-import { TextareaWithAttachments } from '@/frontend/reusable-elements/textareas/TextareaWithAttachments';
 import { type Attachment } from '@/lib/s3';
 import { AttachmentDisplay } from '@/frontend/reusable-components/attachments/AttachmentDisplay';
+import { DefectDescriptionAttachmentField } from '@/frontend/components/defect/shared/DefectDescriptionAttachmentField';
 import {
   Select,
   SelectContent,
@@ -250,22 +250,16 @@ export function DefectDetailsCard({
           {/* Description with Attachments */}
           <div className="space-y-2">
             <Label htmlFor="description">説明</Label>
-            <TextareaWithAttachments
-              fieldName="description"
-              variant="glass"
+            <DefectDescriptionAttachmentField
               value={formData.description || ''}
               onChange={(value) => handleFieldChange('description', value)}
+              attachments={descriptionAttachments}
+              onAttachmentsChange={handleDescriptionAttachmentsChange}
+              projectId={projectId}
+              defectId={defectId}
               placeholder="欠陥の詳細な説明"
               rows={4}
               maxLength={2000}
-              showCharCount={true}
-              attachments={descriptionAttachments}
-              onAttachmentsChange={handleDescriptionAttachmentsChange}
-              entityId={defectId}
-              entityType="defect"
-              projectId={projectId}
-              showAttachments={true}
-              forceShowAttachments={true}
             />
             {errors.description && <p className="text-xs text-red-400">{errors.description}</p>}
           </div>

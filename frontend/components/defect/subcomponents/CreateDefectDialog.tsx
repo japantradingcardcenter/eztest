@@ -8,6 +8,7 @@ import { FloatingAlert, type FloatingAlertMessage } from '@/frontend/reusable-co
 import { type Attachment } from '@/lib/s3';
 import { uploadFileToS3 } from '@/lib/s3';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
+import { DefectDescriptionAttachmentField } from '@/frontend/components/defect/shared/DefectDescriptionAttachmentField';
 
 interface Defect {
   id: string;
@@ -230,15 +231,21 @@ export function CreateDefectDialog({
     {
       name: 'description',
       label: '説明（画像・動画を添付可能）',
-      type: 'textarea-with-attachments',
-      placeholder: '欠陥の詳細を入力...',
+      type: 'custom',
       rows: 3,
       cols: 2,
       maxLength: 2000,
-      attachments: descriptionAttachments,
-      onAttachmentsChange: setDescriptionAttachments,
-      entityType: 'defect',
-      forceShowAttachments: true,
+      customRender: (value: string, onChange: (value: string) => void) => (
+        <DefectDescriptionAttachmentField
+          value={value}
+          onChange={onChange}
+          attachments={descriptionAttachments}
+          onAttachmentsChange={setDescriptionAttachments}
+          projectId={projectId}
+          rows={3}
+          maxLength={2000}
+        />
+      ),
     },
   ];
 
