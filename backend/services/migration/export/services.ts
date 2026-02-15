@@ -215,6 +215,7 @@ export class ExportService {
       return {
         'テストケースID': tc.tcId,
         'テストケース名': tc.title,
+        'フロータイトル': tc.title,
         'モジュール・機能': tc.module?.name || '',
         '優先度': tc.priority,
         '前提条件': tc.preconditions || '',
@@ -328,14 +329,8 @@ export class ExportService {
 
     // Transform data for export
     const exportData = defects.map((defect) => {
-      const flowTitles = defect.testCases
-        .map((testCaseDefect) => testCaseDefect.testCase.title)
-        .filter((title): title is string => Boolean(title))
-        .join('; ');
-
       return {
         'Defect Title / Summary': defect.title,
-        'フロータイトル': flowTitles,
         'Description': defect.description || '',
         'Severity': defect.severity,
         'Priority': defect.priority,
