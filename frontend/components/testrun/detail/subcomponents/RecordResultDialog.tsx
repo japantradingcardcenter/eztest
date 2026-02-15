@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/frontend/reusable-elements/selects/Select';
 import { Checkbox } from '@/frontend/reusable-elements/checkboxes/Checkbox';
-import { CheckCircle, XCircle, AlertCircle, Circle, Bug, Timer, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, Circle, Bug, Timer, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { ResultFormData } from '../types';
 import { CreateDefectDialog } from '@/frontend/components/defect/subcomponents/CreateDefectDialog';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
@@ -65,6 +65,8 @@ interface RecordResultDialogProps {
   testCaseId: string;
   projectId: string;
   testRunEnvironment?: string; // Environment from test run
+  testRunPlatform?: string;
+  testRunDevice?: string;
   formData: ResultFormData;
   onOpenChange: (open: boolean) => void;
   onFormChange: (data: Partial<ResultFormData>) => void;
@@ -81,6 +83,8 @@ export function RecordResultDialog({
   testCaseId,
   projectId,
   testRunEnvironment,
+  testRunPlatform,
+  testRunDevice,
   formData,
   onOpenChange,
   onFormChange,
@@ -106,6 +110,7 @@ export function RecordResultDialog({
   // 経過時間タイマー（テストケース読み込み完了後に開始）
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [timerStartTime, setTimerStartTime] = useState<number | null>(null);
+  const [timerOffset, setTimerOffset] = useState(0); // 既存の実行時間からの継続用オフセット（秒）
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ダイアログが開いたらテストケース詳細を取得し、読み込み完了後にタイマー開始
@@ -113,6 +118,7 @@ export function RecordResultDialog({
     if (open && testCaseId) {
       // タイマーをリセット
       setTimerStartTime(null);
+      setTimerOffset(0);
       setElapsedSeconds(0);
 
       const fetchTestCaseDetail = async () => {
@@ -122,6 +128,12 @@ export function RecordResultDialog({
           const data = await response.json();
           if (data.data) {
             setTestCaseDetail(data.data);
+            // 既存のテスト実行時間があればオフセットとして設定（続きから計測）
+            const existingTime = data.data.estimatedTime;
+            if (existingTime && existingTime > 0) {
+              setTimerOffset(existingTime);
+              setElapsedSeconds(existingTime);
+            }
           }
         } catch (error) {
           console.error('Error fetching test case detail:', error);
@@ -136,6 +148,7 @@ export function RecordResultDialog({
     } else {
       setTestCaseDetail(null);
       setTimerStartTime(null);
+      setTimerOffset(0);
       setElapsedSeconds(0);
     }
   }, [open, testCaseId]);
@@ -143,7 +156,7 @@ export function RecordResultDialog({
   useEffect(() => {
     if (open && timerStartTime) {
       const updateElapsed = () => {
-        setElapsedSeconds(Math.floor((Date.now() - timerStartTime) / 1000));
+        setElapsedSeconds(timerOffset + Math.floor((Date.now() - timerStartTime) / 1000));
       };
       updateElapsed();
       timerRef.current = setInterval(updateElapsed, 1000);
@@ -159,7 +172,7 @@ export function RecordResultDialog({
         timerRef.current = null;
       }
     };
-  }, [open, timerStartTime]);
+  }, [open, timerStartTime, timerOffset]);
 
   const formatElapsedTime = (totalSeconds: number): string => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -259,8 +272,8 @@ export function RecordResultDialog({
           console.error('Error linking defects:', error);
         }
       }
-      // 計測した経過秒数を渡して保存
-      const duration = timerStartTime ? Math.round((Date.now() - timerStartTime) / 1000) : undefined;
+      // 計測した経過秒数（既存の実行時間 + 今回の計測時間）を渡して保存
+      const duration = timerStartTime ? timerOffset + Math.round((Date.now() - timerStartTime) / 1000) : undefined;
       await onSubmit(duration);
     } catch (error) {
       throw error;
@@ -345,7 +358,8 @@ export function RecordResultDialog({
         <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
         {/* テストケース詳細表示 */}
         {loadingTestCase ? (
-          <div className="mb-4 p-4 rounded-lg bg-white/5 border border-white/10">
+          <div className="mb-4 py-12 flex flex-col items-center justify-center gap-3">
+            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
             <p className="text-sm text-white/50">テストケースを読み込み中...</p>
           </div>
         ) : testCaseDetail && (
@@ -540,7 +554,10 @@ export function RecordResultDialog({
               </div>
 
               {loadingDefects ? (
-                <p className="text-sm text-white/50">欠陥を読み込み中...</p>
+                <div className="py-6 flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+                  <p className="text-sm text-white/50">欠陥を読み込み中...</p>
+                </div>
               ) : (
                 <div className="space-y-4">
                   {/* Filter Buttons */}
@@ -643,12 +660,7 @@ export function RecordResultDialog({
             onClick={handleSubmitWithDefects}
             buttonName="Record Test Result Dialog - Save Result"
           >
-            結果を保存
-            {formData.status === 'FAILED' && selectedDefectIds.length > 0 && (
-              <span className="ml-2 text-xs">
-                （{selectedDefectIds.length} 件の欠陥）
-              </span>
-            )}
+            {formData.status === 'FAILED' ? '欠陥レポートを作成' : '結果を保存'}
           </ButtonPrimary>
         </DialogFooter>
       </DialogContent>
@@ -661,6 +673,8 @@ export function RecordResultDialog({
         onDefectCreated={handleCreateDefect}
         testCaseId={testCaseId}
         testRunEnvironment={testRunEnvironment}
+        testRunPlatform={testRunPlatform}
+        testRunDevice={testRunDevice}
       />
     </Dialog>
   );

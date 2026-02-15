@@ -128,8 +128,25 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Upload pending attachments first
+      // Collect already-uploaded attachments that are not yet linked to this defect
       const allAttachments = [...descriptionAttachments];
+      const alreadyLinkedAttachmentIds = new Set(
+        (defect.attachments || [])
+          .filter((att) => !att.fieldName || att.fieldName === 'description')
+          .map((att) => att.id)
+      );
+      const immediateUploadedAttachments: Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }> =
+        allAttachments
+          .filter((att) => !att.id.startsWith('pending-') && !alreadyLinkedAttachmentIds.has(att.id))
+          .map((att) => ({
+            id: att.id,
+            s3Key: att.filename,
+            fileName: att.originalName,
+            mimeType: att.mimeType,
+            fieldName: att.fieldName,
+          }));
+
+      // Upload pending attachments first
       const pendingAttachments = allAttachments.filter((att) => att.id.startsWith('pending-'));
       const uploadedAttachments: Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }> = [];
 
@@ -175,6 +192,11 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
         }
       }
 
+      const attachmentsToLink = [...immediateUploadedAttachments, ...uploadedAttachments].filter(
+        (att, index, arr) =>
+          arr.findIndex((x) => (x.id ? x.id === att.id : x.s3Key === att.s3Key)) === index
+      );
+
       // Always include title since it's required and shouldn't change, but only send other fields if changed
       const dataToSend: Record<string, unknown> = {};
       
@@ -216,12 +238,12 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
       
       if (response.ok && data.data && !Array.isArray(data.data)) {
         // Link uploaded attachments to the defect
-        if (uploadedAttachments.length > 0) {
+        if (attachmentsToLink.length > 0) {
           try {
             await fetch(`/api/projects/${projectId}/defects/${defectId}/attachments`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ attachments: uploadedAttachments }),
+              body: JSON.stringify({ attachments: attachmentsToLink }),
             });
           } catch (error) {
             console.error('Failed to link attachments:', error);
@@ -427,6 +449,9 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
               formData={formData}
               onFormChange={setFormData}
               projectId={projectId}
+              defectId={defectId}
+              onSave={handleSave}
+              saving={saving}
               descriptionAttachments={descriptionAttachments}
               onDescriptionAttachmentsChange={setDescriptionAttachments}
             />

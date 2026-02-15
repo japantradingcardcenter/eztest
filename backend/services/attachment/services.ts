@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { s3Client, getS3Bucket, getS3PathPrefix, MAX_FILE_SIZE, CHUNK_SIZE } from '@/lib/s3-client';
+import { s3Client, getS3Bucket, getS3PathPrefix, isS3Configured, MAX_FILE_SIZE, CHUNK_SIZE } from '@/lib/s3-client';
 import { CreateMultipartUploadCommand, CompleteMultipartUploadCommand, AbortMultipartUploadCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import crypto from 'crypto';
@@ -25,6 +25,8 @@ const ALLOWED_MIME_TYPES = [
   'application/x-rar-compressed', 'application/x-7z-compressed',
   // Code files
   'application/json', 'application/xml', 'text/javascript', 'text/css',
+  // Videos
+  'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo',
 ];
 
 export class AttachmentService {
@@ -59,11 +61,6 @@ export class AttachmentService {
     // Validate file type (security - don't trust client)
     if (!fileType || !this.validateFileType(fileType)) {
       throw new Error(`File type "${fileType}" is not allowed`);
-    }
-
-    // Block video files explicitly
-    if (fileType.startsWith('video/')) {
-      throw new Error('Video files are not supported');
     }
 
     // Generate unique S3 key with hierarchical folder structure
@@ -288,20 +285,24 @@ export class AttachmentService {
       attachment.mimeType.startsWith('image/') ||
       attachment.mimeType === 'application/pdf';
 
-    // Generate presigned URL for secure access (valid for 1 hour)
-    const { GetObjectCommand } = await import('@aws-sdk/client-s3');
-    const command = new GetObjectCommand({
-      Bucket: getS3Bucket(),
-      Key: attachment.path,
-      ResponseContentDisposition: isPreviewable
-        ? 'inline'
-        : `attachment; filename="${encodeURIComponent(attachment.originalName)}"`,
-      ResponseContentType: attachment.mimeType,
-    });
-
-    const signedUrl = await getSignedUrl(s3Client, command, {
-      expiresIn: 3600, // 1 hour
-    });
+    // Generate URL for file access
+    let signedUrl: string;
+    if (isS3Configured()) {
+      const { GetObjectCommand } = await import('@aws-sdk/client-s3');
+      const command = new GetObjectCommand({
+        Bucket: getS3Bucket(),
+        Key: attachment.path,
+        ResponseContentDisposition: isPreviewable
+          ? 'inline'
+          : `attachment; filename="${encodeURIComponent(attachment.originalName)}"`,
+        ResponseContentType: attachment.mimeType,
+      });
+      signedUrl = await getSignedUrl(s3Client, command, {
+        expiresIn: 3600,
+      });
+    } else {
+      signedUrl = `/api/attachments/local/${attachment.path}`;
+    }
 
     return {
       url: signedUrl,
@@ -359,20 +360,29 @@ export class AttachmentService {
     }
 
     // Generate presigned DELETE URL for browser to delete from S3
-    const command = new DeleteObjectCommand({
-      Bucket: getS3Bucket(),
-      Key: attachment.path,
-    });
+    if (isS3Configured()) {
+      const command = new DeleteObjectCommand({
+        Bucket: getS3Bucket(),
+        Key: attachment.path,
+      });
 
-    const deleteUrl = await getSignedUrl(s3Client, command, {
-      expiresIn: 300, // 5 minutes
-    });
+      const deleteUrl = await getSignedUrl(s3Client, command, {
+        expiresIn: 300,
+      });
 
-    return {
-      deleteUrl,
-      s3Key: attachment.filename,
-      message: 'Presigned DELETE URL generated',
-    };
+      return {
+        deleteUrl,
+        s3Key: attachment.filename,
+        message: 'Presigned DELETE URL generated',
+      };
+    } else {
+      // ローカルストレージ: 削除URLは不要
+      return {
+        deleteUrl: null,
+        s3Key: attachment.filename,
+        message: 'Local storage - no presigned URL needed',
+      };
+    }
   }
 
   /**
