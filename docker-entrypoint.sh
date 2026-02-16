@@ -28,9 +28,9 @@ echo "Database is ready!"
 # Run migrations
 echo "Running database migrations..."
 
-# TEMPORARY FIX: Resolve failed migration (remove this block after successful deployment)
-echo "Resolving failed migration..."
-npx prisma migrate resolve --applied 20260206001223_add_testcase_additional_fields 2>/dev/null || true
+# TEMPORARY FIX: Resolve failed migrations (remove this block after successful deployment)
+echo "Resolving failed migrations..."
+npx prisma migrate resolve --rolled-back 20260213023835_ 2>/dev/null || true
 
 npx prisma migrate deploy
 
