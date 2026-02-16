@@ -311,6 +311,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       );
   }, [testRun?.results]);
 
+  // ◀▶ナビゲーション（前後切り替え）
   const navigateTestCase = useCallback((direction: 'prev' | 'next') => {
     if (!selectedTestCase || sortedTestCases.length === 0) return;
     const currentIndex = sortedTestCases.findIndex(tc => tc.id === selectedTestCase.testCaseId);
@@ -329,6 +330,32 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       status: existingResult?.status || '',
       comment: existingResult?.comment || '',
     });
+  }, [selectedTestCase, sortedTestCases, testRun?.results, setResultForm]);
+
+  // 次のテストケースに遷移するヘルパー（保存後・欠陥作成後に使用）
+  const navigateToNextTestCase = useCallback(() => {
+    if (!selectedTestCase || sortedTestCases.length === 0) {
+      setResultDialogOpen(false);
+      setSelectedTestCase(null);
+      return;
+    }
+    const currentIndex = sortedTestCases.findIndex(tc => tc.id === selectedTestCase.testCaseId);
+    if (currentIndex >= 0 && currentIndex < sortedTestCases.length - 1) {
+      const nextTestCase = sortedTestCases[currentIndex + 1];
+      const nextResult = testRun?.results.find((r) => r.testCaseId === nextTestCase.id);
+      setSelectedTestCase({
+        testCaseId: nextTestCase.id,
+        testCaseName: nextTestCase.title || nextTestCase.name || '',
+      });
+      setResultForm({
+        status: nextResult?.status || '',
+        comment: nextResult?.comment || '',
+      });
+      setResultDialogOpen(true);
+    } else {
+      setResultDialogOpen(false);
+      setSelectedTestCase(null);
+    }
   }, [selectedTestCase, sortedTestCases, testRun?.results, setResultForm]);
 
   const handleOpenResultDialog = (testCase: TestCase) => {
@@ -382,22 +409,14 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         clearResultForm();
         fetchTestRun();
 
-        // 次のテストケースがあれば自動的に切り替え、なければダイアログを閉じる
-        const currentIndex = sortedTestCases.findIndex(tc => tc.id === selectedTestCase.testCaseId);
-        if (currentIndex >= 0 && currentIndex < sortedTestCases.length - 1) {
-          const nextTestCase = sortedTestCases[currentIndex + 1];
-          const nextResult = testRun?.results.find((r) => r.testCaseId === nextTestCase.id);
-          setSelectedTestCase({
-            testCaseId: nextTestCase.id,
-            testCaseName: nextTestCase.title || nextTestCase.name || '',
-          });
-          setResultForm({
-            status: nextResult?.status || '',
-            comment: nextResult?.comment || '',
-          });
-        } else {
+        if (resultForm.status === 'FAILED' && selectedTestCase) {
+          // FAILED → 結果記録を閉じて新規欠陥作成ダイアログを開く
           setResultDialogOpen(false);
-          setSelectedTestCase(null);
+          setSelectedTestCaseForDefect(selectedTestCase.testCaseId);
+          setCreateDefectDialogOpen(true);
+        } else {
+          // FAILED以外 → 次のテストケースへ遷移
+          navigateToNextTestCase();
         }
       } else {
         alert(data.error || '結果の保存に失敗しました');
@@ -677,10 +696,11 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const handleDefectCreated = () => {
     setCreateDefectDialogOpen(false);
     setSelectedTestCaseForDefect(null);
-    // Trigger defect list refresh in RecordResultDialog
     setDefectRefreshTrigger(prev => prev + 1);
-    // Optionally refresh test run data if needed
     fetchTestRun();
+
+    // 欠陥作成後、次のテストケースの結果記録ダイアログを開く
+    navigateToNextTestCase();
   };
 
   const getResultIcon = (status?: string) => {
@@ -834,6 +854,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           testCaseId={selectedTestCase?.testCaseId || ''}
           projectId={testRun.project?.id || ''}
           testRunEnvironment={testRun.environment}
+          testRunPlatform={testRun.platform}
+          testRunDevice={testRun.device}
           formData={resultForm}
           onOpenChange={setResultDialogOpen}
           onFormChange={(data) => {
@@ -908,6 +930,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
             onDefectCreated={handleDefectCreated}
             testCaseId={selectedTestCaseForDefect}
             testRunEnvironment={testRun.environment}
+            testRunPlatform={testRun.platform}
+            testRunDevice={testRun.device}
           />
         )}
 

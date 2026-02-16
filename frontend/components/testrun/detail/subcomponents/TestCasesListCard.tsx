@@ -92,7 +92,7 @@ export function TestCasesListCard({
     {
       key: 'rtcId',
       label: 'RTC-ID',
-      width: '100px',
+      width: '160px',
       render: (row: ResultRow) => (
         <p className="text-xs font-mono text-white/70 truncate">{row.testCase.rtcId || '-'}</p>
       ),
@@ -303,9 +303,14 @@ export function TestCasesListCard({
   const isInProgress = testRunStatus === 'IN_PROGRESS';
 
   const tableDataSorted = isInProgress
-    ? [...tableData].sort((a, b) =>
-        (a.testCase.rtcId || '').localeCompare(b.testCase.rtcId || '', undefined, { numeric: true })
-      )
+    ? [...tableData].sort((a, b) => {
+        const aId = a.testCase.rtcId || '';
+        const bId = b.testCase.rtcId || '';
+        // RTC-IDがない行は末尾に
+        if (!aId && bId) return 1;
+        if (aId && !bId) return -1;
+        return aId.localeCompare(bId, undefined, { numeric: true });
+      })
     : [...tableData].sort((a, b) => {
         const keyA = getModuleSortKey(a);
         const keyB = getModuleSortKey(b);
@@ -376,7 +381,7 @@ export function TestCasesListCard({
           groupConfig={groupConfig}
           defaultExpanded={true}
           onRowClick={(row) => router.push(`/projects/${projectId}/testcases/${row.testCase.id}`)}
-          gridTemplateColumns="70px 100px 1fr 100px 90px 120px 120px 140px 140px"
+          gridTemplateColumns="70px 160px 1fr 100px 90px 120px 120px 140px 140px"
           emptyMessage="テストケースはありません"
         />
       )}

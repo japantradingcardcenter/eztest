@@ -215,6 +215,7 @@ export class ExportService {
       return {
         'テストケースID': tc.tcId,
         'テストケース名': tc.title,
+        'フロータイトル': tc.title,
         'モジュール・機能': tc.module?.name || '',
         '優先度': tc.priority,
         '前提条件': tc.preconditions || '',
