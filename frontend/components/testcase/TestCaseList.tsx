@@ -108,7 +108,6 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: itemsPerPage.toString(),
-        groupBy: 'module',
       });
       
       if (searchQuery) params.append('search', searchQuery);
@@ -162,20 +161,6 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
     setItemsPerPage(items);
     setCurrentPage(1); // Reset to first page when items per page changes
   };
-
-  // Show modules that have test cases in the current page OR are truly empty (on last page only)
-  const modulesForTable = testCases.length === 0 
-    ? modules 
-    : modules.filter(module => {
-        // Include if module has test cases in current page
-        const hasTestCasesInPage = testCases.some(tc => tc.moduleId === module.id);
-        if (hasTestCasesInPage) return true;
-        
-        // Include if module is truly empty AND we're on the last page
-        const isTrulyEmpty = module._count?.testCases === 0;
-        const isLastPage = currentPage === totalPagesCount;
-        return isTrulyEmpty && isLastPage;
-      });
 
   const handleTestCaseCreated = (newTestCase: TestCase) => {
     setAlert({
@@ -354,8 +339,8 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
           <>
             <TestCaseTable
               testCases={testCases}
-              groupedByModule={true}
-              modules={modulesForTable}
+              groupedByModule={false}
+              modules={[]}
               onDelete={handleDeleteClick}
               onClick={handleCardClick}
               canDelete={canDeleteTestCase}
