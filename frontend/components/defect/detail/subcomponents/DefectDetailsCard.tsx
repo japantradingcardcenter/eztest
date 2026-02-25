@@ -253,7 +253,7 @@ export function DefectDetailsCard({
               variant="glass"
               value={formData.description || ''}
               onChange={(value) => handleFieldChange('description', value)}
-              placeholder="欠陥の詳細な説明"
+              placeholder="Defectの詳細な説明"
               rows={4}
               maxLength={2000}
               showCharCount={true}
@@ -262,6 +262,7 @@ export function DefectDetailsCard({
               entityType="defect"
               projectId={projectId}
               showAttachments={true}
+              allowVideo={true}
             />
             {errors.description && <p className="text-xs text-red-400">{errors.description}</p>}
           </div>

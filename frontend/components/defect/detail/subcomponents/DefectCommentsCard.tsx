@@ -303,6 +303,7 @@ export const DefectCommentsCard: React.FC<DefectCommentsCardProps> = ({
               attachments={commentAttachments}
               onAttachmentsChange={setCommentAttachments}
               entityType="comment"
+              allowVideo={true}
               placeholder="コメントを入力..."
               rows={2}
               disabled={submitting}

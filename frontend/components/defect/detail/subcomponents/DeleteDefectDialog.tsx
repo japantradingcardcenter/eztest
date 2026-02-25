@@ -22,8 +22,8 @@ export function DeleteDefectDialog({
   if (!defect) return null;
 
   const config: BaseConfirmDialogConfig = {
-    title: '欠陥を削除',
-    description: `欠陥「${defect.defectId}: ${defect.title}」を削除してもよろしいですか？この操作は取り消せません。`,
+    title: 'Defectを削除',
+    description: `Defect「${defect.defectId}: ${defect.title}」を削除してもよろしいですか？この操作は取り消せません。`,
     submitLabel: '削除',
     cancelLabel: 'キャンセル',
     triggerOpen: open,

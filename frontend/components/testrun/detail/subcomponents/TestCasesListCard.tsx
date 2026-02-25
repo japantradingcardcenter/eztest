@@ -225,7 +225,7 @@ export function TestCasesListCard({
                       className="flex items-center gap-2"
                       buttonName={`Test Cases List Card - Defect Actions (${row.testCase.title || row.testCase.id})`}
                     >
-                      欠陥
+                      Defect
                       <ChevronDown className="w-3 h-3" />
                     </ButtonSecondary>
                   </DropdownMenuTrigger>
@@ -238,7 +238,7 @@ export function TestCasesListCard({
                         }}
                       >
                         <Bug className="w-4 h-4 mr-2" />
-                        欠陥を作成
+                        Defectを作成
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem
@@ -248,7 +248,7 @@ export function TestCasesListCard({
                       }}
                     >
                       <ListChecks className="w-4 h-4 mr-2" />
-                      欠陥を選択
+                      Defectを選択
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

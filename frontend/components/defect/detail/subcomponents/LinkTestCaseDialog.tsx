@@ -77,7 +77,7 @@ export function LinkTestCaseDialog({
 
   const config: BaseDialogConfig = {
     title: 'テストケースをリンク',
-    description: '欠陥に関連する失敗を追跡するため、テストケースをリンクします。',
+    description: 'Defectに関連する失敗を追跡するため、テストケースをリンクします。',
     fields,
     submitLabel: 'リンクする',
     cancelLabel: 'キャンセル',
@@ -109,7 +109,7 @@ export function LinkTestCaseDialog({
       setAlert({
         type: 'success',
         title: 'リンクしました',
-        message: 'テストケースがこの欠陥に正常にリンクされました',
+        message: 'テストケースがこのDefectに正常にリンクされました',
       });
       onTestCaseLinked();
     },

@@ -86,12 +86,12 @@ export default function DefectList({ projectId }: DefectListProps) {
         label: 'マイグレーション',
         items: [
           {
-            label: '欠陥をインポート',
+            label: 'Defectをインポート',
             icon: Import,
             onClick: () => setImportDialogOpen(true),
           },
           {
-            label: '欠陥をエクスポート',
+            label: 'Defectをエクスポート',
             icon: Upload,
             onClick: () => setExportDialogOpen(true),
           },
@@ -103,7 +103,7 @@ export default function DefectList({ projectId }: DefectListProps) {
     if (canCreateDefect) {
       actions.push({
         type: 'action' as const,
-        label: '新規欠陥',
+        label: '新規Defect',
         icon: Plus,
         onClick: () => setCreateDialogOpen(true),
         variant: 'primary' as const,
@@ -163,7 +163,7 @@ export default function DefectList({ projectId }: DefectListProps) {
 
   useEffect(() => {
     if (project) {
-      document.title = `欠陥 - ${project.name} | EZTest`;
+      document.title = `Defect - ${project.name} | EZTest`;
     }
   }, [project]);
 
@@ -395,7 +395,7 @@ export default function DefectList({ projectId }: DefectListProps) {
       setAlert({
         type: 'success',
         title: 'Success',
-        message: `${selectedDefects.size} 件の欠陥を削除しました`,
+        message: `${selectedDefects.size} 件のDefectを削除しました`,
       });
       setTimeout(() => setAlert(null), 5000);
       
@@ -405,7 +405,7 @@ export default function DefectList({ projectId }: DefectListProps) {
       setAlert({
         type: 'error',
         title: 'エラー',
-        message: '一部の欠陥の削除に失敗しました',
+        message: '一部のDefectの削除に失敗しました',
       });
       setTimeout(() => setAlert(null), 5000);
     }
@@ -421,7 +421,7 @@ export default function DefectList({ projectId }: DefectListProps) {
         setAlert({
           type: 'success',
           title: '成功',
-          message: '欠陥を削除しました',
+          message: 'Defectを削除しました',
         });
         setTimeout(() => setAlert(null), 5000);
         fetchDefects();
@@ -432,7 +432,7 @@ export default function DefectList({ projectId }: DefectListProps) {
       setAlert({
         type: 'error',
         title: 'エラー',
-        message: '欠陥の削除に失敗しました',
+        message: 'Defectの削除に失敗しました',
       });
       setTimeout(() => setAlert(null), 5000);
     } finally {
@@ -464,7 +464,7 @@ export default function DefectList({ projectId }: DefectListProps) {
 
 
   if (loading || permissionsLoading) {
-    return <Loader fullScreen text="欠陥を読み込み中..." />;
+    return <Loader fullScreen text="Defectを読み込み中..." />;
   }
 
   return (
@@ -480,7 +480,7 @@ export default function DefectList({ projectId }: DefectListProps) {
             items={[
               { label: 'プロジェクト', href: '/projects' },
               { label: project?.name || '読み込み中...', href: `/projects/${projectId}` },
-              { label: '欠陥', href: `/projects/${projectId}/defects` }
+              { label: 'Defect', href: `/projects/${projectId}/defects` }
             ]}
           />
         }
@@ -498,7 +498,7 @@ export default function DefectList({ projectId }: DefectListProps) {
                     {project.key}
                   </Badge>
                 )}
-                <h1 className="text-2xl font-bold text-white">欠陥</h1>
+                <h1 className="text-2xl font-bold text-white">Defect</h1>
               </div>
               {project && (
                 <p className="text-white/70 text-sm">{project.name}</p>
@@ -603,8 +603,8 @@ export default function DefectList({ projectId }: DefectListProps) {
       {/* Create Defect Dialog */}
       {/* Bulk Delete Confirmation Dialog */}
       <BaseConfirmDialog
-        title="欠陥を削除"
-        description={`${selectedDefects.size} 件の欠陥を削除してもよろしいですか？この操作は取り消せません。`}
+        title="Defectを削除"
+        description={`${selectedDefects.size} 件のDefectを削除してもよろしいですか？この操作は取り消せません。`}
         submitLabel="削除"
         cancelLabel="キャンセル"
         triggerOpen={deleteConfirmOpen}
@@ -615,8 +615,8 @@ export default function DefectList({ projectId }: DefectListProps) {
 
       {/* Single Delete Confirmation Dialog */}
       <BaseConfirmDialog
-        title="欠陥を削除"
-        description={defectToDelete ? `欠陥「${defectToDelete.title}」を削除してもよろしいですか？この操作は取り消せません。` : ''}
+        title="Defectを削除"
+        description={defectToDelete ? `Defect「${defectToDelete.title}」を削除してもよろしいですか？この操作は取り消せません。` : ''}
         submitLabel="削除"
         cancelLabel="キャンセル"
         triggerOpen={singleDeleteConfirmOpen}
@@ -634,7 +634,7 @@ export default function DefectList({ projectId }: DefectListProps) {
           setAlert({
             type: 'success',
             title: '成功',
-            message: `欠陥 ${defect.defectId} を作成しました`,
+            message: `Defect ${defect.defectId} を作成しました`,
           });
           setTimeout(() => setAlert(null), 5000);
           fetchDefects();
@@ -645,11 +645,11 @@ export default function DefectList({ projectId }: DefectListProps) {
       <FileImportDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
-        title="欠陥をインポート"
-        description="CSV または Excel ファイルをアップロードして、複数の欠陥を一括インポートできます。"
+        title="Defectをインポート"
+        description="CSV または Excel ファイルをアップロードして、複数のDefectを一括インポートできます。"
         importEndpoint={`/api/projects/${projectId}/defects/import`}
         templateEndpoint={`/api/projects/${projectId}/defects/import/template`}
-        itemName="欠陥"
+        itemName="Defect"
         onImportComplete={() => {
           fetchDefects();
           setImportDialogOpen(false);
@@ -660,8 +660,8 @@ export default function DefectList({ projectId }: DefectListProps) {
       <FileExportDialog
         open={exportDialogOpen}
         onOpenChange={setExportDialogOpen}
-        title="欠陥をエクスポート"
-        description="欠陥のエクスポート形式を選択してください"
+        title="Defectをエクスポート"
+        description="Defectのエクスポート形式を選択してください"
         exportOptions={{
           projectId,
           endpoint: `/api/projects/${projectId}/defects/export`,
@@ -672,7 +672,7 @@ export default function DefectList({ projectId }: DefectListProps) {
             assignedToId: assigneeFilter !== 'all' && assigneeFilter !== 'unassigned' ? assigneeFilter : undefined,
           },
         }}
-        itemName="欠陥"
+        itemName="Defect"
       />
     </>
   );

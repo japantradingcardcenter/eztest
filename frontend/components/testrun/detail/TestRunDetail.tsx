@@ -833,7 +833,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
             open={exportDialogOpen}
             onOpenChange={setExportDialogOpen}
             title="テストランレポートをエクスポート"
-            description="テストケースと欠陥を含む詳細レポートのエクスポート形式を選択してください。"
+            description="テストケースとDefectを含む詳細レポートのエクスポート形式を選択してください。"
             exportOptions={{
               projectId: testRun.project?.id || '',
               endpoint: `/api/projects/${testRun.project?.id}/testruns/${testRunId}/export`,

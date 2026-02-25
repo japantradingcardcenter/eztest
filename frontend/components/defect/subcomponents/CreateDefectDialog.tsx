@@ -98,7 +98,7 @@ export function CreateDefectDialog({
     {
       name: 'title',
       label: 'タイトル',
-      placeholder: '欠陥タイトルを入力',
+      placeholder: 'Defectタイトルを入力',
       type: 'text',
       required: true,
       minLength: 5,
@@ -191,7 +191,7 @@ export function CreateDefectDialog({
       name: 'description',
       label: '説明',
       type: 'textarea-with-attachments',
-      placeholder: '欠陥の詳細を入力...',
+      placeholder: 'Defectの詳細を入力...',
       rows: 3,
       cols: 2,
       maxLength: 2000,
@@ -252,10 +252,10 @@ export function CreateDefectDialog({
   };
 
   const config: BaseDialogConfig = {
-    title: '新規欠陥を作成',
-    description: '欠陥の詳細を入力してください。ステータスはデフォルトで「新規」になります。',
+    title: '新規Defectを作成',
+    description: 'Defectの詳細を入力してください。ステータスはデフォルトで「新規」になります。',
     fields,
-    submitLabel: '欠陥を作成',
+    submitLabel: 'Defectを作成',
     cancelLabel: 'キャンセル',
     triggerOpen,
     onOpenChange: handleDialogOpenChange,
@@ -266,6 +266,12 @@ export function CreateDefectDialog({
     onSubmit: async (formData) => {
       // Upload pending attachments first
       const uploadedAttachments = await uploadPendingAttachments();
+      const attachmentsToLink = uploadedAttachments
+        .filter((attachment): attachment is { id: string; fieldName?: string } => Boolean(attachment.id))
+        .map((attachment) => ({
+          id: attachment.id,
+          fieldName: attachment.fieldName,
+        }));
 
       // Get test case ID from prop (passed when creating from test run) or from form data (selected from dropdown)
       const finalTestCaseId = testCaseId || formData.testCaseId || null;
@@ -298,15 +304,20 @@ export function CreateDefectDialog({
       const createdDefect = data.data;
 
       // Link uploaded attachments to the defect
-      if (uploadedAttachments.length > 0) {
+      if (attachmentsToLink.length > 0) {
         try {
-          await fetch(`/api/projects/${projectId}/defects/${createdDefect.id}/attachments`, {
+          const attachmentResponse = await fetch(`/api/projects/${projectId}/defects/${createdDefect.id}/attachments`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ attachments: uploadedAttachments }),
+            body: JSON.stringify({ attachments: attachmentsToLink }),
           });
+          if (!attachmentResponse.ok) {
+            const errorData = await attachmentResponse.json().catch(() => ({ error: 'Failed to link attachments' }));
+            throw new Error(errorData.error || 'Failed to link attachments');
+          }
         } catch (error) {
           console.error('Failed to link attachments:', error);
+          throw error;
         }
       }
 
@@ -317,8 +328,8 @@ export function CreateDefectDialog({
         const defect = result as Defect;
         setAlert({
           type: 'success',
-          title: '欠陥を作成しました',
-          message: `欠陥 ${defect.defectId} が正常に作成されました`,
+          title: 'Defectを作成しました',
+          message: `Defect ${defect.defectId} が正常に作成されました`,
         });
         // Reset attachments state
         setDescriptionAttachments([]);

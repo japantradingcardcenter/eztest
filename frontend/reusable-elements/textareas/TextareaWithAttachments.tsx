@@ -30,6 +30,7 @@ type TextareaWithAttachmentsProps = Omit<React.ComponentProps<"textarea">, 'valu
   projectId?: string;
   entityType?: 'testcase' | 'defect' | 'comment' | 'testresult' | 'teststep' | 'unassigned';
   showAttachments?: boolean;
+  allowVideo?: boolean;
 }
 
 function TextareaWithAttachments({ 
@@ -46,6 +47,7 @@ function TextareaWithAttachments({
   projectId,
   entityType = 'testcase',
   showAttachments = true,
+  allowVideo = false,
   ...props 
 }: TextareaWithAttachmentsProps) {
   // Check if attachments feature is enabled
@@ -203,7 +205,7 @@ function TextareaWithAttachments({
 
     setFileError('');
 
-    const validation = validateFile(file);
+    const validation = validateFile(file, { allowVideo });
     if (!validation.valid) {
       setFileError(validation.error || 'Invalid file');
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -362,7 +364,7 @@ function TextareaWithAttachments({
             onChange={handleFileSelect}
             disabled={uploading}
             className="hidden"
-            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar"
+            accept={allowVideo ? "image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar" : "image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar"}
           />
           
           {/* Upload Progress */}
@@ -526,6 +528,7 @@ function TextareaWithAttachments({
           entityId={entityId}
           projectId={projectId}
           entityType={entityType}
+          allowVideo={allowVideo}
           title={`Manage Files - ${fieldName}`}
         />
       )}

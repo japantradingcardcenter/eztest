@@ -46,7 +46,7 @@ export function SendTestRunReportDialog({
         <DialogHeader>
           <DialogTitle>テストランレポートを送信</DialogTitle>
           <DialogDescription>
-            管理者、プロジェクトマネージャー、欠陥担当者にテストランレポートをメールで送信しますか？
+            管理者、プロジェクトマネージャー、Defect担当者にテストランレポートをメールで送信しますか？
           </DialogDescription>
         </DialogHeader>
         {error && (

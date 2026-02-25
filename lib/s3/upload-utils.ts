@@ -8,6 +8,10 @@
 export const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
 export const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunks
 
+interface ValidateFileOptions {
+  allowVideo?: boolean;
+}
+
 export interface Attachment {
   id: string;
   filename: string;
@@ -37,7 +41,9 @@ export interface UploadResult {
 /**
  * Validates a file before upload
  */
-export function validateFile(file: File): { valid: boolean; error?: string } {
+export function validateFile(file: File, options: ValidateFileOptions = {}): { valid: boolean; error?: string } {
+  const { allowVideo = false } = options;
+
   // Check file size
   if (file.size > MAX_FILE_SIZE) {
     return {
@@ -47,7 +53,7 @@ export function validateFile(file: File): { valid: boolean; error?: string } {
   }
 
   // Block video files
-  if (file.type.startsWith('video/')) {
+  if (!allowVideo && file.type.startsWith('video/')) {
     return {
       valid: false,
       error: 'Video files are not supported. Please upload images or documents.',
@@ -224,7 +230,7 @@ export async function uploadFileToS3({
 export async function abortUpload(uploadId: string, s3Key: string): Promise<void> {
   try {
     const response = await fetch(
-      `/api/attachments/upload/abort?uploadId=${uploadId}&s3Key=${encodeURIComponent(s3Key)}`,
+      `/api/attachments/upload/abort?uploadId=${uploadId}&fileKey=${encodeURIComponent(s3Key)}`,
       { method: 'DELETE' }
     );
     

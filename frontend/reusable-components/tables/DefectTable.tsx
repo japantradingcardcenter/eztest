@@ -106,7 +106,7 @@ export function DefectTable({
           <Checkbox
             checked={allSelected}
             onCheckedChange={onSelectAll}
-            aria-label="すべての欠陥を選択"
+            aria-label="すべてのDefectを選択"
             className={someSelected ? 'data-[state=checked]:bg-primary/50' : ''}
           />
         </div>
@@ -165,7 +165,7 @@ export function DefectTable({
       {/* Defect Rows */}
       {defects.length === 0 ? (
         <div className="text-center py-8 text-white/50">
-          表示する欠陥がありません
+          表示するDefectがありません
         </div>
       ) : (
         defects.map((defect, rowIndex) => (
@@ -183,7 +183,7 @@ export function DefectTable({
               <Checkbox
                 checked={selectedDefects.has(defect.id)}
                 onCheckedChange={() => onSelectDefect(defect.id)}
-                aria-label={`欠陥 ${defect.defectId} を選択`}
+                aria-label={`Defect ${defect.defectId} を選択`}
               />
             </div>
 
@@ -203,7 +203,7 @@ export function DefectTable({
                 {defect.title && defect.title.length > 50 && (
                   <HoverCardContent side="top" className="w-96">
                     <div className="space-y-2">
-                      <h4 className="text-sm font-semibold text-white">欠陥タイトル</h4>
+                      <h4 className="text-sm font-semibold text-white">Defectタイトル</h4>
                       <p className="text-sm text-white/80 break-words">{defect.title}</p>
                       {defect.description && (
                         <>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -35,6 +35,7 @@ interface FileUploadModalProps {
   title?: string;
   maxFiles?: number;
   onDeleteMarked?: (deletedIds: string[]) => void;
+  allowVideo?: boolean;
 }
 
 export function FileUploadModal({
@@ -49,6 +50,7 @@ export function FileUploadModal({
   title = 'Manage Files',
   maxFiles = 20,
   onDeleteMarked,
+  allowVideo = false,
 }: FileUploadModalProps) {
   const [attachmentsEnabled, setAttachmentsEnabled] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -156,7 +158,7 @@ export function FileUploadModal({
         break;
       }
 
-      const validation = validateFile(file);
+      const validation = validateFile(file, { allowVideo });
       if (!validation.valid) {
         setFileError(validation.error || 'Invalid file');
         continue;
@@ -305,7 +307,7 @@ export function FileUploadModal({
                 multiple
                 onChange={handleFileSelect}
                 className="hidden"
-                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar,.png,.jpg,.jpeg"
+                accept={allowVideo ? "image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar,.png,.jpg,.jpeg" : "image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar,.png,.jpg,.jpeg"}
               />
               
               {/* Single Drag & Drop Area */}
@@ -347,7 +349,7 @@ export function FileUploadModal({
                   Drag & Drop or <span className="text-blue-400 font-semibold cursor-pointer hover:text-blue-300">Choose File</span> to upload
                 </p>
                 <p className="text-white/50 text-sm">
-                  Doc, pdf, png, jpeg
+                  {allowVideo ? 'Video, image, document' : 'Doc, pdf, png, jpeg'}
                 </p>
               </div>
 
