@@ -28,7 +28,7 @@ interface EditTestRunDialogProps {
   } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onTestRunUpdated: () => void;
+  onTestRunUpdated: (updatedTestRun: { id: string; name: string }) => void;
 }
 
 export function EditTestRunDialog({
@@ -198,7 +198,7 @@ export function EditTestRunDialog({
     onOpenChange,
     onSubmit: handleSubmit,
     onSuccess: (updatedTestRun) => {
-      if (updatedTestRun) onTestRunUpdated();
+      if (updatedTestRun) onTestRunUpdated(updatedTestRun);
     },
     disablePersistence: true,
     submitButtonName: 'Edit Test Run Dialog - Update',
