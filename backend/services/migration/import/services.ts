@@ -343,38 +343,6 @@ export class ImportService {
           }
         }
 
-        // 既存テストケースの判定: RTC-ID があれば RTC-ID でのみ照合（異なる RTC-ID は別テストケース）、なければタイトルで照合
-        let existingTestCase: { id: string; tcId: string } | null = null;
-        if (rtcIdStr) {
-          existingTestCase = await prisma.testCase.findFirst({
-            where: { projectId, rtcId: rtcIdStr },
-            select: { id: true, tcId: true },
-          });
-        } else {
-          existingTestCase = await prisma.testCase.findFirst({
-            where: {
-              projectId,
-              title: { equals: testCaseTitle, mode: 'insensitive' },
-            },
-            select: { id: true, tcId: true },
-          });
-        }
-
-        let existingTestCaseToUpdate: { id: string; tcId: string } | null = null;
-        if (existingTestCase) {
-          if (updateExisting) {
-            existingTestCaseToUpdate = { id: existingTestCase.id, tcId: existingTestCase.tcId };
-          } else {
-            result.skipped++;
-            result.skippedItems.push({
-              row: rowNumber,
-              title: testCaseTitle,
-              reason: `Already exists (${existingTestCase.tcId})`,
-            });
-            continue; // Skip this row
-          }
-        }
-
         // Find or create module
         let moduleId: string | undefined;
         if (moduleValue && typeof moduleValue === 'string' && moduleValue.toString().trim()) {
@@ -417,6 +385,69 @@ export class ImportService {
             project.testSuites.push(foundSuite);
           }
           suiteId = foundSuite.id;
+        }
+
+        // 既存テストケースの判定:
+        // RTC-ID があれば RTC-ID 優先、なければタイトルで照合。
+        // ただし suite が異なる場合は別テストケースとして扱い、既存を上書きしない。
+        let existingTestCase: {
+          id: string;
+          tcId: string;
+          suiteId: string | null;
+          testCaseSuites: Array<{ testSuiteId: string }>;
+        } | null = null;
+        if (rtcIdStr) {
+          existingTestCase = await prisma.testCase.findFirst({
+            where: { projectId, rtcId: rtcIdStr },
+            select: {
+              id: true,
+              tcId: true,
+              suiteId: true,
+              testCaseSuites: {
+                select: { testSuiteId: true },
+              },
+            },
+          });
+        } else {
+          existingTestCase = await prisma.testCase.findFirst({
+            where: {
+              projectId,
+              title: { equals: testCaseTitle, mode: 'insensitive' },
+            },
+            select: {
+              id: true,
+              tcId: true,
+              suiteId: true,
+              testCaseSuites: {
+                select: { testSuiteId: true },
+              },
+            },
+          });
+        }
+
+        // Different suite should not overwrite existing test case.
+        if (existingTestCase && suiteId) {
+          const inTargetSuite =
+            existingTestCase.suiteId === suiteId ||
+            existingTestCase.testCaseSuites.some((tcs) => tcs.testSuiteId === suiteId);
+          if (!inTargetSuite) {
+            existingTestCase = null;
+          }
+        }
+
+        let existingTestCaseToUpdate: { id: string; tcId: string } | null = null;
+        if (existingTestCase) {
+          if (updateExisting) {
+            existingTestCaseToUpdate = { id: existingTestCase.id, tcId: existingTestCase.tcId };
+          } else {
+            result.skipped++;
+            result.skippedItems.push({
+              row: rowNumber,
+              title: testCaseTitle,
+              reason: `Already exists (${existingTestCase.tcId})`,
+            });
+            continue; // Skip this row
+          }
         }
 
         // Validate priority
@@ -906,10 +937,10 @@ export class ImportService {
               })),
             });
           }
-          await prisma.testCaseSuite.deleteMany({ where: { testCaseId: existingTestCaseToUpdate.id } });
           if (suiteId) {
-            await prisma.testCaseSuite.create({
-              data: { testCaseId: existingTestCaseToUpdate.id, testSuiteId: suiteId },
+            await prisma.testCaseSuite.createMany({
+              data: [{ testCaseId: existingTestCaseToUpdate.id, testSuiteId: suiteId }],
+              skipDuplicates: true,
             });
           }
           for (const defect of defectsToLink) {
