@@ -197,8 +197,11 @@ export function EditTestRunDialog({
     triggerOpen: open,
     onOpenChange,
     onSubmit: handleSubmit,
-    onSuccess: (updatedTestRun) => {
-      if (updatedTestRun) onTestRunUpdated(updatedTestRun);
+    onSuccess: (result) => {
+      if (result && testRun) {
+        const updated = result as { id: string; name: string };
+        onTestRunUpdated({ id: updated.id || testRun.id, name: updated.name || testRun.name });
+      }
     },
     disablePersistence: true,
     submitButtonName: 'Edit Test Run Dialog - Update',
