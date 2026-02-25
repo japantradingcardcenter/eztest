@@ -6,9 +6,10 @@ import { SelectOption } from '@/frontend/reusable-components';
 import { useEffect, useState } from 'react';
 import { Label } from '@/frontend/reusable-elements/labels/Label';
 import { Input } from '@/frontend/reusable-elements/inputs/Input';
-import { TextareaWithAttachments } from '@/frontend/reusable-elements/textareas/TextareaWithAttachments';
+import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import { type Attachment } from '@/lib/s3';
 import { AttachmentDisplay } from '@/frontend/reusable-components/attachments/AttachmentDisplay';
+import { DefectDescriptionAttachmentField } from '@/frontend/components/defect/shared/DefectDescriptionAttachmentField';
 import {
   Select,
   SelectContent,
@@ -26,6 +27,9 @@ interface DefectDetailsCardProps {
   onFormChange: (data: DefectFormData) => void;
   onFieldChange?: (field: keyof DefectFormData, value: string | number | null) => void;
   projectId?: string;
+  defectId?: string;
+  onSave?: () => void;
+  saving?: boolean;
   // Attachments
   descriptionAttachments?: Attachment[];
   onDescriptionAttachmentsChange?: (attachments: Attachment[]) => void;
@@ -45,6 +49,9 @@ export function DefectDetailsCard({
   onFormChange,
   onFieldChange,
   projectId,
+  defectId,
+  onSave,
+  saving = false,
   descriptionAttachments = [],
   onDescriptionAttachmentsChange,
 }: DefectDetailsCardProps) {
@@ -248,21 +255,16 @@ export function DefectDetailsCard({
           {/* Description with Attachments */}
           <div className="space-y-2">
             <Label htmlFor="description">説明</Label>
-            <TextareaWithAttachments
-              fieldName="description"
-              variant="glass"
+            <DefectDescriptionAttachmentField
               value={formData.description || ''}
               onChange={(value) => handleFieldChange('description', value)}
-              placeholder="Defectの詳細な説明"
-              rows={4}
-              maxLength={2000}
-              showCharCount={true}
               attachments={descriptionAttachments}
               onAttachmentsChange={handleDescriptionAttachmentsChange}
-              entityType="defect"
               projectId={projectId}
-              showAttachments={true}
-              allowVideo={true}
+              defectId={defectId}
+              placeholder="欠陥の詳細な説明"
+              rows={4}
+              maxLength={2000}
             />
             {errors.description && <p className="text-xs text-red-400">{errors.description}</p>}
           </div>
@@ -277,6 +279,17 @@ export function DefectDetailsCard({
               onChange={(e) => handleFieldChange('environment', e.target.value)}
               placeholder="例: Production, Staging, Development"
             />
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <ButtonPrimary
+              type="button"
+              onClick={onSave}
+              disabled={saving}
+              className="cursor-pointer"
+            >
+              {saving ? '保存中...' : '保存する'}
+            </ButtonPrimary>
           </div>
         </div>
       ) : (

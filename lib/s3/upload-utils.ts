@@ -8,10 +8,6 @@
 export const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
 export const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunks
 
-interface ValidateFileOptions {
-  allowVideo?: boolean;
-}
-
 export interface Attachment {
   id: string;
   filename: string;
@@ -41,9 +37,7 @@ export interface UploadResult {
 /**
  * Validates a file before upload
  */
-export function validateFile(file: File, options: ValidateFileOptions = {}): { valid: boolean; error?: string } {
-  const { allowVideo = false } = options;
-
+export function validateFile(file: File): { valid: boolean; error?: string } {
   // Check file size
   if (file.size > MAX_FILE_SIZE) {
     return {
@@ -52,19 +46,60 @@ export function validateFile(file: File, options: ValidateFileOptions = {}): { v
     };
   }
 
-  // Block video files
-  if (!allowVideo && file.type.startsWith('video/')) {
-    return {
-      valid: false,
-      error: 'Video files are not supported. Please upload images or documents.',
-    };
-  }
-
   return { valid: true };
 }
 
 /**
+ * Uploads a file to local storage as fallback when S3 is not configured
+ */
+async function uploadFileLocal(
+  file: File,
+  fieldName: string,
+  entityType: string,
+  projectId?: string,
+  onProgress?: (progress: number) => void,
+): Promise<UploadResult> {
+  try {
+    onProgress?.(10);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('fieldName', fieldName);
+    formData.append('entityType', entityType);
+    if (projectId) formData.append('projectId', projectId);
+
+    onProgress?.(30);
+
+    const response = await fetch('/api/attachments/upload-local', {
+      method: 'POST',
+      body: formData,
+    });
+
+    onProgress?.(80);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to upload file locally');
+    }
+
+    const data = await response.json();
+    onProgress?.(100);
+
+    return {
+      success: true,
+      attachment: data.attachment,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Local upload failed',
+    };
+  }
+}
+
+/**
  * Uploads a file directly to S3 using chunked multipart upload with presigned URLs
+ * Falls back to local storage if S3 is not configured
  */
 export async function uploadFileToS3({
   file,
@@ -76,23 +111,31 @@ export async function uploadFileToS3({
 }: UploadOptions): Promise<UploadResult> {
   try {
     // Step 1: Initialize multipart upload and get presigned URLs
-    const initResponse = await fetch('/api/attachments/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        fieldName,
-        entityType,
-        entityId,
-        projectId,
-      }),
-    });
+    let initResponse: Response;
+    try {
+      initResponse = await fetch('/api/attachments/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+          fieldName,
+          entityType,
+          entityId,
+          projectId,
+        }),
+      });
+    } catch {
+      // ネットワークエラーやサーバーエラーの場合はローカルにフォールバック
+      console.warn('S3 upload request failed, falling back to local storage');
+      return uploadFileLocal(file, fieldName, entityType, projectId, onProgress);
+    }
 
     if (!initResponse.ok) {
-      const error = await initResponse.json();
-      throw new Error(error.error || 'Failed to initialize upload');
+      // S3が利用できない場合はローカルストレージにフォールバック
+      console.warn('S3 upload initialization failed, falling back to local storage');
+      return uploadFileLocal(file, fieldName, entityType, projectId, onProgress);
     }
 
     const { uploadId, s3Key, presignedUrls, totalParts } = await initResponse.json();
@@ -230,7 +273,7 @@ export async function uploadFileToS3({
 export async function abortUpload(uploadId: string, s3Key: string): Promise<void> {
   try {
     const response = await fetch(
-      `/api/attachments/upload/abort?uploadId=${uploadId}&fileKey=${encodeURIComponent(s3Key)}`,
+      `/api/attachments/upload/abort?uploadId=${uploadId}&s3Key=${encodeURIComponent(s3Key)}`,
       { method: 'DELETE' }
     );
     

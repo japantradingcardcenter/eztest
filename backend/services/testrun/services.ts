@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { XMLParser } from 'fast-xml-parser';
 import dropdownOptionService from '@/backend/services/dropdown-option/dropdown-option.service';
 
@@ -302,6 +303,8 @@ interface CreateTestRunInput {
   executionType?: 'MANUAL' | 'AUTOMATION';
   assignedToId?: string;
   environment?: string;
+  platform?: string;
+  device?: string;
   status?: string;
   testCaseIds?: string[];
   testSuiteIds?: string[];
@@ -315,6 +318,8 @@ interface UpdateTestRunInput {
   status?: string;
   assignedToId?: string;
   environment?: string;
+  platform?: string;
+  device?: string;
   startedAt?: Date;
   completedAt?: Date;
 }
@@ -354,7 +359,7 @@ export class TestRunService {
       ];
     }
 
-    return await prisma.testRun.findMany({
+    const testRuns = await prisma.testRun.findMany({
       where,
       include: {
         assignedTo: {
@@ -380,13 +385,39 @@ export class TestRunService {
         createdAt: 'desc',
       },
     });
+
+    // platform/device are in Prisma schema and returned directly by findMany
+    // Augment with executionType/version from raw SQL (not in Prisma schema)
+    if (testRuns.length > 0) {
+      try {
+        const ids = testRuns.map(tr => tr.id);
+        const rows = await prisma.$queryRaw<Array<{ id: string; executionType: string | null; version: string | null }>>`
+          SELECT "id", "executionType", "version" FROM "TestRun" WHERE "id" IN (${Prisma.join(ids)})
+        `;
+        const rowMap = new Map(rows.map(r => [r.id, { executionType: r.executionType || 'MANUAL', version: r.version || null }]));
+        return testRuns.map(tr => ({
+          ...tr,
+          executionType: rowMap.get(tr.id)?.executionType || 'MANUAL',
+          version: rowMap.get(tr.id)?.version || undefined,
+        }));
+      } catch {
+        // Column may not exist yet - return with defaults
+        return testRuns.map(tr => ({
+          ...tr,
+          executionType: 'MANUAL',
+          version: undefined,
+        }));
+      }
+    }
+
+    return testRuns;
   }
 
   /**
    * Get a single test run by ID
    */
   async getTestRunById(testRunId: string) {
-    return await prisma.testRun.findUnique({
+    const testRun = await prisma.testRun.findUnique({
       where: { id: testRunId },
       include: {
         project: {
@@ -454,6 +485,25 @@ export class TestRunService {
         },
       },
     });
+
+    if (!testRun) return null;
+
+    // Fetch executionType/version via raw SQL (not in Prisma schema)
+    let executionType: string | null = null;
+    let version: string | null = null;
+    try {
+      const rows = await prisma.$queryRaw<Array<{ executionType: string | null; version: string | null }>>`
+        SELECT "executionType", "version" FROM "TestRun" WHERE "id" = ${testRunId} LIMIT 1
+      `;
+      if (rows[0]) {
+        executionType = rows[0].executionType;
+        version = rows[0].version;
+      }
+    } catch {
+      // Column may not exist yet
+    }
+
+    return { ...testRun, executionType: executionType || 'MANUAL', version: version || undefined };
   }
 
   /**
@@ -481,16 +531,17 @@ export class TestRunService {
       testCaseIds = [...new Set([...testCaseIds, ...suiteTestCaseIds])]; // Remove duplicates
     }
 
-    // Create the test run
+    // Create the test run (platform/device are in the Prisma schema; executionType is handled via raw SQL)
     const status = data.status || 'PLANNED';
     const testRun = await prisma.testRun.create({
       data: {
         projectId: data.projectId,
         name: data.name,
         description: data.description,
-        executionType: data.executionType || 'MANUAL',
         assignedToId: data.assignedToId || null,
         environment: data.environment,
+        platform: data.platform || null,
+        device: data.device || null,
         status,
         completedAt: status === 'COMPLETED' ? new Date() : null,
         createdById: data.createdById,
@@ -507,6 +558,21 @@ export class TestRunService {
       },
     });
 
+    // Set executionType via raw SQL (not in Prisma schema, column may not exist)
+    try {
+      const execType = data.executionType || 'MANUAL';
+      await prisma.$executeRaw`UPDATE "TestRun" SET "executionType" = ${execType} WHERE "id" = ${testRun.id}`;
+    } catch (error) {
+      console.warn('[TestRunService] Failed to set executionType on test run (column may not exist yet):', error instanceof Error ? error.message : error);
+    }
+
+    // Set version via raw SQL (column may not exist)
+    try {
+      await prisma.$executeRaw`UPDATE "TestRun" SET "version" = ${data.version || null} WHERE "id" = ${testRun.id}`;
+    } catch (error) {
+      console.warn('[TestRunService] Failed to set version on test run (column may not exist yet):', error instanceof Error ? error.message : error);
+    }
+
     // If test case IDs are provided, create placeholder results
     if (testCaseIds.length > 0) {
       await prisma.testResult.createMany({
@@ -518,6 +584,24 @@ export class TestRunService {
         })),
         skipDuplicates: true,
       });
+
+      // Update platform and device on the test cases if specified on the test run
+      if (data.platform || data.device) {
+        try {
+          const updateData: Record<string, string> = {};
+          if (data.platform) updateData.platform = data.platform;
+          if (data.device) updateData.device = data.device;
+
+          await prisma.testCase.updateMany({
+            where: {
+              id: { in: testCaseIds },
+            },
+            data: updateData,
+          });
+        } catch (error) {
+          console.warn('[TestRunService] Failed to reflect platform/device onto test cases:', error instanceof Error ? error.message : error);
+        }
+      }
     }
 
     return testRun;
@@ -527,9 +611,13 @@ export class TestRunService {
    * Update a test run
    */
   async updateTestRun(testRunId: string, data: UpdateTestRunInput) {
-    return await prisma.testRun.update({
+    // Extract executionType/version to handle via raw SQL (not in Prisma schema)
+    // platform and device ARE in the schema, so they go through Prisma directly
+    const { executionType, version, ...prismaData } = data;
+
+    const testRun = await prisma.testRun.update({
       where: { id: testRunId },
-      data,
+      data: prismaData,
       include: {
         assignedTo: {
           select: {
@@ -546,6 +634,25 @@ export class TestRunService {
         },
       },
     });
+
+    // Set executionType via raw SQL (not in Prisma schema, column may not exist)
+    if (executionType !== undefined) {
+      try {
+        await prisma.$executeRaw`UPDATE "TestRun" SET "executionType" = ${executionType || 'MANUAL'} WHERE "id" = ${testRunId}`;
+      } catch (error) {
+        console.warn('[TestRunService] Failed to update executionType on test run:', error instanceof Error ? error.message : error);
+      }
+    }
+
+    if (version !== undefined) {
+      try {
+        await prisma.$executeRaw`UPDATE "TestRun" SET "version" = ${version || null} WHERE "id" = ${testRunId}`;
+      } catch (error) {
+        console.warn('[TestRunService] Failed to update version on test run:', error instanceof Error ? error.message : error);
+      }
+    }
+
+    return testRun;
   }
 
   /**
@@ -632,6 +739,19 @@ export class TestRunService {
   }
 
   /**
+   * Reopen a completed test run
+   */
+  async reopenTestRun(testRunId: string) {
+    return await prisma.testRun.update({
+      where: { id: testRunId },
+      data: {
+        status: 'IN_PROGRESS',
+        completedAt: null,
+      },
+    });
+  }
+
+  /**
    * Cancel a test run
    */
   async cancelTestRun(testRunId: string) {
@@ -658,7 +778,7 @@ export class TestRunService {
       stackTrace?: string;
     }
   ) {
-    return await prisma.testResult.upsert({
+    const result = await prisma.testResult.upsert({
       where: {
         testRunId_testCaseId: {
           testRunId,
@@ -703,6 +823,43 @@ export class TestRunService {
         },
       },
     });
+
+    // Reflect test run's platform and device onto the test case
+    // Uses raw SQL to avoid Prisma client validation issues when fields are not yet generated
+    try {
+      const testRunRows = await prisma.$queryRaw<Array<{ platform: string | null; device: string | null }>>`
+        SELECT "platform", "device" FROM "TestRun" WHERE "id" = ${testRunId} LIMIT 1
+      `;
+
+      const testRunData = testRunRows[0];
+      if (testRunData && (testRunData.platform || testRunData.device)) {
+        const updateData: Record<string, string> = {};
+        if (testRunData.platform) updateData.platform = testRunData.platform;
+        if (testRunData.device) updateData.device = testRunData.device;
+
+        await prisma.testCase.update({
+          where: { id: testCaseId },
+          data: updateData,
+        });
+      }
+    } catch (error) {
+      // Log but don't fail the main operation - platform/device reflection is a side effect
+      console.warn('[TestRunService] Failed to reflect platform/device onto test case:', error instanceof Error ? error.message : error);
+    }
+
+    // 計測時間をTestCaseのテスト実行時間（秒）に反映
+    if (data.duration && data.duration > 0) {
+      try {
+        await prisma.testCase.update({
+          where: { id: testCaseId },
+          data: { estimatedTime: data.duration },
+        });
+      } catch (error) {
+        console.warn('[TestRunService] Failed to update estimatedTime on test case:', error instanceof Error ? error.message : error);
+      }
+    }
+
+    return result;
   }
 
   /**

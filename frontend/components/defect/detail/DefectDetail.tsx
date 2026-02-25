@@ -128,8 +128,25 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Upload pending attachments first
+      // Collect already-uploaded attachments that are not yet linked to this defect
       const allAttachments = [...descriptionAttachments];
+      const alreadyLinkedAttachmentIds = new Set(
+        (defect.attachments || [])
+          .filter((att) => !att.fieldName || att.fieldName === 'description')
+          .map((att) => att.id)
+      );
+      const immediateUploadedAttachments: Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }> =
+        allAttachments
+          .filter((att) => !att.id.startsWith('pending-') && !alreadyLinkedAttachmentIds.has(att.id))
+          .map((att) => ({
+            id: att.id,
+            s3Key: att.filename,
+            fileName: att.originalName,
+            mimeType: att.mimeType,
+            fieldName: att.fieldName,
+          }));
+
+      // Upload pending attachments first
       const pendingAttachments = allAttachments.filter((att) => att.id.startsWith('pending-'));
       const uploadedAttachments: Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }> = [];
 
@@ -175,6 +192,11 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
         }
       }
 
+      const attachmentsToLink = [...immediateUploadedAttachments, ...uploadedAttachments].filter(
+        (att, index, arr) =>
+          arr.findIndex((x) => (x.id ? x.id === att.id : x.s3Key === att.s3Key)) === index
+      );
+
       // Always include title since it's required and shouldn't change, but only send other fields if changed
       const dataToSend: Record<string, unknown> = {};
       
@@ -216,32 +238,15 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
       
       if (response.ok && data.data && !Array.isArray(data.data)) {
         // Link uploaded attachments to the defect
-        if (uploadedAttachments.length > 0) {
-          const attachmentsToLink = uploadedAttachments
-            .filter((attachment): attachment is { id: string; fieldName?: string } => Boolean(attachment.id))
-            .map((attachment) => ({
-              id: attachment.id,
-              fieldName: attachment.fieldName,
-            }));
-
+        if (attachmentsToLink.length > 0) {
           try {
-            const linkResponse = await fetch(`/api/projects/${projectId}/defects/${defectId}/attachments`, {
+            await fetch(`/api/projects/${projectId}/defects/${defectId}/attachments`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ attachments: attachmentsToLink }),
             });
-            if (!linkResponse.ok) {
-              const linkError = await linkResponse.json().catch(() => ({ error: 'Failed to link attachments' }));
-              throw new Error(linkError.error || 'Failed to link attachments');
-            }
           } catch (error) {
             console.error('Failed to link attachments:', error);
-            setAlert({
-              type: 'error',
-              title: 'アップロード失敗',
-              message: error instanceof Error ? error.message : '添付ファイルの関連付けに失敗しました',
-            });
-            return;
           }
         }
 
@@ -249,7 +254,7 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
         setAlert({
           type: 'success',
           title: '更新しました',
-          message: 'Defectが正常に更新されました',
+          message: '欠陥が正常に更新されました',
         });
         setTimeout(() => setAlert(null), 5000);
         fetchDefect();
@@ -259,7 +264,7 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
           : data.message || 'Failed to update defect';
         setAlert({
           type: 'error',
-          title: 'Defectの更新に失敗しました',
+          title: '欠陥の更新に失敗しました',
           message: errorMessage,
         });
       }
@@ -287,7 +292,7 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
       setAlert({
         type: 'success',
         title: '削除しました',
-        message: 'Defectが正常に削除されました',
+        message: '欠陥が正常に削除されました',
       });
       setTimeout(() => {
         router.push(`/projects/${projectId}/defects`);
@@ -312,15 +317,15 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
         setAlert({
           type: 'success',
           title: '再オープンしました',
-          message: 'Defectが正常に再オープンされました',
+          message: '欠陥が正常に再オープンされました',
         });
         setTimeout(() => setAlert(null), 5000);
         fetchDefect();
       } else {
         setAlert({
           type: 'error',
-          title: 'Defectの再オープンに失敗しました',
-          message: data.error || 'Defectの再オープンに失敗しました',
+          title: '欠陥の再オープンに失敗しました',
+          message: data.error || '欠陥の再オープンに失敗しました',
         });
       }
     } catch (error) {
@@ -336,14 +341,14 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
   };
 
   if (loading) {
-    return <Loader fullScreen text="Defectを読み込み中..." />;
+    return <Loader fullScreen text="欠陥を読み込み中..." />;
   }
 
   if (!defect) {
     return (
       <div className="min-h-screen p-4 md:p-6 lg:p-8">
         <div className="text-center py-12">
-          <p className="text-gray-400">Defectが見つかりません</p>
+          <p className="text-gray-400">欠陥が見つかりません</p>
         </div>
       </div>
     );
@@ -367,7 +372,7 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
                 href: `/projects/${defect.project.id}`,
               },
               {
-                label: 'Defect',
+                label: '欠陥',
                 href: `/projects/${defect.project.id}/defects`,
               },
               { label: defect.title, href: `/projects/${defect.project.id}/defects/${defect.id}` },
@@ -412,7 +417,7 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
         <ActionButtonGroup
           buttons={[
             {
-              label: 'すべてのDefectを見る',
+              label: 'すべての欠陥を見る',
               icon: List,
               onClick: () => router.push(`/projects/${defect.project.id}/defects`),
               variant: 'secondary',
@@ -444,6 +449,9 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
               formData={formData}
               onFormChange={setFormData}
               projectId={projectId}
+              defectId={defectId}
+              onSave={handleSave}
+              saving={saving}
               descriptionAttachments={descriptionAttachments}
               onDescriptionAttachmentsChange={setDescriptionAttachments}
             />

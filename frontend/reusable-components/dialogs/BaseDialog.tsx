@@ -41,6 +41,8 @@ export interface BaseDialogField {
   // For textarea-with-attachments type
   attachments?: Attachment[];
   onAttachmentsChange?: (attachments: Attachment[]) => void;
+  entityType?: 'testcase' | 'teststep' | 'defect' | 'comment' | 'testresult' | 'unassigned';
+  forceShowAttachments?: boolean;
 }
 
 export interface BaseDialogConfig<T = unknown> {
@@ -375,12 +377,13 @@ export const BaseDialog = <T = unknown,>({
           }}
           attachments={field.attachments || []}
           onAttachmentsChange={field.onAttachmentsChange}
-          entityType="testcase"
+          entityType={field.entityType || "testcase"}
           projectId={projectId}
           placeholder={field.placeholder}
           maxLength={field.maxLength}
           rows={field.rows || 3}
           showCharCount={true}
+          forceShowAttachments={field.forceShowAttachments}
           className={errorBorderClass}
         />
       );

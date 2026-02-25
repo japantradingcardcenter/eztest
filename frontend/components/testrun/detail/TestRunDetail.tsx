@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { Breadcrumbs } from '@/frontend/reusable-components/layout/Breadcrumbs';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
@@ -22,6 +22,7 @@ import { TestRun, TestCase, ResultFormData, TestRunStats, TestSuite } from './ty
 import { usePermissions } from '@/hooks/usePermissions';
 import { useFormPersistence } from '@/hooks/useFormPersistence';
 import { FileExportDialog } from '@/frontend/reusable-components/dialogs/FileExportDialog';
+import { EditTestRunDialog } from '@/frontend/components/testrun/subcomponents/EditTestRunDialog';
 
 interface TestRunDetailProps {
   testRunId: string;
@@ -53,6 +54,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [addingTestSuites, setAddingTestSuites] = useState(false);
   const [loadingSuites, setLoadingSuites] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const [resultForm, setResultForm, clearResultForm] = useFormPersistence<ResultFormData>(
     `testrun-result-${testRunId}`,
@@ -214,6 +216,46 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     }
   };
 
+  const handleReopenTestRun = async () => {
+    try {
+      setActionLoading(true);
+      let projectId = testRun?.project?.id;
+      if (!projectId && typeof window !== 'undefined') {
+        const pathSegments = window.location.pathname.split('/');
+        const projectIndex = pathSegments.indexOf('projects');
+        if (projectIndex !== -1 && projectIndex + 1 < pathSegments.length) {
+          projectId = pathSegments[projectIndex + 1];
+        }
+      }
+      const response = await fetch(`/api/projects/${projectId}/testruns/${testRunId}/reopen`, {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (data.data) {
+        fetchTestRun();
+      } else {
+        alert(data.error || 'テストランの再開に失敗しました');
+      }
+    } catch (error) {
+      console.error('Error reopening test run:', error);
+      alert('テストランの再開に失敗しました');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleTestRunUpdated = async () => {
+    setEditDialogOpen(false);
+    await fetchTestRun();
+    setFloatingAlert({
+      type: 'success',
+      title: 'テストランを更新しました',
+      message: 'テストラン情報を更新しました。',
+    });
+  };
+
   const handleSendReportYes = async () => {
     let projectId = testRun?.project?.id;
     if (!projectId && typeof window !== 'undefined') {
@@ -270,6 +312,64 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     }
   };
 
+  // RTC-ID昇順にソートしたテストケースリスト（ナビゲーション用）
+  const sortedTestCases = useMemo(() => {
+    if (!testRun?.results) return [];
+    return [...testRun.results]
+      .filter((r) => r.testCase)
+      .map((r) => r.testCase)
+      .sort((a, b) =>
+        (a.rtcId || '').localeCompare(b.rtcId || '', undefined, { numeric: true })
+      );
+  }, [testRun?.results]);
+
+  // ◀▶ナビゲーション（前後切り替え）
+  const navigateTestCase = useCallback((direction: 'prev' | 'next') => {
+    if (!selectedTestCase || sortedTestCases.length === 0) return;
+    const currentIndex = sortedTestCases.findIndex(tc => tc.id === selectedTestCase.testCaseId);
+    if (currentIndex === -1) return;
+    const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= sortedTestCases.length) return;
+
+    const newTestCase = sortedTestCases[newIndex];
+    const existingResult = testRun?.results.find((r) => r.testCaseId === newTestCase.id);
+
+    setSelectedTestCase({
+      testCaseId: newTestCase.id,
+      testCaseName: newTestCase.title || newTestCase.name || '',
+    });
+    setResultForm({
+      status: existingResult?.status || '',
+      comment: existingResult?.comment || '',
+    });
+  }, [selectedTestCase, sortedTestCases, testRun?.results, setResultForm]);
+
+  // 次のテストケースに遷移するヘルパー（保存後・欠陥作成後に使用）
+  const navigateToNextTestCase = useCallback(() => {
+    if (!selectedTestCase || sortedTestCases.length === 0) {
+      setResultDialogOpen(false);
+      setSelectedTestCase(null);
+      return;
+    }
+    const currentIndex = sortedTestCases.findIndex(tc => tc.id === selectedTestCase.testCaseId);
+    if (currentIndex >= 0 && currentIndex < sortedTestCases.length - 1) {
+      const nextTestCase = sortedTestCases[currentIndex + 1];
+      const nextResult = testRun?.results.find((r) => r.testCaseId === nextTestCase.id);
+      setSelectedTestCase({
+        testCaseId: nextTestCase.id,
+        testCaseName: nextTestCase.title || nextTestCase.name || '',
+      });
+      setResultForm({
+        status: nextResult?.status || '',
+        comment: nextResult?.comment || '',
+      });
+      setResultDialogOpen(true);
+    } else {
+      setResultDialogOpen(false);
+      setSelectedTestCase(null);
+    }
+  }, [selectedTestCase, sortedTestCases, testRun?.results, setResultForm]);
+
   const handleOpenResultDialog = (testCase: TestCase) => {
     const existingResult = testRun?.results.find(
       (r) => r.testCaseId === testCase.id
@@ -288,7 +388,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     setResultDialogOpen(true);
   };
 
-  const handleSubmitResult = async () => {
+  const handleSubmitResult = async (durationSeconds?: number) => {
     if (!selectedTestCase || !resultForm.status) {
       alert('結果ステータスを選択してください');
       return;
@@ -303,6 +403,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           projectId = pathSegments[projectIndex + 1];
         }
       }
+
       const response = await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -310,16 +411,25 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           testCaseId: selectedTestCase.testCaseId,
           status: resultForm.status,
           comment: resultForm.comment,
+          duration: durationSeconds,
         }),
       });
 
       const data = await response.json();
 
       if (data.data) {
-        setResultDialogOpen(false);
-        setSelectedTestCase(null);
-        clearResultForm(); // Clear persisted form data after successful submission
+        clearResultForm();
         fetchTestRun();
+
+        if (resultForm.status === 'FAILED' && selectedTestCase) {
+          // FAILED → 結果記録を閉じて新規欠陥作成ダイアログを開く
+          setResultDialogOpen(false);
+          setSelectedTestCaseForDefect(selectedTestCase.testCaseId);
+          setCreateDefectDialogOpen(true);
+        } else {
+          // FAILED以外 → 次のテストケースへ遷移
+          navigateToNextTestCase();
+        }
       } else {
         alert(data.error || '結果の保存に失敗しました');
       }
@@ -598,10 +708,11 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const handleDefectCreated = () => {
     setCreateDefectDialogOpen(false);
     setSelectedTestCaseForDefect(null);
-    // Trigger defect list refresh in RecordResultDialog
     setDefectRefreshTrigger(prev => prev + 1);
-    // Optionally refresh test run data if needed
     fetchTestRun();
+
+    // 欠陥作成後、次のテストケースの結果記録ダイアログを開く
+    navigateToNextTestCase();
   };
 
   const getResultIcon = (status?: string) => {
@@ -713,8 +824,14 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           executionTypeLabel={executionTypeLabel}
           actionLoading={actionLoading}
           canUpdate={canUpdateTestRun}
+          onEditTestRun={() => setEditDialogOpen(true)}
           onStartTestRun={handleStartTestRun}
           onCompleteTestRun={handleCompleteTestRun}
+          onReopenTestRun={handleReopenTestRun}
+          totalExecutionTime={
+            testRun.results
+              ?.reduce((sum, r) => sum + (r.testCase?.estimatedTime || 0), 0) || 0
+          }
         />
 
         <TestRunStatsCards
@@ -750,6 +867,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           testCaseId={selectedTestCase?.testCaseId || ''}
           projectId={testRun.project?.id || ''}
           testRunEnvironment={testRun.environment}
+          testRunPlatform={testRun.platform}
+          testRunDevice={testRun.device}
           formData={resultForm}
           onOpenChange={setResultDialogOpen}
           onFormChange={(data) => {
@@ -760,6 +879,12 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           }}
           onSubmit={handleSubmitResult}
           refreshTrigger={defectRefreshTrigger}
+          onNavigate={navigateTestCase}
+          hasPrev={sortedTestCases.findIndex(tc => tc.id === selectedTestCase?.testCaseId) > 0}
+          hasNext={(() => {
+            const idx = sortedTestCases.findIndex(tc => tc.id === selectedTestCase?.testCaseId);
+            return idx >= 0 && idx < sortedTestCases.length - 1;
+          })()}
         />
 
         <AddTestCasesDialog
@@ -818,6 +943,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
             onDefectCreated={handleDefectCreated}
             testCaseId={selectedTestCaseForDefect}
             testRunEnvironment={testRun.environment}
+            testRunPlatform={testRun.platform}
+            testRunDevice={testRun.device}
           />
         )}
 
@@ -842,6 +969,14 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
             itemName="テストランレポート"
           />
         )}
+
+        <EditTestRunDialog
+          projectId={testRun.project?.id || ''}
+          testRun={testRun}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onTestRunUpdated={handleTestRunUpdated}
+        />
       </div>
 
       <FloatingAlert

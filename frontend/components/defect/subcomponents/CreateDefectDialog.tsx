@@ -2,11 +2,13 @@
 
 import { BaseDialog, BaseDialogField, BaseDialogConfig } from '@/frontend/reusable-components/dialogs/BaseDialog';
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { SearchableSelect } from '@/frontend/reusable-elements/selects/SearchableSelect';
 import { FloatingAlert, type FloatingAlertMessage } from '@/frontend/reusable-components/alerts/FloatingAlert';
 import { type Attachment } from '@/lib/s3';
 import { uploadFileToS3 } from '@/lib/s3';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
+import { DefectDescriptionAttachmentField } from '@/frontend/components/defect/shared/DefectDescriptionAttachmentField';
 
 interface Defect {
   id: string;
@@ -23,6 +25,8 @@ interface CreateDefectDialogProps {
   // Context-specific props for auto-population
   testCaseId?: string; // When creating from test run with failed test case
   testRunEnvironment?: string; // When creating from test run, auto-populate environment
+  testRunPlatform?: string; // When creating from test run, auto-populate platform
+  testRunDevice?: string; // When creating from test run, auto-populate device
 }
 
 export function CreateDefectDialog({
@@ -32,7 +36,10 @@ export function CreateDefectDialog({
   onDefectCreated,
   testCaseId,
   testRunEnvironment,
+  testRunPlatform,
+  testRunDevice,
 }: CreateDefectDialogProps) {
+  const { data: session } = useSession();
   const [alert, setAlert] = useState<FloatingAlertMessage | null>(null);
   const [assignees, setAssignees] = useState<Array<{ id: string; name: string }>>([]);
   const [testCases, setTestCases] = useState<Array<{ id: string; testCaseId: string; title: string }>>([]);
@@ -88,6 +95,7 @@ export function CreateDefectDialog({
     value: assignee.id,
     label: assignee.name,
   }));
+  const validAssigneeIds = new Set(assignees.map((assignee) => assignee.id));
 
   // Map dropdown options to the format expected by BaseDialog
   const SEVERITY_OPTIONS = severityOptions.map(opt => ({ value: opt.value, label: opt.label }));
@@ -98,10 +106,9 @@ export function CreateDefectDialog({
     {
       name: 'title',
       label: 'タイトル',
-      placeholder: 'Defectタイトルを入力',
+      placeholder: '欠陥タイトルを入力',
       type: 'text',
       required: true,
-      minLength: 5,
       maxLength: 200,
       cols: 1,
     },
@@ -154,9 +161,10 @@ export function CreateDefectDialog({
     },
     {
       name: 'assignedToId',
-      label: '担当者',
+      label: '担当者（自動入力）',
       type: 'select',
       placeholder: '担当者を選択',
+      defaultValue: session?.user?.id || '',
       options: assigneeOptions,
       cols: 1,
     },
@@ -169,6 +177,39 @@ export function CreateDefectDialog({
       defaultValue: testRunEnvironment,
       options: testRunEnvironment ? undefined : ENVIRONMENT_OPTIONS,
       readOnly: !!testRunEnvironment,
+      maxLength: 100,
+      cols: 1,
+    },
+    {
+      name: 'platform',
+      label: testRunPlatform ? 'プラットフォーム（自動入力）' : 'プラットフォーム',
+      type: testRunPlatform ? 'text' : 'select',
+      placeholder: testRunPlatform ? testRunPlatform : 'プラットフォームを選択',
+      defaultValue: testRunPlatform || 'none',
+      options: testRunPlatform ? undefined : [
+        { value: 'none', label: 'プラットフォームを選択' },
+        { value: 'Web', label: 'Web' },
+        { value: 'Web(SP)', label: 'Web(SP)' },
+        { value: 'iOS Native', label: 'iOS Native' },
+        { value: 'Android Native', label: 'Android Native' },
+      ],
+      readOnly: !!testRunPlatform,
+      maxLength: 100,
+      cols: 1,
+    },
+    {
+      name: 'device',
+      label: testRunDevice ? '端末（自動入力）' : '端末',
+      type: testRunDevice ? 'text' : 'select',
+      placeholder: testRunDevice ? testRunDevice : '端末を選択',
+      defaultValue: testRunDevice || 'none',
+      options: testRunDevice ? undefined : [
+        { value: 'none', label: '端末を選択' },
+        { value: 'iPhone', label: 'iPhone' },
+        { value: 'Android', label: 'Android' },
+        { value: 'PC', label: 'PC' },
+      ],
+      readOnly: !!testRunDevice,
       maxLength: 100,
       cols: 1,
     },
@@ -189,14 +230,22 @@ export function CreateDefectDialog({
     },
     {
       name: 'description',
-      label: '説明',
-      type: 'textarea-with-attachments',
-      placeholder: 'Defectの詳細を入力...',
+      label: '説明（画像・動画を添付可能）',
+      type: 'custom',
       rows: 3,
       cols: 2,
       maxLength: 2000,
-      attachments: descriptionAttachments,
-      onAttachmentsChange: setDescriptionAttachments,
+      customRender: (value: string, onChange: (value: string) => void) => (
+        <DefectDescriptionAttachmentField
+          value={value}
+          onChange={onChange}
+          attachments={descriptionAttachments}
+          onAttachmentsChange={setDescriptionAttachments}
+          projectId={projectId}
+          rows={3}
+          maxLength={2000}
+        />
+      ),
     },
   ];
 
@@ -244,7 +293,7 @@ export function CreateDefectDialog({
         }
       } catch (error) {
         console.error('Failed to upload attachment:', error);
-        throw error;
+        // 個別ファイルの失敗は無視して続行
       }
     }
 
@@ -252,10 +301,10 @@ export function CreateDefectDialog({
   };
 
   const config: BaseDialogConfig = {
-    title: '新規Defectを作成',
-    description: 'Defectの詳細を入力してください。ステータスはデフォルトで「新規」になります。',
+    title: '新規欠陥を作成',
+    description: 'バグの内容を入力してください。ステータスはデフォルトで「新規」になります。',
     fields,
-    submitLabel: 'Defectを作成',
+    submitLabel: '欠陥を作成',
     cancelLabel: 'キャンセル',
     triggerOpen,
     onOpenChange: handleDialogOpenChange,
@@ -264,25 +313,49 @@ export function CreateDefectDialog({
     submitButtonName: 'Create Defect Dialog - Create Defect',
     cancelButtonName: 'Create Defect Dialog - Cancel',
     onSubmit: async (formData) => {
-      // Upload pending attachments first
-      const uploadedAttachments = await uploadPendingAttachments();
-      const attachmentsToLink = uploadedAttachments
-        .filter((attachment): attachment is { id: string; fieldName?: string } => Boolean(attachment.id))
-        .map((attachment) => ({
-          id: attachment.id,
-          fieldName: attachment.fieldName,
-        }));
+      // Collect already-uploaded attachments (immediate upload mode)
+      const existingUploadedAttachments: Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }> =
+        descriptionAttachments
+          .filter((att) => !att.id.startsWith('pending-'))
+          .map((att) => ({
+            id: att.id,
+            s3Key: att.filename,
+            fileName: att.originalName,
+            mimeType: att.mimeType,
+            fieldName: att.fieldName,
+          }));
+
+      // Upload pending attachments first (failure doesn't block defect creation)
+      let uploadedPendingAttachments: Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }> = [];
+      try {
+        uploadedPendingAttachments = await uploadPendingAttachments();
+      } catch (error) {
+        console.warn('Attachment upload failed, continuing with defect creation:', error);
+      }
+
+      // Merge attachments and dedupe by id/s3Key
+      const uploadedAttachments = [...existingUploadedAttachments, ...uploadedPendingAttachments].filter(
+        (att, index, arr) =>
+          arr.findIndex((x) => (x.id ? x.id === att.id : x.s3Key === att.s3Key)) === index
+      );
 
       // Get test case ID from prop (passed when creating from test run) or from form data (selected from dropdown)
       const finalTestCaseId = testCaseId || formData.testCaseId || null;
       
+      const rawAssignedToId = typeof formData.assignedToId === 'string' ? formData.assignedToId.trim() : '';
+      const normalizedAssignedToId = rawAssignedToId !== '' && validAssigneeIds.has(rawAssignedToId)
+        ? rawAssignedToId
+        : null;
+
       const payload = {
         title: formData.title,
         description: formData.description || null,
         severity: formData.severity,
         priority: formData.priority,
-        assignedToId: formData.assignedToId && formData.assignedToId.trim() !== '' ? formData.assignedToId : null,
+        assignedToId: normalizedAssignedToId,
         environment: formData.environment && formData.environment.trim() !== '' ? formData.environment : null,
+        platform: formData.platform && formData.platform.trim() !== '' && formData.platform !== 'none' ? formData.platform : null,
+        device: formData.device && formData.device.trim() !== '' && formData.device !== 'none' ? formData.device : null,
         dueDate: formData.dueDate ? new Date(formData.dueDate as string).toISOString() : undefined,
         progressPercentage: formData.progressPercentage ? Number(formData.progressPercentage) : undefined,
         status: 'NEW', // Always start as NEW as per lifecycle requirements
@@ -304,20 +377,15 @@ export function CreateDefectDialog({
       const createdDefect = data.data;
 
       // Link uploaded attachments to the defect
-      if (attachmentsToLink.length > 0) {
+      if (uploadedAttachments.length > 0) {
         try {
-          const attachmentResponse = await fetch(`/api/projects/${projectId}/defects/${createdDefect.id}/attachments`, {
+          await fetch(`/api/projects/${projectId}/defects/${createdDefect.id}/attachments`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ attachments: attachmentsToLink }),
+            body: JSON.stringify({ attachments: uploadedAttachments }),
           });
-          if (!attachmentResponse.ok) {
-            const errorData = await attachmentResponse.json().catch(() => ({ error: 'Failed to link attachments' }));
-            throw new Error(errorData.error || 'Failed to link attachments');
-          }
         } catch (error) {
           console.error('Failed to link attachments:', error);
-          throw error;
         }
       }
 
@@ -328,8 +396,8 @@ export function CreateDefectDialog({
         const defect = result as Defect;
         setAlert({
           type: 'success',
-          title: 'Defectを作成しました',
-          message: `Defect ${defect.defectId} が正常に作成されました`,
+          title: '欠陥を作成しました',
+          message: `欠陥 ${defect.defectId} が正常に作成されました`,
         });
         // Reset attachments state
         setDescriptionAttachments([]);
