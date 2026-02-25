@@ -79,7 +79,46 @@ export const DefectCommentsCard: React.FC<DefectCommentsCardProps> = ({
   const [commentAttachments, setCommentAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string>('');
   const commentsEndRef = useRef<HTMLDivElement>(null);
+
+  const uploadCommentAttachmentWithFallback = async (file: File): Promise<Attachment> => {
+    const uploadResult = await uploadFileToS3({
+      file,
+      fieldName: 'comment',
+      entityType: 'comment',
+      projectId,
+      onProgress: () => {},
+    });
+
+    if (uploadResult.success && uploadResult.attachment) {
+      return uploadResult.attachment;
+    }
+
+    // S3経由が失敗した場合はローカル保存へ再フォールバック
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('fieldName', 'comment');
+    formData.append('entityType', 'comment');
+    formData.append('projectId', projectId);
+
+    const localResponse = await fetch('/api/attachments/upload-local', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!localResponse.ok) {
+      const localError = await localResponse.json().catch(() => ({ error: 'Failed to upload attachment' }));
+      throw new Error(uploadResult.error || localError.error || 'Failed to upload attachment');
+    }
+
+    const localData = await localResponse.json();
+    if (!localData?.attachment) {
+      throw new Error('アップロード結果が不正です');
+    }
+
+    return localData.attachment as Attachment;
+  };
 
   const fetchComments = useCallback(async () => {
     setLoading(true);
@@ -103,9 +142,10 @@ export const DefectCommentsCard: React.FC<DefectCommentsCardProps> = ({
     if (!hasText && !hasAttachments) return;
 
     setSubmitting(true);
+    setSubmitError('');
     try {
       // First upload any pending attachments
-      const uploadedAttachments = [];
+      const uploadedAttachments: Attachment[] = [];
       for (const attachment of commentAttachments) {
         if (attachment.id.startsWith('pending-')) {
           // This is a pending attachment, need to upload it first
@@ -116,20 +156,8 @@ export const DefectCommentsCard: React.FC<DefectCommentsCardProps> = ({
             continue;
           }
 
-          // Upload the file
-          const uploadResult = await uploadFileToS3({
-            file,
-            fieldName: 'comment',
-            entityType: 'comment',
-            projectId,
-            onProgress: () => {},
-          });
-
-          if (uploadResult.success && uploadResult.attachment) {
-            uploadedAttachments.push(uploadResult.attachment);
-          } else {
-            console.error('Failed to upload attachment:', uploadResult.error);
-          }
+          const uploaded = await uploadCommentAttachmentWithFallback(file);
+          uploadedAttachments.push(uploaded);
         } else {
           // Already uploaded
           uploadedAttachments.push(attachment);
@@ -170,6 +198,7 @@ export const DefectCommentsCard: React.FC<DefectCommentsCardProps> = ({
           if (!linkResponse.ok) {
             const errorText = await linkResponse.text();
             console.error('Failed to link attachment:', errorText);
+            throw new Error(`添付ファイルの関連付けに失敗しました: ${errorText}`);
           }
         }
       }
@@ -183,8 +212,9 @@ export const DefectCommentsCard: React.FC<DefectCommentsCardProps> = ({
       setTimeout(() => {
         commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
-    } catch {
-      console.error('Failed to add comment');
+    } catch (error) {
+      console.error('Failed to add comment', error);
+      setSubmitError(error instanceof Error ? error.message : 'コメント投稿に失敗しました');
     } finally {
       setSubmitting(false);
     }
@@ -303,6 +333,9 @@ export const DefectCommentsCard: React.FC<DefectCommentsCardProps> = ({
               attachments={commentAttachments}
               onAttachmentsChange={setCommentAttachments}
               entityType="comment"
+              projectId={projectId}
+              forceShowAttachments={true}
+              uploadOnSave={true}
               placeholder="コメントを入力..."
               rows={2}
               disabled={submitting}
@@ -315,9 +348,12 @@ export const DefectCommentsCard: React.FC<DefectCommentsCardProps> = ({
                 className="min-w-[120px]"
               >
                 <Send className="w-4 h-4 mr-2" />
-                {submitting ? '投稿中...' : 'コメントする'}
+                {submitting ? '保存中...' : '保存する'}
               </ButtonPrimary>
             </div>
+            {submitError && (
+              <p className="text-xs text-red-400">{submitError}</p>
+            )}
           </form>
         </div>
       </div>

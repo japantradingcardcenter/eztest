@@ -215,6 +215,7 @@ export class ExportService {
       return {
         'テストケースID': tc.tcId,
         'テストケース名': tc.title,
+        'フロータイトル': tc.title,
         'モジュール・機能': tc.module?.name || '',
         '優先度': tc.priority,
         '前提条件': tc.preconditions || '',
@@ -238,7 +239,7 @@ export class ExportService {
         '自動化状況': tc.automationStatus || '',
         // Older fields (for backward compatibility)
         '説明': tc.description || '',
-        '想定時間（分）': tc.estimatedTime || '',
+        'テスト実行時間（秒）': tc.estimatedTime || '',
         '事後条件': tc.postconditions || '',
         'テストスイート': suites,
       };

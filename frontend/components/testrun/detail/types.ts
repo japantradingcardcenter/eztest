@@ -42,8 +42,11 @@ export interface TestRun {
   name: string;
   description?: string;
   executionType?: 'MANUAL' | 'AUTOMATION' | string;
+  version?: string;
   status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   environment?: string;
+  platform?: string;
+  device?: string;
   project: {
     id: string;
     name: string;
