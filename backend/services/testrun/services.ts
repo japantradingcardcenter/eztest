@@ -303,6 +303,7 @@ interface CreateTestRunInput {
   executionType?: 'MANUAL' | 'AUTOMATION';
   assignedToId?: string;
   environment?: string;
+  version?: string;
   platform?: string;
   device?: string;
   status?: string;
@@ -318,6 +319,7 @@ interface UpdateTestRunInput {
   status?: string;
   assignedToId?: string;
   environment?: string;
+  version?: string;
   platform?: string;
   device?: string;
   startedAt?: Date;

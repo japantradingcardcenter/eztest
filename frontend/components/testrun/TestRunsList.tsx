@@ -197,7 +197,7 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
     }
   };
 
-  const handleTestRunUpdated = (updatedTestRun: TestRun) => {
+  const handleTestRunUpdated = (updatedTestRun: { id: string; name: string }) => {
     setEditDialogOpen(false);
     setSelectedTestRun(null);
     setAlert({

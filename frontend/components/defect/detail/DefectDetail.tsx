@@ -126,6 +126,7 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
   };
 
   const handleSave = async () => {
+    if (!defect) return;
     setSaving(true);
     try {
       // Collect already-uploaded attachments that are not yet linked to this defect

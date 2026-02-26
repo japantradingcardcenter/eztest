@@ -3,6 +3,7 @@ ECR_REGISTRY := 381492258078.dkr.ecr.ap-northeast-1.amazonaws.com
 ECR_REPOSITORY := eztest
 IMAGE_NAME := falcon9-eztest
 AWS_REGION := ap-northeast-1
+AWS_PROFILE := falcon9-dev-eztest
 
 # タイムスタンプ (YYYYMMDDHHmmss形式)
 TIMESTAMP := $(shell date +%Y%m%d%H%M%S)
@@ -11,7 +12,7 @@ TIMESTAMP := $(shell date +%Y%m%d%H%M%S)
 
 # ECRにログイン
 login:
-	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(ECR_REGISTRY)
+	aws ecr get-login-password --region $(AWS_REGION) --profile $(AWS_PROFILE) | docker login --username AWS --password-stdin $(ECR_REGISTRY)
 
 # Dockerイメージをビルド
 build:
