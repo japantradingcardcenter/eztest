@@ -68,7 +68,7 @@ export function DefectFilters({
           <SearchInput
             value={searchQuery}
             onChange={onSearchChange}
-            placeholder="欠陥を検索..."
+            placeholder="Defectを検索..."
           />
         </div>
 

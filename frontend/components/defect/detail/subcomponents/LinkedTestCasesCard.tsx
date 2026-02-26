@@ -55,7 +55,7 @@ export function LinkedTestCasesCard({ defect, onRefresh }: LinkedTestCasesCardPr
         <div className="text-center py-8">
           <TestTube2 className="w-12 h-12 text-white/20 mx-auto mb-3" />
           <p className="text-white/60 text-sm">
-            この欠陥にリンクされたテストケースはまだありません
+            このDefectにリンクされたテストケースはまだありません
           </p>
           <p className="text-white/40 text-xs mt-1">
             テスト実行からリンクするか、手動で関連付けられます

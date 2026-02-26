@@ -104,7 +104,7 @@ export const ProjectCard = ({ project, onNavigate, onDelete, canUpdate = false, 
         {
           icon: Bug,
           value: project._count?.defects || 0,
-          label: '欠陥',
+          label: 'Defect',
           iconColor: 'text-red-400',
         },
       ]}

@@ -15,7 +15,7 @@ export function DefectInfoCard({ defect }: DefectInfoCardProps) {
   return (
     <DetailCard title="情報" contentClassName="space-y-3">
       <div>
-        <h4 className="text-sm font-medium text-white/60 mb-1">欠陥ID</h4>
+        <h4 className="text-sm font-medium text-white/60 mb-1">Defect ID</h4>
         <p className="text-white/90 text-sm font-mono">{defect.defectId}</p>
       </div>
 

@@ -8,6 +8,8 @@ import crypto from 'crypto';
 const ALLOWED_MIME_TYPES = [
   // Images
   'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/avif',
+  // Videos (restricted by entity type/path check)
+  'video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska',
   // Documents
   'application/pdf',
   'application/msword',
@@ -33,8 +35,19 @@ export class AttachmentService {
   /**
    * Validate file type against security whitelist
    */
-  private validateFileType(mimeType: string): boolean {
-    return ALLOWED_MIME_TYPES.includes(mimeType);
+  private validateFileType(mimeType: string, entityType?: string, s3Key?: string): boolean {
+    if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
+      return false;
+    }
+
+    // Only allow videos for defect/comment attachments
+    if (mimeType.startsWith('video/')) {
+      const allowByEntityType = entityType === 'defect' || entityType === 'comment';
+      const allowByS3Path = typeof s3Key === 'string' && (s3Key.includes('/defects/') || s3Key.includes('/comments/'));
+      return allowByEntityType || allowByS3Path;
+    }
+
+    return true;
   }
 
   /**
@@ -59,7 +72,7 @@ export class AttachmentService {
     }
 
     // Validate file type (security - don't trust client)
-    if (!fileType || !this.validateFileType(fileType)) {
+    if (!fileType || !this.validateFileType(fileType, entityType)) {
       throw new Error(`File type "${fileType}" is not allowed`);
     }
 
@@ -161,6 +174,7 @@ export class AttachmentService {
     fileSize: number,
     fileType: string,
     testCaseId?: string,
+    testStepId?: string,
     fieldName?: string
   ) {
     if (!uploadId || !s3Key || !parts || !Array.isArray(parts)) {
@@ -168,7 +182,7 @@ export class AttachmentService {
     }
 
     // Validate file type (security - must match allowed types)
-    if (!this.validateFileType(fileType)) {
+    if (!this.validateFileType(fileType, undefined, s3Key)) {
       throw new Error(`File type "${fileType}" is not allowed`);
     }
 
@@ -222,6 +236,7 @@ export class AttachmentService {
         size: fileSize,
         path: s3Key, // Store the S3 key, not the full URL
         ...(testCaseId && { testCaseId }),
+        ...(testStepId && { testStepId }),
         ...(fieldName && { fieldName }),
       },
     });

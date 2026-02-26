@@ -13,11 +13,11 @@ export function EmptyDefectState({ hasFilters, onCreateClick, canCreate = true }
   return (
     <EmptyStateCard
       icon={Bug}
-      title="欠陥がありません"
+      title="Defectがありません"
       description={hasFilters
         ? '検索条件を変更してみてください'
-        : '最初の欠陥を作成して始めましょう'}
-      actionLabel={!hasFilters && canCreate ? '欠陥を作成' : undefined}
+        : '最初のDefectを作成して始めましょう'}
+      actionLabel={!hasFilters && canCreate ? 'Defectを作成' : undefined}
       onAction={!hasFilters && canCreate ? onCreateClick : undefined}
       actionButtonName="Defect List - Create Defect (Empty State)"
     />

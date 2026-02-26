@@ -50,7 +50,7 @@ export const getProjectSidebarItems = (projectId: string, isAdmin: boolean = fal
       children: [],
     },
     {
-      label: '欠陥',
+      label: 'Defect',
       href: `/projects/${projectId}/defects`,
     },
     {
@@ -100,7 +100,7 @@ export const getProjectsPageSidebarItems = (isAdmin: boolean = false): SidebarIt
       children: [],
     },
     {
-      label: '欠陥',
+      label: 'Defect',
       href: '#',
     },
     {
