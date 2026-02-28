@@ -12,6 +12,7 @@ import { TestCase, Module } from '../types';
 import { useRouter } from 'next/navigation';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 import { getDynamicBadgeProps } from '@/lib/badge-color-utils';
+import { Checkbox } from '@/frontend/reusable-elements/checkboxes/Checkbox';
 
 interface TestCaseTableProps {
   testCases: TestCase[];
@@ -22,6 +23,10 @@ interface TestCaseTableProps {
   canDelete?: boolean;
   projectId?: string;
   enableModuleLink?: boolean;
+  selectedTestCases?: Set<string>;
+  onSelectTestCase?: (testCaseId: string) => void;
+  onSelectAll?: (selected: boolean) => void;
+  showSelection?: boolean;
 }
 
 /**
@@ -57,9 +62,16 @@ export function TestCaseTable({
   canDelete = true,
   projectId,
   enableModuleLink = false,
+  selectedTestCases = new Set<string>(),
+  onSelectTestCase,
+  onSelectAll,
+  showSelection = false,
 }: TestCaseTableProps) {
   const router = useRouter();
   const { options: statusOptions } = useDropdownOptions('TestCase', 'status');
+  const isSelectionEnabled = showSelection && Boolean(onSelectTestCase) && Boolean(onSelectAll);
+  const allSelected = testCases.length > 0 && testCases.every((testCase) => selectedTestCases.has(testCase.id));
+  const someSelected = testCases.some((testCase) => selectedTestCases.has(testCase.id)) && !allSelected;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getStatusColor = (status: string) => {
@@ -77,6 +89,30 @@ export function TestCaseTable({
 
   // Define columns
   const columns: ColumnDef<TestCase>[] = [
+    ...(isSelectionEnabled ? [{
+      key: 'select',
+      label: (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={allSelected}
+            onCheckedChange={(checked) => onSelectAll?.(checked === true)}
+            aria-label="すべてのテストケースを選択"
+            className={someSelected ? 'data-[state=checked]:bg-primary/50' : ''}
+          />
+        </div>
+      ),
+      width: '40px',
+      align: 'center' as const,
+      render: (row: TestCase) => (
+        <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+          <Checkbox
+            checked={selectedTestCases.has(row.id)}
+            onCheckedChange={() => onSelectTestCase?.(row.id)}
+            aria-label={`テストケース ${row.tcId || row.title} を選択`}
+          />
+        </div>
+      ),
+    }] : []),
     {
       key: 'title',
       label: 'TITLE',
@@ -238,7 +274,11 @@ export function TestCaseTable({
       grouped={groupedByModule}
       groupConfig={groupConfig}
       actions={actions}
-      gridTemplateColumns="minmax(900px, 6fr) 70px 80px 100px 80px 100px 80px 70px 40px"
+      gridTemplateColumns={
+        isSelectionEnabled
+          ? '40px minmax(900px, 6fr) 70px 80px 100px 80px 100px 80px 70px 40px'
+          : 'minmax(900px, 6fr) 70px 80px 100px 80px 100px 80px 70px 40px'
+      }
       emptyMessage="No test cases available"
     />
   );

@@ -114,6 +114,10 @@ export const testCaseQuerySchema = z.object({
   functionName: z.string().optional(),
 });
 
+export const bulkDeleteTestCasesSchema = z.object({
+  testCaseIds: z.array(z.string().min(1)).min(1, 'At least one test case ID is required'),
+});
+
 /**
  * Type exports
  */
@@ -122,3 +126,4 @@ export type CreateTestCaseInput = z.infer<typeof createTestCaseSchema>;
 export type UpdateTestCaseInput = z.infer<typeof updateTestCaseSchema>;
 export type UpdateTestStepsInput = z.infer<typeof updateTestStepsSchema>;
 export type TestCaseQueryParams = z.infer<typeof testCaseQuerySchema>;
+export type BulkDeleteTestCasesInput = z.infer<typeof bulkDeleteTestCasesSchema>;

@@ -62,7 +62,7 @@ export function FileImportDialog({
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [updateExisting, setUpdateExisting] = useState(false);
+  const [updateExisting, setUpdateExisting] = useState(showUpdateExistingOption);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reset state when dialog opens
@@ -72,12 +72,12 @@ export function FileImportDialog({
       setResult(null);
       setError(null);
       setUploading(false);
-      setUpdateExisting(false);
+      setUpdateExisting(showUpdateExistingOption);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
-  }, [open]);
+  }, [open, showUpdateExistingOption]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
