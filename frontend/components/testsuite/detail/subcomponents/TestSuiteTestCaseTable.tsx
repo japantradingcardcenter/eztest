@@ -26,7 +26,6 @@ interface TestSuiteTestCaseTableProps {
  */
 export function TestSuiteTestCaseTable({
   testCases,
-  modules: _modules = [],
   onDelete,
   onClick,
   canDelete = true,

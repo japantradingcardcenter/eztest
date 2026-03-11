@@ -2,7 +2,7 @@ import { testCaseService } from '@/backend/services/testcase/services';
 import { CustomRequest } from '@/backend/utils/interceptor';
 import { NotFoundException, InternalServerException, ValidationException } from '@/backend/utils/exceptions';
 import { TestCaseMessages } from '@/backend/constants/static_messages';
-import { createTestCaseSchema, updateTestCaseSchema, updateTestStepsSchema, testCaseQuerySchema, linkAttachmentsSchema } from '@/backend/validators';
+import { createTestCaseSchema, updateTestCaseSchema, updateTestStepsSchema, testCaseQuerySchema, linkAttachmentsSchema, bulkDeleteTestCasesSchema } from '@/backend/validators';
 import { z, ZodError } from 'zod';
 
 export class TestCaseController {
@@ -269,6 +269,47 @@ evidence: validatedData.evidence,
         throw new NotFoundException(TestCaseMessages.TestCaseNotFound);
       }
       throw new InternalServerException(TestCaseMessages.FailedToDeleteTestCase);
+    }
+  }
+
+  /**
+   * Bulk delete test cases in a project
+   * Permission already checked by route wrapper
+   */
+  async bulkDeleteTestCases(
+    request: CustomRequest,
+    projectId: string,
+    body: unknown
+  ) {
+    const validationResult = bulkDeleteTestCasesSchema.safeParse(body);
+    if (!validationResult.success) {
+      throw new ValidationException(
+        'Validation failed',
+        validationResult.error.issues
+      );
+    }
+
+    const validatedData = validationResult.data;
+
+    try {
+      const result = await testCaseService.bulkDeleteTestCases(
+        projectId,
+        validatedData.testCaseIds,
+        request.userInfo.id,
+        request.scopeInfo.scope_name
+      );
+
+      return {
+        data: {
+          message: `${result.deletedCount} test case(s) deleted successfully`,
+          deletedCount: result.deletedCount,
+        },
+      };
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Some test cases not found or access denied') {
+        throw new ValidationException('Some selected test cases are invalid or inaccessible');
+      }
+      throw new InternalServerException('Failed to bulk delete test cases');
     }
   }
 
