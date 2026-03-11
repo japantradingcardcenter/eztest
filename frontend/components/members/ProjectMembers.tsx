@@ -14,7 +14,6 @@ import { Project, ProjectMember } from './types';
 import { MembersCard } from './subcomponents/MembersCard';
 import { CreateAddMemberDialog } from './subcomponents/AddMemberDialog';
 import { RemoveMemberDialog } from './subcomponents/RemoveMemberDialog';
-import { clearAllPersistedForms } from '@/hooks/useFormPersistence';
 
 interface ProjectMembersProps {
   projectId: string;
@@ -55,18 +54,6 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
 
     return actions;
   }, [isAdminOrManager]);
-
-  const handleSignOut = () => {
-    clearAllPersistedForms();
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('lastProjectId');
-      Object.keys(sessionStorage).forEach(key => {
-        if (key.startsWith('defects-filters-')) {
-          sessionStorage.removeItem(key);
-        }
-      });
-    }
-  };
 
   useEffect(() => {
     fetchProjectAndMembers();

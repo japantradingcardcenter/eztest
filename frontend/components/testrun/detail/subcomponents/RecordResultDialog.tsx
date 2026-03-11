@@ -137,18 +137,18 @@ export function RecordResultDialog({
     testCaseDetailRef.current = testCaseDetail;
   }, [testCaseDetail]);
 
-  const getCurrentElapsedSeconds = () => {
+  const getCurrentElapsedSeconds = useCallback(() => {
     if (timerStartTimeRef.current) {
       return timerOffsetRef.current + Math.floor((Date.now() - timerStartTimeRef.current) / 1000);
     }
     return elapsedSecondsRef.current;
-  };
+  }, []);
 
-  const persistElapsedForTestCase = (targetTestCaseId?: string) => {
+  const persistElapsedForTestCase = useCallback((targetTestCaseId?: string) => {
     const id = targetTestCaseId || activeTestCaseIdRef.current;
     if (!id) return;
     timerCacheRef.current[id] = getCurrentElapsedSeconds();
-  };
+  }, [getCurrentElapsedSeconds]);
 
   // ダイアログが開いたらテストケース詳細を取得し、読み込み完了後にタイマー開始
   useEffect(() => {
@@ -221,7 +221,7 @@ export function RecordResultDialog({
       setTimerStartTime(null);
       setTestCaseDetail(null);
     }
-  }, [open, testCaseId]);
+  }, [open, testCaseId, persistElapsedForTestCase]);
 
   useEffect(() => {
     if (open && timerStartTime) {
