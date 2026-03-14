@@ -493,7 +493,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       const promises = selectedCaseIds.map(async (testCaseId) => {
         const payload = {
           testCaseId,
-          status: 'SKIPPED',
+          status: 'NOT_STARTED',
         };
         
         const response = await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results`, {
@@ -665,7 +665,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             testCaseId,
-            status: 'SKIPPED',
+            status: 'NOT_STARTED',
           }),
         });
 

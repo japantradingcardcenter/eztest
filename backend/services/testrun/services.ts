@@ -581,7 +581,7 @@ export class TestRunService {
         data: testCaseIds.map((testCaseId) => ({
           testRunId: testRun.id,
           testCaseId,
-          status: 'SKIPPED',
+          status: 'NOT_STARTED',
           executedById: data.assignedToId || '', // Will be updated when actually executed
         })),
         skipDuplicates: true,
