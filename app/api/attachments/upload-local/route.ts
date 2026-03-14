@@ -30,7 +30,6 @@ export async function POST(request: Request) {
     // Generate unique filename
     const timestamp = Date.now();
     const randomHash = crypto.randomBytes(8).toString('hex');
-    const ext = path.extname(file.name);
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const uniqueFilename = `${timestamp}_${randomHash}_${sanitizedName}`;
 

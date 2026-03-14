@@ -8,6 +8,7 @@ export const ENVIRONMENT_OPTIONS = [
 ];
 
 export const STATUS_OPTIONS = [
+  { label: '未着手', value: 'NOT_STARTED' },
   { label: '計画中', value: 'PLANNED' },
   { label: '実行中', value: 'IN_PROGRESS' },
   { label: '完了', value: 'COMPLETED' },

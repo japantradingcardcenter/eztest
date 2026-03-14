@@ -865,6 +865,51 @@ export class TestCaseService {
   }
 
   /**
+   * Bulk delete test cases in a project
+   * Ensures all selected test cases are accessible within the target project
+   */
+  async bulkDeleteTestCases(projectId: string, testCaseIds: string[], userId: string, scope: string) {
+    const uniqueTestCaseIds = Array.from(new Set(testCaseIds));
+
+    if (uniqueTestCaseIds.length === 0) {
+      return { deletedCount: 0 };
+    }
+
+    let whereClause: Record<string, unknown> = {
+      id: { in: uniqueTestCaseIds },
+      projectId,
+    };
+
+    if (scope === 'project') {
+      whereClause = {
+        ...whereClause,
+        project: {
+          members: {
+            some: {
+              userId,
+            },
+          },
+        },
+      };
+    }
+
+    const accessibleTestCases = await prisma.testCase.findMany({
+      where: whereClause,
+      select: { id: true },
+    });
+
+    if (accessibleTestCases.length !== uniqueTestCaseIds.length) {
+      throw new Error('Some test cases not found or access denied');
+    }
+
+    await Promise.all(
+      uniqueTestCaseIds.map((testCaseId) => this.deleteTestCase(testCaseId, userId, scope))
+    );
+
+    return { deletedCount: uniqueTestCaseIds.length };
+  }
+
+  /**
    * Add/Update test steps
    * Scope filtering: verify user has access before updating
    */

@@ -534,7 +534,7 @@ export class TestRunService {
     }
 
     // Create the test run (platform/device are in the Prisma schema; executionType is handled via raw SQL)
-    const status = data.status || 'PLANNED';
+    const status = data.status || 'NOT_STARTED';
     const testRun = await prisma.testRun.create({
       data: {
         projectId: data.projectId,
@@ -581,7 +581,7 @@ export class TestRunService {
         data: testCaseIds.map((testCaseId) => ({
           testRunId: testRun.id,
           testCaseId,
-          status: 'SKIPPED',
+          status: 'NOT_STARTED',
           executedById: data.assignedToId || '', // Will be updated when actually executed
         })),
         skipDuplicates: true,
@@ -885,6 +885,7 @@ export class TestRunService {
       blocked: 0,
       skipped: 0,
       retest: 0,
+      notStarted: 0,
     };
 
     results.forEach((result) => {
@@ -904,6 +905,9 @@ export class TestRunService {
           break;
         case 'RETEST':
           stats.retest = result._count.status;
+          break;
+        case 'NOT_STARTED':
+          stats.notStarted = result._count.status;
           break;
       }
     });
