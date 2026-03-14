@@ -534,7 +534,7 @@ export class TestRunService {
     }
 
     // Create the test run (platform/device are in the Prisma schema; executionType is handled via raw SQL)
-    const status = data.status || 'PLANNED';
+    const status = data.status || 'NOT_STARTED';
     const testRun = await prisma.testRun.create({
       data: {
         projectId: data.projectId,
