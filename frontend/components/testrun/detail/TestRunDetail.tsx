@@ -761,12 +761,18 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           case 'SKIPPED':
             stats.skipped++;
             break;
+          case 'NOT_STARTED':
+            stats.pending++;
+            break;
+          case 'RETEST':
+            stats.pending++;
+            break;
         }
       });
     }
 
-    // Pending = tests that haven't been executed (skipped tests count as not executed)
-    stats.pending = stats.skipped;
+    // Pending = tests that haven't been executed (NOT_STARTED, SKIPPED, RETEST count as not executed)
+    stats.pending += stats.skipped;
 
     return stats;
   };

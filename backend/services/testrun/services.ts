@@ -885,6 +885,7 @@ export class TestRunService {
       blocked: 0,
       skipped: 0,
       retest: 0,
+      notStarted: 0,
     };
 
     results.forEach((result) => {
@@ -904,6 +905,9 @@ export class TestRunService {
           break;
         case 'RETEST':
           stats.retest = result._count.status;
+          break;
+        case 'NOT_STARTED':
+          stats.notStarted = result._count.status;
           break;
       }
     });
