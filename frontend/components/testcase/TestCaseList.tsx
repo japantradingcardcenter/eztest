@@ -165,13 +165,6 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
     setCurrentPage(1); // Reset to first page when items per page changes
   };
 
-  // Check if any filters are active
-  const hasActiveFilters = 
-    searchQuery !== '' ||
-    statusFilter !== 'all' ||
-    domainFilter !== '' ||
-    functionNameFilter !== '';
-
   const handleTestCaseCreated = (newTestCase: TestCase) => {
     setAlert({
       type: 'success',

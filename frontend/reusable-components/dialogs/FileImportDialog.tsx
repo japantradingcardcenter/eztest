@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from '@/frontend/reusable-elements/dialogs/Dialog';
 import { Alert, AlertDescription } from '@/frontend/reusable-elements/alerts/Alert';
+import { Checkbox } from '@/frontend/reusable-elements/checkboxes/Checkbox';
 import { Upload, FileSpreadsheet, Download, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 interface ImportResult {
@@ -324,13 +325,12 @@ export function FileImportDialog({
 
           {showUpdateExistingOption && (
             <div className="flex items-start gap-3 p-4 rounded-lg border border-white/20 bg-white/5">
-              <input
+              <Checkbox
                 id="import-update-existing"
-                type="checkbox"
                 checked={updateExisting}
-                onChange={(e) => setUpdateExisting(e.target.checked)}
+                onCheckedChange={(checked) => setUpdateExisting(checked === true)}
                 disabled={uploading}
-                className="mt-1 rounded border-white/30 bg-white/5 text-primary focus:ring-primary"
+                className="mt-1"
               />
               <label htmlFor="import-update-existing" className="flex-1 cursor-pointer text-sm">
                 <span className="font-medium text-white/90">同一タイトルの既存テストケースを更新する</span>
