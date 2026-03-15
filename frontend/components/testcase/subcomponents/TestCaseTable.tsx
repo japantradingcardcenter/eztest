@@ -6,6 +6,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/frontend/reusable-elements/hover-cards/HoverCard';
+import { Checkbox } from '@/frontend/reusable-elements/checkboxes/Checkbox';
 import { Trash2, Bug } from 'lucide-react';
 import { GroupedDataTable, ColumnDef, GroupConfig, ActionConfig } from '@/frontend/reusable-components/tables/GroupedDataTable';
 import { TestCase, Module } from '../types';
@@ -22,6 +23,14 @@ interface TestCaseTableProps {
   canDelete?: boolean;
   projectId?: string;
   enableModuleLink?: boolean;
+  /** チェックボックスで一括選択・削除を有効にする */
+  showCheckbox?: boolean;
+  selectedIds?: Set<string>;
+  onSelectionChange?: (ids: Set<string>) => void;
+  /** 全件数（全ページ選択時に使用） */
+  totalItems?: number;
+  /** 全件選択時のID取得（totalItems > 現在表示件数の場合に呼ばれる） */
+  onSelectAllInProject?: () => Promise<string[]>;
 }
 
 /**
@@ -57,9 +66,41 @@ export function TestCaseTable({
   canDelete = true,
   projectId,
   enableModuleLink = false,
+  showCheckbox = false,
+  selectedIds = new Set(),
+  onSelectionChange,
+  totalItems,
+  onSelectAllInProject,
 }: TestCaseTableProps) {
   const router = useRouter();
   const { options: statusOptions } = useDropdownOptions('TestCase', 'status');
+
+  const handleCheckboxChange = (rowId: string, checked: boolean) => {
+    if (!onSelectionChange) return;
+    const next = new Set(selectedIds);
+    if (checked) next.add(rowId);
+    else next.delete(rowId);
+    onSelectionChange(next);
+  };
+
+  const handleSelectAll = async (checked: boolean) => {
+    if (!onSelectionChange) return;
+    if (!checked) {
+      onSelectionChange(new Set());
+      return;
+    }
+    // 全件数が表示件数を超える場合は API で全IDを取得
+    const needsFetchAll = totalItems != null && onSelectAllInProject && totalItems > testCases.length;
+    if (needsFetchAll) {
+      const ids = await onSelectAllInProject();
+      onSelectionChange(new Set(ids));
+    } else {
+      onSelectionChange(new Set(testCases.map((tc) => tc.id)));
+    }
+  };
+
+  const allSelected = testCases.length > 0 && testCases.every((tc) => selectedIds.has(tc.id));
+  const someSelected = testCases.some((tc) => selectedIds.has(tc.id));
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getStatusColor = (status: string) => {
@@ -77,6 +118,39 @@ export function TestCaseTable({
 
   // Define columns
   const columns: ColumnDef<TestCase>[] = [
+    ...(showCheckbox && canDelete
+      ? [
+          {
+            key: 'select',
+            label: '',
+            width: '40px',
+            className: 'flex-shrink-0',
+            align: 'center' as const,
+            renderHeader: () => (
+              <div className="flex justify-center">
+                <Checkbox
+                  checked={allSelected || (someSelected ? 'indeterminate' : false)}
+                  onCheckedChange={(checked) =>
+                    handleSelectAll(checked === true)
+                  }
+                  aria-label="Select all"
+                />
+              </div>
+            ),
+            render: (row: TestCase) => (
+              <div onClick={(e) => e.stopPropagation()} className="flex justify-center">
+                <Checkbox
+                  checked={selectedIds.has(row.id)}
+                  onCheckedChange={(checked) =>
+                    handleCheckboxChange(row.id, checked === true)
+                  }
+                  aria-label={`Select ${row.title}`}
+                />
+              </div>
+            ),
+          } as ColumnDef<TestCase>,
+        ]
+      : []),
     {
       key: 'title',
       label: 'TITLE',
@@ -238,7 +312,11 @@ export function TestCaseTable({
       grouped={groupedByModule}
       groupConfig={groupConfig}
       actions={actions}
-      gridTemplateColumns="minmax(900px, 6fr) 70px 80px 100px 80px 100px 80px 70px 40px"
+      gridTemplateColumns={
+        showCheckbox && canDelete
+          ? '40px minmax(900px, 6fr) 70px 80px 100px 80px 100px 80px 70px 40px'
+          : 'minmax(900px, 6fr) 70px 80px 100px 80px 100px 80px 70px 40px'
+      }
       emptyMessage="No test cases available"
     />
   );

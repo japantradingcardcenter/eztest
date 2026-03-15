@@ -2,7 +2,7 @@ import { testCaseService } from '@/backend/services/testcase/services';
 import { CustomRequest } from '@/backend/utils/interceptor';
 import { NotFoundException, InternalServerException, ValidationException } from '@/backend/utils/exceptions';
 import { TestCaseMessages } from '@/backend/constants/static_messages';
-import { createTestCaseSchema, updateTestCaseSchema, updateTestStepsSchema, testCaseQuerySchema, linkAttachmentsSchema } from '@/backend/validators';
+import { createTestCaseSchema, updateTestCaseSchema, updateTestStepsSchema, testCaseQuerySchema, linkAttachmentsSchema, bulkDeleteTestCaseSchema } from '@/backend/validators';
 import { z, ZodError } from 'zod';
 
 export class TestCaseController {
@@ -39,6 +39,36 @@ export class TestCaseController {
     );
 
     return { data: testCases };
+  }
+
+  /**
+   * Get all test case IDs for a project with optional filters (idsOnly mode)
+   */
+  async getProjectTestCaseIds(
+    req: CustomRequest,
+    projectId: string
+  ) {
+    const searchParams = req.nextUrl.searchParams;
+    const queryData = {
+      suiteId: searchParams.get('suiteId') || undefined,
+      priority: searchParams.get('priority') || undefined,
+      status: searchParams.get('status') || undefined,
+      search: searchParams.get('search') || undefined,
+      domain: searchParams.get('domain') || undefined,
+      functionName: searchParams.get('functionName') || undefined,
+    };
+
+    const validationResult = testCaseQuerySchema.safeParse(queryData);
+    if (!validationResult.success) {
+      throw new ValidationException(
+        'Invalid query parameters',
+        validationResult.error.issues
+      );
+    }
+
+    const filters = validationResult.data;
+    const ids = await testCaseService.getProjectTestCaseIds(projectId, filters);
+    return { data: { ids } };
   }
 
   /**
@@ -270,6 +300,51 @@ evidence: validatedData.evidence,
       }
       throw new InternalServerException(TestCaseMessages.FailedToDeleteTestCase);
     }
+  }
+
+  /**
+   * Bulk delete test cases
+   * Permission already checked by route wrapper
+   */
+  async bulkDeleteTestCases(
+    request: CustomRequest,
+    projectId: string,
+    body: unknown
+  ) {
+    const validationResult = bulkDeleteTestCaseSchema.safeParse(body);
+    if (!validationResult.success) {
+      throw new ValidationException(
+        'Validation failed',
+        validationResult.error.issues
+      );
+    }
+
+    const { testCaseIds } = validationResult.data;
+
+    const results = await Promise.allSettled(
+      testCaseIds.map((id) =>
+        testCaseService.deleteTestCase(
+          id,
+          request.userInfo.id,
+          request.scopeInfo.scope_name
+        )
+      )
+    );
+
+    const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+    const failed = results.filter((r) => r.status === 'rejected').length;
+
+    if (failed > 0) {
+      console.warn(`[TestCaseController] Bulk delete: ${succeeded} succeeded, ${failed} failed`);
+    }
+
+    return {
+      data: {
+        message: `${succeeded} test case(s) deleted successfully`,
+        deletedCount: succeeded,
+        failedCount: failed,
+      },
+    };
   }
 
   /**

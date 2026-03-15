@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Plus, FolderPlus, Import, Upload } from 'lucide-react';
+import { Plus, FolderPlus, Import, Upload, Trash2 } from 'lucide-react';
 import { TopBar } from '@/frontend/reusable-components/layout/TopBar';
 import { PageHeaderWithBadge } from '@/frontend/reusable-components/layout/PageHeaderWithBadge';
 import { ActionButtonGroup } from '@/frontend/reusable-components/layout/ActionButtonGroup';
@@ -10,12 +10,14 @@ import { HeaderWithFilters } from '@/frontend/reusable-components/layout/HeaderW
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { Pagination } from '@/frontend/reusable-elements/pagination/Pagination';
 import { ButtonSecondary } from '@/frontend/reusable-elements/buttons/ButtonSecondary';
+import { ButtonDestructive } from '@/frontend/reusable-elements/buttons/ButtonDestructive';
 import { FloatingAlert, type FloatingAlertMessage } from '@/frontend/reusable-components/alerts/FloatingAlert';
 import { TestCase, TestSuite, Project, Module } from './types';
 import { TestCaseTable } from './subcomponents/TestCaseTable';
 import { CreateTestCaseDialog } from './subcomponents/CreateTestCaseDialog';
 import { CreateModuleDialog } from './subcomponents/CreateModuleDialog';
 import { DeleteTestCaseDialog } from './subcomponents/DeleteTestCaseDialog';
+import { BaseConfirmDialog } from '@/frontend/reusable-components/dialogs/BaseConfirmDialog';
 import { TestCaseFilters } from './subcomponents/TestCaseFilters';
 import { EmptyTestCaseState } from './subcomponents/EmptyTestCaseState';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -40,9 +42,11 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createModuleDialogOpen, setCreateModuleDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [selectedTestCase, setSelectedTestCase] = useState<TestCase | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -152,12 +156,35 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
   const handlePageChange = (page: number) => {
     setIsPaginationChange(true);
     setCurrentPage(page);
+    setSelectedIds(new Set()); // ページ遷移時に選択をリセット
   };
 
   const handleItemsPerPageChange = (items: number) => {
     setIsPaginationChange(true);
     setItemsPerPage(items);
     setCurrentPage(1); // Reset to first page when items per page changes
+    setSelectedIds(new Set()); // 選択をリセット
+  };
+
+  const fetchAllTestCaseIds = async (): Promise<string[]> => {
+    try {
+      const params = new URLSearchParams({ idsOnly: 'true' });
+      if (searchQuery) params.append('search', searchQuery);
+      if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (domainFilter) params.append('domain', domainFilter);
+      if (functionNameFilter) params.append('functionName', functionNameFilter);
+
+      const response = await fetch(`/api/projects/${projectId}/testcases?${params}`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch test case IDs');
+      }
+      return data.data?.ids ?? [];
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '全件取得に失敗しました';
+      setAlert({ type: 'error', title: 'エラー', message: msg });
+      return [];
+    }
   };
 
   // Check if any filters are active
@@ -235,6 +262,47 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
   const handleDeleteClick = (testCase: TestCase) => {
     setSelectedTestCase(testCase);
     setDeleteDialogOpen(true);
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
+    try {
+      const response = await fetch(`/api/projects/${projectId}/testcases/bulk-delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ testCaseIds: ids }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setBulkDeleteDialogOpen(false);
+        setSelectedIds(new Set());
+        setAlert({
+          type: 'success',
+          title: 'Success',
+          message: data.data?.message || `${ids.length} test case(s) deleted successfully`,
+        });
+        setTimeout(() => setAlert(null), 5000);
+        fetchTestCases();
+      } else {
+        setAlert({
+          type: 'error',
+          title: '一括削除に失敗しました',
+          message: data.error || data.message || 'Failed to delete test cases',
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setAlert({
+        type: 'error',
+        title: 'Connection Error',
+        message: errorMessage,
+      });
+      console.error('Error bulk deleting test cases:', error);
+    }
   };
 
 
@@ -340,6 +408,26 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
           />
         ) : (
           <>
+            {canDeleteTestCase && selectedIds.size > 0 && (
+              <div className="mb-4 flex items-center gap-3">
+                <span className="text-sm text-white/70">
+                  {selectedIds.size} 件選択中
+                </span>
+                <ButtonDestructive
+                  onClick={() => setBulkDeleteDialogOpen(true)}
+                  className="cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  選択したテストケースを削除
+                </ButtonDestructive>
+                <ButtonSecondary
+                  onClick={() => setSelectedIds(new Set())}
+                  className="cursor-pointer"
+                >
+                  選択解除
+                </ButtonSecondary>
+              </div>
+            )}
             <TestCaseTable
               testCases={testCases}
               groupedByModule={false}
@@ -349,6 +437,11 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
               canDelete={canDeleteTestCase}
               projectId={projectId}
               enableModuleLink={true}
+              showCheckbox={canDeleteTestCase}
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+              totalItems={totalItems}
+              onSelectAllInProject={fetchAllTestCaseIds}
             />
 
             {/* Pagination */}
@@ -391,6 +484,21 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
           triggerOpen={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
           onConfirm={handleDeleteTestCase}
+        />
+
+        {/* Bulk Delete Dialog */}
+        <BaseConfirmDialog
+          title="選択したテストケースを削除"
+          description={`${selectedIds.size} 件のテストケースを削除します。この操作は取り消せません。`}
+          submitLabel="削除"
+          cancelLabel="キャンセル"
+          triggerOpen={bulkDeleteDialogOpen}
+          onOpenChange={setBulkDeleteDialogOpen}
+          onSubmit={handleBulkDelete}
+          destructive={true}
+          dialogName="Bulk Delete Test Case Dialog"
+          submitButtonName="Bulk Delete Test Case Dialog - Submit"
+          cancelButtonName="Bulk Delete Test Case Dialog - Cancel"
         />
 
         {/* Import Dialog */}
