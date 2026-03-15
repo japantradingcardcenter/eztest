@@ -261,6 +261,8 @@ export function RecordResultDialog({
   const getStatusIcon = (status: string) => {
     const upperStatus = status.toUpperCase();
     switch (upperStatus) {
+      case 'NOT_STARTED':
+        return <Circle className="w-4 h-4 text-slate-500" />;
       case 'PASSED':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'FAILED':

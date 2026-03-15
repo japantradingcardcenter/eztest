@@ -1,6 +1,6 @@
 export interface TestResult {
   id: string;
-  status: 'PASSED' | 'FAILED' | 'BLOCKED' | 'SKIPPED' | 'RETEST';
+  status: 'NOT_STARTED' | 'PASSED' | 'FAILED' | 'BLOCKED' | 'SKIPPED' | 'RETEST';
   testCaseId: string;
   testCase: TestCase;
   comment?: string;
@@ -43,7 +43,7 @@ export interface TestRun {
   description?: string;
   executionType?: 'MANUAL' | 'AUTOMATION' | string;
   version?: string;
-  status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  status: 'NOT_STARTED' | 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   environment?: string;
   platform?: string;
   device?: string;
