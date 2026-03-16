@@ -246,7 +246,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     }
   };
 
-  const handleTestRunUpdated = async (_updatedTestRun: { id: string; name: string }) => {
+  const handleTestRunUpdated = async () => {
     setEditDialogOpen(false);
     await fetchTestRun();
     setFloatingAlert({
