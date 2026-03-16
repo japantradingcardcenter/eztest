@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Plus, FolderPlus, Import, Upload, Trash2 } from 'lucide-react';
+import { Plus, FolderPlus, Import, Upload, Trash2, Search } from 'lucide-react';
 import { TopBar } from '@/frontend/reusable-components/layout/TopBar';
 import { PageHeaderWithBadge } from '@/frontend/reusable-components/layout/PageHeaderWithBadge';
 import { ActionButtonGroup } from '@/frontend/reusable-components/layout/ActionButtonGroup';
@@ -46,6 +46,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
   const [selectedTestCase, setSelectedTestCase] = useState<TestCase | null>(null);
   const [selectedTestCaseIds, setSelectedTestCaseIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [checkingDuplicates, setCheckingDuplicates] = useState(false);
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -307,6 +308,57 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
     }
   };
 
+  const handleDeduplicate = async () => {
+    const confirmed = window.confirm(
+      '全テストケースを対象に重複確認を実行します。完全一致したテストケースは1件を残して削除されます。この操作は取り消せません。続行しますか？'
+    );
+    if (!confirmed) return;
+
+    setCheckingDuplicates(true);
+    try {
+      const response = await fetch(`/api/projects/${projectId}/testcases/deduplicate`, {
+        method: 'DELETE',
+      });
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setAlert({
+          type: 'error',
+          title: '重複確認に失敗しました',
+          message: data?.error || '重複確認の実行に失敗しました',
+        });
+        return;
+      }
+
+      const result = data?.data ?? {};
+      const deletedCount = Number(result.deletedCount ?? 0);
+      const checkedCount = Number(result.checkedCount ?? 0);
+      const duplicateGroupCount = Number(result.duplicateGroupCount ?? 0);
+      const failedCount = Number(result.failedCount ?? 0);
+
+      setSelectedTestCaseIds(new Set());
+      setAlert({
+        type: failedCount > 0 ? 'error' : 'success',
+        title: failedCount > 0 ? '重複削除を一部完了しました' : '重複確認が完了しました',
+        message:
+          failedCount > 0
+            ? `${checkedCount} 件を確認し、重複グループ ${duplicateGroupCount} 件のうち ${deletedCount} 件を削除、${failedCount} 件は削除できませんでした`
+            : `${checkedCount} 件を確認し、重複グループ ${duplicateGroupCount} 件から ${deletedCount} 件を削除しました`,
+      });
+      fetchTestCases();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setAlert({
+        type: 'error',
+        title: 'Connection Error',
+        message: errorMessage,
+      });
+    } finally {
+      setCheckingDuplicates(false);
+      setTimeout(() => setAlert(null), 5000);
+    }
+  };
+
   const handleCardClick = (testCaseId: string) => {
     router.push(`/projects/${projectId}/testcases/${testCaseId}`);
   };
@@ -427,6 +479,19 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
           />
         ) : (
           <>
+            {canDeleteTestCase && totalItems > 0 && (
+              <div className="mb-3 flex justify-end">
+                <Button
+                  variant="glass-orange"
+                  onClick={handleDeduplicate}
+                  disabled={checkingDuplicates || bulkDeleting}
+                >
+                  <Search className="w-4 h-4 mr-2" />
+                  {checkingDuplicates ? '重複確認中...' : '重複確認'}
+                </Button>
+              </div>
+            )}
+
             {canDeleteTestCase && selectedTestCaseIds.size > 0 && (
               <div className="mb-3 flex justify-end">
                 <Button
