@@ -1,7 +1,5 @@
 import { NextAuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
-import * as bcrypt from 'bcryptjs';
 import { getServerSession } from 'next-auth';
 import { prisma } from './prisma';
 import { getEnv } from './env-validation';
@@ -13,69 +11,11 @@ import { CustomRequest } from '@/backend/utils/interceptor';
 const env = getEnv();
 
 const providers: NextAuthOptions['providers'] = [
-  CredentialsProvider({
-    name: 'credentials',
-    credentials: {
-      email: { label: 'Email', type: 'email' },
-      password: { label: 'Password', type: 'password' },
-    },
-    async authorize(credentials) {
-      if (!credentials?.email || !credentials?.password) {
-        throw new Error('Email and password are required');
-      }
-
-      const user = await prisma.user.findUnique({
-        where: { email: credentials.email },
-      });
-
-      if (!user) {
-        throw new Error('Invalid email or password');
-      }
-
-      // Check if user is deleted
-      if (user.deletedAt) {
-        throw new Error('Your account has been deleted. Please contact your administrator.');
-      }
-
-      // Google認証で作成されたユーザーはパスワードが未設定
-      if (!user.password) {
-        throw new Error('This account uses Google login. Please sign in with Google.');
-      }
-
-      const isPasswordValid = await bcrypt.compare(
-        credentials.password,
-        user.password
-      );
-
-      if (!isPasswordValid) {
-        throw new Error('Invalid email or password');
-      }
-
-      // Fetch role to get role name
-      const userWithRole = await prisma.user.findUnique({
-        where: { id: user.id },
-        include: { role: true },
-      });
-
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        roleName: userWithRole?.role.name || 'TESTER',
-      };
-    },
+  GoogleProvider({
+    clientId: env.googleClientId!,
+    clientSecret: env.googleClientSecret!,
   }),
 ];
-
-// Google Providerはクライアント情報が設定されている場合のみ追加
-if (env.googleClientId && env.googleClientSecret) {
-  providers.push(
-    GoogleProvider({
-      clientId: env.googleClientId,
-      clientSecret: env.googleClientSecret,
-    })
-  );
-}
 
 export const authOptions: NextAuthOptions = {
   providers,
@@ -117,7 +57,6 @@ export const authOptions: NextAuthOptions = {
             data: {
               email: user.email,
               name: user.name ?? user.email,
-              password: null,
               roleId: testerRole.id,
             },
           });
