@@ -35,6 +35,7 @@ const STATIC_BADGE_COLORS: Record<string, { bg: string; text: string; border: st
   'DEPRECATED': { bg: 'bg-gray-500/10', text: 'text-gray-500', border: 'border-gray-500/20' },
   
   // TestRun Status
+  'NOT_STARTED': { bg: 'bg-slate-500/10', text: 'text-slate-400', border: 'border-slate-500/20' },
   'PLANNED': { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' },
   // Note: IN_PROGRESS is already defined above for Defect Status (purple)
   // For TestRun, IN_PROGRESS should be yellow, but since it shares the same value with Defect,
@@ -43,6 +44,7 @@ const STATIC_BADGE_COLORS: Record<string, { bg: string; text: string; border: st
   'CANCELLED': { bg: 'bg-gray-500/10', text: 'text-gray-500', border: 'border-gray-500/20' },
   
   // TestResult Status
+  'NOT_STARTED': { bg: 'bg-slate-500/10', text: 'text-slate-400', border: 'border-slate-500/20' },
   'PASSED': { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/20' },
   'FAILED': { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/20' },
   'BLOCKED': { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/20' },

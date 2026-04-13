@@ -34,6 +34,8 @@ export function TestRunCard({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'NOT_STARTED':
+        return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
       case 'PLANNED':
         return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
       case 'IN_PROGRESS':

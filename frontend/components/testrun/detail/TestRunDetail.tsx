@@ -59,7 +59,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [resultForm, setResultForm, clearResultForm] = useFormPersistence<ResultFormData>(
     `testrun-result-${testRunId}`,
     {
-      status: '',
+      status: 'NOT_STARTED',
       comment: '',
     },
     {
@@ -333,13 +333,18 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
 
     const newTestCase = sortedTestCases[newIndex];
     const existingResult = testRun?.results.find((r) => r.testCaseId === newTestCase.id);
+    const resolvedStatus = !existingResult
+      ? 'NOT_STARTED'
+      : existingResult.status === 'SKIPPED' && !existingResult.comment
+        ? 'NOT_STARTED'
+        : existingResult.status;
 
     setSelectedTestCase({
       testCaseId: newTestCase.id,
       testCaseName: newTestCase.title || newTestCase.name || '',
     });
     setResultForm({
-      status: existingResult?.status || '',
+      status: resolvedStatus,
       comment: existingResult?.comment || '',
     });
   }, [selectedTestCase, sortedTestCases, testRun?.results, setResultForm]);
@@ -355,12 +360,17 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     if (currentIndex >= 0 && currentIndex < sortedTestCases.length - 1) {
       const nextTestCase = sortedTestCases[currentIndex + 1];
       const nextResult = testRun?.results.find((r) => r.testCaseId === nextTestCase.id);
+      const resolvedStatus = !nextResult
+        ? 'NOT_STARTED'
+        : nextResult.status === 'SKIPPED' && !nextResult.comment
+          ? 'NOT_STARTED'
+          : nextResult.status;
       setSelectedTestCase({
         testCaseId: nextTestCase.id,
         testCaseName: nextTestCase.title || nextTestCase.name || '',
       });
       setResultForm({
-        status: nextResult?.status || '',
+        status: resolvedStatus,
         comment: nextResult?.comment || '',
       });
       setResultDialogOpen(true);
@@ -380,8 +390,15 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       testCaseName: testCase.title || testCase.name || '',
     });
 
+    // NOT_STARTED をデフォルトに。古い SKIPPED プレースホルダー（コメントなし）も NOT_STARTED として表示
+    const resolvedStatus = (() => {
+      if (!existingResult) return 'NOT_STARTED';
+      if (existingResult.status === 'SKIPPED' && !existingResult.comment) return 'NOT_STARTED';
+      return existingResult.status;
+    })();
+
     setResultForm({
-      status: existingResult?.status || '',
+      status: resolvedStatus,
       comment: existingResult?.comment || '',
     });
 
@@ -493,7 +510,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       const promises = selectedCaseIds.map(async (testCaseId) => {
         const payload = {
           testCaseId,
-          status: 'SKIPPED',
+          status: 'NOT_STARTED',
         };
         
         const response = await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results`, {
@@ -665,7 +682,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             testCaseId,
-            status: 'SKIPPED',
+            status: 'NOT_STARTED',
           }),
         });
 
@@ -761,12 +778,18 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           case 'SKIPPED':
             stats.skipped++;
             break;
+          case 'NOT_STARTED':
+            stats.pending++;
+            break;
+          case 'RETEST':
+            stats.pending++;
+            break;
         }
       });
     }
 
-    // Pending = tests that haven't been executed (skipped tests count as not executed)
-    stats.pending = stats.skipped;
+    // Pending = tests that haven't been executed (NOT_STARTED, SKIPPED, RETEST count as not executed)
+    stats.pending += stats.skipped;
 
     return stats;
   };
