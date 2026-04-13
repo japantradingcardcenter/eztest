@@ -30,14 +30,9 @@ export const LoginForm = ({
   onSubmit,
 }: LoginFormProps) => {
   return (
-    <>
-      <Card variant="glass">
+    <Card variant="glass">
         <CardHeader>
-          <div className="flex items-center gap-2 mb-2 lg:hidden">
-            <span className="text-2xl">🧪</span>
-            <span className="text-xl font-bold text-primary">EZTest</span>
-          </div>
-          <CardTitle className="text-2xl">Sign in</CardTitle>
+<CardTitle className="text-2xl">Sign in</CardTitle>
           <CardDescription>Access your test management workspace</CardDescription>
         </CardHeader>
 
@@ -116,36 +111,9 @@ export const LoginForm = ({
 
         <CardFooter className="flex-col gap-4">
           <p className="text-sm text-center text-muted-foreground">
-            Don&apos;t have an account?{' '}
-            <Link
-              href="/auth/register"
-              className="text-primary hover:text-accent font-semibold transition-colors"
-            >
-              Sign up for free
-            </Link>
+            Contact your administrator to get access.
           </p>
         </CardFooter>
-      </Card>
-
-      {/* Demo credentials hint */}
-      <Card
-        variant="glass"
-        className="bg-white/[0.02] border-white/10 border-2 backdrop-blur-xl shadow-[0_10px_30px_-12px_rgba(0,0,0,0.5)] before:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] mt-6"
-      >
-        <CardContent className="pt-5">
-          <div className="flex items-start gap-3">
-            <span className="text-lg">💡</span>
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-primary tracking-wide">Try it out!</p>
-              <p className="text-xs font-mono bg-black/30 rounded px-2 py-1 text-accent-foreground">
-                <span className="text-accent">admin@eztest.local</span>
-                <span className="px-1 text-muted-foreground">/</span>
-                <span className="text-accent">Admin@123456</span>
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </>
+    </Card>
   );
 };
