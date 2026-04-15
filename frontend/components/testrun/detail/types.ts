@@ -47,6 +47,13 @@ export interface TestRun {
   environment?: string;
   platform?: string;
   device?: string;
+  assignedToIds?: string[];
+  assignedToList?: Array<{
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  }>;
   project: {
     id: string;
     name: string;

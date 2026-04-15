@@ -13,6 +13,16 @@ function normalizeTestCaseId(identifier: string): string {
   return identifier.replace(/_/g, '-');
 }
 
+function parseDelimitedValues(value?: string | null): string[] {
+  if (!value) {
+    return [];
+  }
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 /**
  * TestNG XML Parser
  * 
@@ -302,6 +312,7 @@ interface CreateTestRunInput {
   description?: string;
   executionType?: 'MANUAL' | 'AUTOMATION';
   assignedToId?: string;
+  assignedToIds?: string[];
   environment?: string;
   version?: string;
   platform?: string;
@@ -318,6 +329,7 @@ interface UpdateTestRunInput {
   executionType?: 'MANUAL' | 'AUTOMATION';
   status?: string;
   assignedToId?: string;
+  assignedToIds?: string[];
   environment?: string;
   version?: string;
   platform?: string;
@@ -351,7 +363,9 @@ export class TestRunService {
     }
 
     if (filters?.environment) {
-      where.environment = filters.environment;
+      where.environment = {
+        contains: filters.environment,
+      };
     }
 
     if (filters?.search) {
@@ -393,14 +407,41 @@ export class TestRunService {
     if (testRuns.length > 0) {
       try {
         const ids = testRuns.map(tr => tr.id);
-        const rows = await prisma.$queryRaw<Array<{ id: string; executionType: string | null; version: string | null }>>`
-          SELECT "id", "executionType", "version" FROM "TestRun" WHERE "id" IN (${Prisma.join(ids)})
+        const rows = await prisma.$queryRaw<Array<{ id: string; executionType: string | null; version: string | null; assignedToIds: string | null }>>`
+          SELECT "id", "executionType", "version", "assignedToIds" FROM "TestRun" WHERE "id" IN (${Prisma.join(ids)})
         `;
-        const rowMap = new Map(rows.map(r => [r.id, { executionType: r.executionType || 'MANUAL', version: r.version || null }]));
+        const rowMap = new Map(rows.map(r => [r.id, {
+          executionType: r.executionType || 'MANUAL',
+          version: r.version || null,
+          assignedToIds: parseDelimitedValues(r.assignedToIds),
+        }]));
+
+        const allAssignedToIds = Array.from(
+          new Set(
+            rows.flatMap((row) => parseDelimitedValues(row.assignedToIds))
+          )
+        );
+        const assignedUsers = allAssignedToIds.length > 0
+          ? await prisma.user.findMany({
+              where: { id: { in: allAssignedToIds } },
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+              },
+            })
+          : [];
+        const assignedUserMap = new Map(assignedUsers.map((user) => [user.id, user]));
+
         return testRuns.map(tr => ({
           ...tr,
           executionType: rowMap.get(tr.id)?.executionType || 'MANUAL',
           version: rowMap.get(tr.id)?.version || undefined,
+          assignedToIds: rowMap.get(tr.id)?.assignedToIds || (tr.assignedToId ? [tr.assignedToId] : []),
+          assignedToList: (rowMap.get(tr.id)?.assignedToIds || (tr.assignedToId ? [tr.assignedToId] : []))
+            .map((userId) => assignedUserMap.get(userId))
+            .filter(Boolean),
         }));
       } catch {
         // Column may not exist yet - return with defaults
@@ -408,6 +449,8 @@ export class TestRunService {
           ...tr,
           executionType: 'MANUAL',
           version: undefined,
+          assignedToIds: tr.assignedToId ? [tr.assignedToId] : [],
+          assignedToList: tr.assignedTo ? [tr.assignedTo] : [],
         }));
       }
     }
@@ -493,19 +536,40 @@ export class TestRunService {
     // Fetch executionType/version via raw SQL (not in Prisma schema)
     let executionType: string | null = null;
     let version: string | null = null;
+    let assignedToIdsRaw: string | null = null;
     try {
-      const rows = await prisma.$queryRaw<Array<{ executionType: string | null; version: string | null }>>`
-        SELECT "executionType", "version" FROM "TestRun" WHERE "id" = ${testRunId} LIMIT 1
+      const rows = await prisma.$queryRaw<Array<{ executionType: string | null; version: string | null; assignedToIds: string | null }>>`
+        SELECT "executionType", "version", "assignedToIds" FROM "TestRun" WHERE "id" = ${testRunId} LIMIT 1
       `;
       if (rows[0]) {
         executionType = rows[0].executionType;
         version = rows[0].version;
+        assignedToIdsRaw = rows[0].assignedToIds;
       }
     } catch {
       // Column may not exist yet
     }
 
-    return { ...testRun, executionType: executionType || 'MANUAL', version: version || undefined };
+    const assignedToIds = parseDelimitedValues(assignedToIdsRaw);
+    const assignedToList = assignedToIds.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: assignedToIds } },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+          },
+        })
+      : testRun.assignedTo ? [testRun.assignedTo] : [];
+
+    return {
+      ...testRun,
+      executionType: executionType || 'MANUAL',
+      version: version || undefined,
+      assignedToIds: assignedToIds.length > 0 ? assignedToIds : (testRun.assignedToId ? [testRun.assignedToId] : []),
+      assignedToList,
+    };
   }
 
   /**
@@ -533,6 +597,9 @@ export class TestRunService {
       testCaseIds = [...new Set([...testCaseIds, ...suiteTestCaseIds])]; // Remove duplicates
     }
 
+    const normalizedAssignedToIds = (data.assignedToIds || []).map((id) => id.trim()).filter(Boolean);
+    const primaryAssignedToId = data.assignedToId || normalizedAssignedToIds[0] || null;
+
     // Create the test run (platform/device are in the Prisma schema; executionType is handled via raw SQL)
     const status = data.status || 'NOT_STARTED';
     const testRun = await prisma.testRun.create({
@@ -540,7 +607,7 @@ export class TestRunService {
         projectId: data.projectId,
         name: data.name,
         description: data.description,
-        assignedToId: data.assignedToId || null,
+        assignedToId: primaryAssignedToId,
         environment: data.environment,
         platform: data.platform || null,
         device: data.device || null,
@@ -575,6 +642,14 @@ export class TestRunService {
       console.warn('[TestRunService] Failed to set version on test run (column may not exist yet):', error instanceof Error ? error.message : error);
     }
 
+    // Set additional assignee IDs via raw SQL (column may not exist)
+    try {
+      const assignedToIdsValue = normalizedAssignedToIds.length > 0 ? normalizedAssignedToIds.join(',') : null;
+      await prisma.$executeRaw`UPDATE "TestRun" SET "assignedToIds" = ${assignedToIdsValue} WHERE "id" = ${testRun.id}`;
+    } catch (error) {
+      console.warn('[TestRunService] Failed to set assignedToIds on test run (column may not exist yet):', error instanceof Error ? error.message : error);
+    }
+
     // If test case IDs are provided, create placeholder results
     if (testCaseIds.length > 0) {
       await prisma.testResult.createMany({
@@ -582,7 +657,7 @@ export class TestRunService {
           testRunId: testRun.id,
           testCaseId,
           status: 'NOT_STARTED',
-          executedById: data.assignedToId || '', // Will be updated when actually executed
+          executedById: primaryAssignedToId || '', // Will be updated when actually executed
         })),
         skipDuplicates: true,
       });
@@ -615,7 +690,8 @@ export class TestRunService {
   async updateTestRun(testRunId: string, data: UpdateTestRunInput) {
     // Extract executionType/version to handle via raw SQL (not in Prisma schema)
     // platform and device ARE in the schema, so they go through Prisma directly
-    const { executionType, version, ...prismaData } = data;
+    const { executionType, version, assignedToIds, ...prismaData } = data;
+    const normalizedAssignedToIds = (assignedToIds || []).map((id) => id.trim()).filter(Boolean);
 
     const testRun = await prisma.testRun.update({
       where: { id: testRunId },
@@ -651,6 +727,15 @@ export class TestRunService {
         await prisma.$executeRaw`UPDATE "TestRun" SET "version" = ${version || null} WHERE "id" = ${testRunId}`;
       } catch (error) {
         console.warn('[TestRunService] Failed to update version on test run:', error instanceof Error ? error.message : error);
+      }
+    }
+
+    if (assignedToIds !== undefined) {
+      try {
+        const assignedToIdsValue = normalizedAssignedToIds.length > 0 ? normalizedAssignedToIds.join(',') : null;
+        await prisma.$executeRaw`UPDATE "TestRun" SET "assignedToIds" = ${assignedToIdsValue} WHERE "id" = ${testRunId}`;
+      } catch (error) {
+        console.warn('[TestRunService] Failed to update assignedToIds on test run:', error instanceof Error ? error.message : error);
       }
     }
 

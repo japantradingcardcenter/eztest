@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { BaseDialog, BaseDialogField, BaseDialogConfig } from '@/frontend/reusable-components/dialogs/BaseDialog';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
+import { parseMultiValueField } from '../utils/multiValueField';
 
 interface ProjectMember {
   user: {
@@ -89,7 +90,7 @@ export function EditTestRunDialog({
       label: '環境',
       type: 'select',
       placeholder: '環境を選択',
-      defaultValue: testRun?.environment || 'none',
+      defaultValue: parseMultiValueField(testRun?.environment)[0] || 'none',
       options: [
         { value: 'none', label: '環境を選択' },
         ...environmentOptions.map((opt) => ({ value: opt.value, label: opt.label })),
@@ -113,7 +114,7 @@ export function EditTestRunDialog({
       label: 'プラットフォーム',
       type: 'select',
       placeholder: 'プラットフォームを選択',
-      defaultValue: testRun?.platform || 'none',
+      defaultValue: parseMultiValueField(testRun?.platform)[0] || 'none',
       options: [
         { value: 'none', label: 'プラットフォームを選択' },
         { value: 'Web', label: 'Web' },
@@ -128,7 +129,7 @@ export function EditTestRunDialog({
       label: '端末',
       type: 'select',
       placeholder: '端末を選択',
-      defaultValue: testRun?.device || 'none',
+      defaultValue: parseMultiValueField(testRun?.device)[0] || 'none',
       options: [
         { value: 'none', label: '端末を選択' },
         { value: 'iPhone', label: 'iPhone' },
