@@ -1,4 +1,5 @@
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/frontend/reusable-elements/avatars/Avatar';
 import { Button } from '@/frontend/reusable-elements/buttons/Button';
 import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import { ButtonSecondary } from '@/frontend/reusable-elements/buttons/ButtonSecondary';
@@ -39,7 +40,7 @@ interface ResultRow {
   testCase: TestCase;
   status: string;
   comment?: string;
-  executedBy?: { name: string };
+  executedBy?: { name: string; email?: string; avatar?: string | null };
   executedAt?: string;
 }
 
@@ -170,12 +171,33 @@ export function TestCasesListCard({
     {
       key: 'executedBy',
       label: '実行者',
-      width: '120px',
-      render: (row: ResultRow) => (
-        <span className="text-white/70 text-sm truncate block">
-          {row.executedBy?.name || '-'}
-        </span>
-      ),
+      width: '70px',
+      align: 'center',
+      render: (row: ResultRow) => {
+        const user = row.executedBy;
+        if (!user?.name) {
+          return <span className="text-white/50 text-sm">-</span>;
+        }
+        const initials = user.name
+          .trim()
+          .split(/\s+/)
+          .map((part) => part.charAt(0))
+          .join('')
+          .slice(0, 2)
+          .toUpperCase();
+        return (
+          <div className="flex items-center justify-center" title={user.name}>
+            <Avatar className="size-7">
+              {user.avatar ? (
+                <AvatarImage src={user.avatar} alt={user.name} />
+              ) : null}
+              <AvatarFallback className="text-[10px]">
+                {initials || '?'}
+              </AvatarFallback>
+            </Avatar>
+          </div>
+        );
+      },
     },
     {
       key: 'executedAt',
@@ -399,7 +421,7 @@ export function TestCasesListCard({
           groupConfig={groupConfig}
           defaultExpanded={true}
           onRowClick={(row) => router.push(`/projects/${projectId}/testcases/${row.testCase.id}`)}
-          gridTemplateColumns="70px 1fr 100px 90px 120px 120px 140px 120px"
+          gridTemplateColumns="70px 1fr 100px 90px 120px 70px 140px 120px"
           emptyMessage="テストケースはありません"
         />
       )}
