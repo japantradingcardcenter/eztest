@@ -155,7 +155,7 @@ export function TestCasesListCard({
           : row.status;
         return (
           <div className="flex items-center gap-2">
-            {getResultIcon(row.status)}
+            {row.status !== 'FAILED' && getResultIcon(row.status)}
             <Badge
               variant="outline"
               className={`text-xs px-2 py-0.5 ${badgeProps.className}`}
