@@ -339,7 +339,8 @@ export class AttachmentService {
   async updateAttachment(
     attachmentId: string,
     testCaseId?: string | null,
-    testStepId?: string | null
+    testStepId?: string | null,
+    testResultId?: string | null
   ) {
     const updateData: Record<string, string | null> = {};
 
@@ -348,6 +349,14 @@ export class AttachmentService {
     }
     if (testStepId !== undefined) {
       updateData.testStepId = testStepId || null;
+    }
+    if (testResultId !== undefined) {
+      updateData.testResultId = testResultId || null;
+      // テスト結果に紐づける場合は他エンティティとの排他
+      if (testResultId) {
+        updateData.testCaseId = null;
+        updateData.testStepId = null;
+      }
     }
 
     const attachment = await prisma.attachment.update({
