@@ -266,12 +266,12 @@ export function TestCasesListCard({
                   e.stopPropagation();
                   onExcludeTestCase(row.testCase, row.status);
                 }}
-                className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-7 px-2 text-xs"
+                className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-7 w-7 p-0 inline-flex items-center justify-center"
                 title="このテストケースをテストランから除外"
+                aria-label="このテストケースをテストランから除外"
                 buttonName={`Test Cases List Card - Exclude (${row.testCase.title || row.testCase.id})`}
               >
-                <Trash2 className="w-3 h-3 mr-1" />
-                除外
+                <Trash2 className="w-4 h-4" />
               </Button>
             )}
         </div>
