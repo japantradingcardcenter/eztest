@@ -194,7 +194,10 @@ function TextareaWithAttachments({
     });
 
     if (result.success && result.attachment) {
-      onAttachmentsChange?.([...attachments, result.attachment]);
+      const merged: Attachment = entityType
+        ? { ...result.attachment, entityType }
+        : result.attachment;
+      onAttachmentsChange?.([...attachments, merged]);
       setUploadProgress(100);
       setTimeout(() => {
         setUploading(false);
@@ -240,6 +243,7 @@ function TextareaWithAttachments({
         mimeType: file.type,
         uploadedAt: new Date().toISOString(),
         fieldName: fieldName,
+        ...(entityType ? { entityType } : {}),
         // @ts-expect-error - Add file object for later upload
         _pendingFile: file,
       };
@@ -256,6 +260,15 @@ function TextareaWithAttachments({
       console.error('File access error:', error);
       setFileError('Failed to access file');
     }
+  };
+
+  /** 一覧から削除（保存待ちは確認なし、既にアップロード済みは確認後に S3/DB 削除） */
+  const handleRemoveInline = (attachmentId: string) => {
+    if (attachmentId.startsWith('pending-')) {
+      onAttachmentsChange?.(attachments.filter((a) => a.id !== attachmentId));
+      return;
+    }
+    handleDeleteClick(attachmentId);
   };
 
   const handleDeleteClick = (attachmentId: string) => {
@@ -377,6 +390,15 @@ function TextareaWithAttachments({
                   {att.id.startsWith('pending-') && (
                     <span className="text-yellow-400 flex-shrink-0">保存待ち</span>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveInline(att.id)}
+                    className="flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full border border-white/15 bg-white/5 hover:bg-red-500/25 hover:border-red-400/40 text-white/60 hover:text-red-300 transition-colors cursor-pointer"
+                    aria-label="添付を削除"
+                    title="添付を削除"
+                  >
+                    <X className="w-4 h-4" strokeWidth={2.5} />
+                  </button>
                 </div>
               ))}
               {attachments.some((att) => att.mimeType.startsWith('image/')) && (
@@ -384,7 +406,7 @@ function TextareaWithAttachments({
                   {attachments
                     .filter((att) => att.mimeType.startsWith('image/'))
                     .map((att) => (
-                      <div key={`preview-${att.id}`} className="w-full aspect-square rounded overflow-hidden border border-white/15 bg-white/5">
+                      <div key={`preview-${att.id}`} className="relative w-full aspect-square rounded overflow-hidden border border-white/15 bg-white/5">
                         {imageUrls[att.id] ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -397,6 +419,15 @@ function TextareaWithAttachments({
                             読み込み中
                           </div>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveInline(att.id)}
+                          className="absolute top-1.5 right-1.5 z-10 inline-flex items-center justify-center w-7 h-7 rounded-full border border-white/20 bg-black/65 hover:bg-red-600 text-white shadow-md hover:scale-105 transition-transform cursor-pointer"
+                          aria-label="添付を削除"
+                          title="添付を削除"
+                        >
+                          <X className="w-4 h-4" strokeWidth={2.5} />
+                        </button>
                       </div>
                     ))}
                 </div>
@@ -566,10 +597,10 @@ function TextareaWithAttachments({
 
       {/* Delete Attachment Confirmation Dialog */}
       <BaseConfirmDialog
-        title="Delete Attachment"
-        description="Are you sure you want to delete this attachment? This action cannot be undone."
-        submitLabel="Delete"
-        cancelLabel="Cancel"
+        title="添付を削除しますか？"
+        description="アップロード済みのファイルはストレージから削除されます。この操作は取り消せません。"
+        submitLabel="削除する"
+        cancelLabel="キャンセル"
         triggerOpen={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
         onSubmit={handleDeleteConfirm}
