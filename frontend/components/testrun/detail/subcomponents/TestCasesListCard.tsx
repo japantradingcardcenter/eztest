@@ -192,7 +192,7 @@ export function TestCasesListCard({
     {
       key: 'actions',
       label: 'アクション',
-      width: '150px',
+      width: '120px',
       align: 'right',
       render: (row: ResultRow) => (
         <div className="flex items-center gap-1 justify-end">
@@ -206,10 +206,12 @@ export function TestCasesListCard({
                     e.stopPropagation();
                     onExecuteTestCase(row.testCase);
                   }}
-                  className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 h-7 px-2 text-xs"
+                  className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 h-7 w-7 p-0 inline-flex items-center justify-center text-base leading-none"
+                  title={row.status && row.status !== 'SKIPPED' ? '結果を更新' : 'テストケースを実行'}
+                  aria-label={row.status && row.status !== 'SKIPPED' ? '結果を更新' : 'テストケースを実行'}
                   buttonName={`Test Cases List Card - ${row.status && row.status !== 'SKIPPED' ? 'Update' : 'Execute'} (${row.testCase.title || row.testCase.id})`}
                 >
-                  {row.status && row.status !== 'SKIPPED' ? '更新' : '実行'}
+                  ▶
                 </Button>
               )}
               {row.status === 'FAILED' && canCreateDefect && (
@@ -222,10 +224,12 @@ export function TestCasesListCard({
                   >
                     <ButtonSecondary
                       size="sm"
-                      className="flex items-center gap-1 h-7 px-2 text-xs"
+                      className="inline-flex items-center justify-center gap-0.5 h-7 px-1.5 text-base leading-none"
+                      title="欠陥アクション"
+                      aria-label="欠陥アクション"
                       buttonName={`Test Cases List Card - Defect Actions (${row.testCase.title || row.testCase.id})`}
                     >
-                      欠陥
+                      <span aria-hidden="true">👾</span>
                       <ChevronDown className="w-3 h-3" />
                     </ButtonSecondary>
                   </DropdownMenuTrigger>
@@ -395,7 +399,7 @@ export function TestCasesListCard({
           groupConfig={groupConfig}
           defaultExpanded={true}
           onRowClick={(row) => router.push(`/projects/${projectId}/testcases/${row.testCase.id}`)}
-          gridTemplateColumns="70px 1fr 100px 90px 120px 120px 140px 150px"
+          gridTemplateColumns="70px 1fr 100px 90px 120px 120px 140px 120px"
           emptyMessage="テストケースはありません"
         />
       )}
