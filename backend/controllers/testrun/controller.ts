@@ -90,6 +90,7 @@ export class TestRunController {
       device: validatedData.device,
       status: validatedData.status,
       testCaseIds: validatedData.testCaseIds,
+      testSuiteIds: validatedData.testSuiteIds,
       createdById: userId,
     });
 
