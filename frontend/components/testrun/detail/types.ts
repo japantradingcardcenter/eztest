@@ -9,6 +9,7 @@ export interface TestResult {
   executedBy?: {
     name: string;
     email: string;
+    avatar?: string | null;
   };
 }
 
