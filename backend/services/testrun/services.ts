@@ -579,21 +579,31 @@ export class TestRunService {
     // Collect test case IDs
     let testCaseIds = data.testCaseIds || [];
 
-    // If test suite IDs are provided, fetch all test cases from those suites
+    // If test suite IDs are provided, fetch all test cases from those suites.
+    // テストケースとテストスイートの関連は新しい中間テーブル `TestCaseSuite` と
+    // 旧来の `TestCase.suiteId`（レガシー、後方互換用）の両方を参照する必要がある。
     if (data.testSuiteIds && data.testSuiteIds.length > 0) {
-      const suiteCases = await prisma.testCase.findMany({
-        where: {
-          suiteId: {
-            in: data.testSuiteIds,
+      const [joinTableEntries, legacySuiteCases] = await Promise.all([
+        prisma.testCaseSuite.findMany({
+          where: {
+            testSuiteId: { in: data.testSuiteIds },
+            testCase: { projectId: data.projectId },
           },
-          projectId: data.projectId,
-        },
-        select: {
-          id: true,
-        },
-      });
-      
-      const suiteTestCaseIds = suiteCases.map(tc => tc.id);
+          select: { testCaseId: true },
+        }),
+        prisma.testCase.findMany({
+          where: {
+            suiteId: { in: data.testSuiteIds },
+            projectId: data.projectId,
+          },
+          select: { id: true },
+        }),
+      ]);
+
+      const suiteTestCaseIds = [
+        ...joinTableEntries.map(j => j.testCaseId),
+        ...legacySuiteCases.map(tc => tc.id),
+      ];
       testCaseIds = [...new Set([...testCaseIds, ...suiteTestCaseIds])]; // Remove duplicates
     }
 
@@ -652,12 +662,14 @@ export class TestRunService {
 
     // If test case IDs are provided, create placeholder results
     if (testCaseIds.length > 0) {
-      await prisma.testResult.createMany({
+      // executedById は NOT NULL で User への外部キー。
+      // テスター未割り当て時は作成者 ID をフォールバックに使う（実際の実行時に上書きされる）。
+      const placeholderExecutorId = data.assignedToId || data.createdById;
         data: testCaseIds.map((testCaseId) => ({
           testRunId: testRun.id,
           testCaseId,
           status: 'NOT_STARTED',
-          executedById: primaryAssignedToId || '', // Will be updated when actually executed
+          executedById: placeholderExecutorId,
         })),
         skipDuplicates: true,
       });
