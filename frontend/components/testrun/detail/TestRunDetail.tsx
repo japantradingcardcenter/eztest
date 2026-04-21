@@ -781,6 +781,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const handleCreateDefect = (testCaseId: string) => {
     setSelectedTestCaseForDefect(testCaseId);
     setCreateDefectDialogOpen(true);
+  };
+
   const handleExcludeRequest = (testCase: TestCase, currentStatus: string) => {
     setExcludeTarget({
       testCaseId: testCase.id,
@@ -810,8 +812,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     } finally {
       setExcludeLoading(false);
     }
-  };
-
   };
 
   const handleDefectCreated = async () => {

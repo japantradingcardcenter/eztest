@@ -676,6 +676,7 @@ export class TestRunService {
       // executedById は NOT NULL で User への外部キー。
       // テスター未割り当て時は作成者 ID をフォールバックに使う（実際の実行時に上書きされる）。
       const placeholderExecutorId = data.assignedToId || data.createdById;
+      await prisma.testResult.createMany({
         data: testCaseIds.map((testCaseId) => ({
           testRunId: testRun.id,
           testCaseId,
