@@ -498,6 +498,7 @@ export class DefectService {
                 avatar: true,
               },
             },
+            attachments: true,
           },
           orderBy: {
             createdAt: 'desc',
@@ -1292,26 +1293,132 @@ export const shortcutService = {
       const linkedTestSuites = (defect as { linkedTestSuites?: { name: string }[] }).linkedTestSuites;
       const description = buildShortcutDescription(defect, linkedTestSuites, appBaseUrl);
 
-      const attachments = (defect.attachments || []) as Array<{
-        path: string;
-        originalName: string;
+      type UploadedAttachment = {
+        id: number;
+        name: string;
+        url: string | null;
         mimeType: string;
-      }>;
-      const uploadedFileIds: number[] = [];
-      for (const att of attachments) {
+        source: 'defect' | 'comment';
+        commentId?: string;
+      };
+
+      const uploaded: UploadedAttachment[] = [];
+      const uploadFailures: string[] = [];
+
+      const uploadOne = async (
+        att: { path: string; originalName: string; mimeType: string },
+        source: 'defect' | 'comment',
+        commentId?: string
+      ) => {
         const buffer = await readAttachmentBuffer(att.path);
-        if (!buffer) continue;
+        if (!buffer) {
+          uploadFailures.push(`${att.originalName} (読み込み失敗)`);
+          return;
+        }
         try {
           const up = await uploadFile(config, {
             buffer,
             filename: att.originalName,
             contentType: att.mimeType || 'application/octet-stream',
           });
-          uploadedFileIds.push(up.id);
+          uploaded.push({
+            id: up.id,
+            name: up.name || att.originalName,
+            url: up.url ?? null,
+            mimeType: att.mimeType || 'application/octet-stream',
+            source,
+            commentId,
+          });
         } catch (e) {
           console.warn('[shortcut] upload failed', att.originalName, e);
+          uploadFailures.push(
+            `${att.originalName} (${e instanceof Error ? e.message : String(e)})`
+          );
+        }
+      };
+
+      // 1) Defect-level attachments
+      const defectAttachments = (defect.attachments || []) as Array<{
+        path: string;
+        originalName: string;
+        mimeType: string;
+      }>;
+      for (const att of defectAttachments) {
+        await uploadOne(att, 'defect');
+      }
+
+      // 2) Attachments embedded in defect comments
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const defectComments = ((defect as any).comments || []) as Array<{
+        id: string;
+        content: string;
+        createdAt: Date | string;
+        user?: { name?: string | null; email?: string | null } | null;
+        attachments?: Array<{
+          path: string;
+          originalName: string;
+          mimeType: string;
+        }>;
+      }>;
+      for (const c of defectComments) {
+        for (const att of c.attachments || []) {
+          await uploadOne(att, 'comment', c.id);
         }
       }
+
+      // Note: Shortcut's file upload URL (/api/private/files/:id) requires an
+      // authenticated session to view, so we expose clickable links instead of
+      // inlining images. The files are also attached via `file_ids`, which makes
+      // them appear in the story's Files panel.
+      const renderFileLink = (u: UploadedAttachment) => {
+        const icon = u.mimeType.startsWith('image/')
+          ? '🖼'
+          : u.mimeType.startsWith('video/')
+            ? '🎞'
+            : '📎';
+        return u.url
+          ? `- ${icon} [${u.name}](${u.url})`
+          : `- ${icon} ${u.name} (file id: ${u.id})`;
+      };
+
+      const defectFileBlock = (() => {
+        const items = uploaded.filter((u) => u.source === 'defect');
+        if (items.length === 0) return '';
+        return ['', '---', '', '### Attachments', '', ...items.map(renderFileLink)].join('\n');
+      })();
+
+      const commentsBlock = (() => {
+        if (defectComments.length === 0) return '';
+        const blocks: string[] = ['', '---', '', '### EZTest Comments', ''];
+        // Oldest-first is more readable when porting to a fresh story.
+        const sorted = [...defectComments].sort((a, b) => {
+          const ta = new Date(a.createdAt).getTime();
+          const tb = new Date(b.createdAt).getTime();
+          return ta - tb;
+        });
+        for (const c of sorted) {
+          const who = c.user?.name || c.user?.email || 'unknown';
+          const when = new Date(c.createdAt).toISOString();
+          blocks.push(`**${who}** — ${when}`);
+          blocks.push('');
+          blocks.push((c.content || '').trim() || '_(empty)_');
+          const files = uploaded.filter((u) => u.source === 'comment' && u.commentId === c.id);
+          if (files.length > 0) {
+            blocks.push('');
+            for (const f of files) blocks.push(renderFileLink(f));
+          }
+          blocks.push('');
+        }
+        return blocks.join('\n');
+      })();
+
+      const failureMarkdown =
+        uploadFailures.length > 0
+          ? `\n\n> ⚠️ 以下の添付はアップロードに失敗しました:\n${uploadFailures.map((f) => `> - ${f}`).join('\n')}`
+          : '';
+
+      const enrichedDescription = `${description}${defectFileBlock}${commentsBlock}${failureMarkdown}`;
+      const uploadedFileIds = uploaded.map((u) => u.id);
 
       // Fetch the parent story so the sub-task inherits epic/group.
       let parentStory: Awaited<ReturnType<typeof getStory>> | null = null;
@@ -1352,7 +1459,7 @@ export const shortcutService = {
 
       const created = await createStory(config, {
         name: subtaskName,
-        description,
+        description: enrichedDescription,
         storyType: 'bug',
         parentStoryId: storyId,
         epicId: parentStory?.epic_id ?? undefined,
@@ -1367,13 +1474,11 @@ export const shortcutService = {
       const commentText = [
         `## EZTest Defect \`${defect.defectId}\` を Sub-task として取り込みました`,
         '',
-        description,
+        enrichedDescription,
       ].join('\n');
-      try {
-        await addStoryComment(config, created.id, commentText);
-      } catch (e) {
-        console.warn('[shortcut] sub-task comment failed', e);
-      }
+      // Let errors propagate so the UI can surface them; a silently-missing comment
+      // was previously indistinguishable from success.
+      await addStoryComment(config, created.id, commentText);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updated = await (prisma.defect as any).update({

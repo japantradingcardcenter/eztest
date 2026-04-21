@@ -200,8 +200,14 @@ export function DefectInfoCard({ defect, onChanged }: DefectInfoCardProps) {
       <div>
         <h4 className="text-sm font-medium text-white/60 mb-1">テストスイート名</h4>
         {primaryEpicSuite ? (
-          <Badge variant="outline" className="mr-2 mb-1">
-            {primaryEpicSuite.title || primaryEpicSuite.name}
+          <Badge
+            variant="outline"
+            className="mr-2 mb-1 max-w-full"
+            title={primaryEpicSuite.title || primaryEpicSuite.name}
+          >
+            <span className="truncate block">
+              {primaryEpicSuite.title || primaryEpicSuite.name}
+            </span>
           </Badge>
         ) : (
           <p className="text-white/50 text-xs">
@@ -263,7 +269,15 @@ export function DefectInfoCard({ defect, onChanged }: DefectInfoCardProps) {
       <StatisticsSection
         statistics={[
           { label: 'コメント', value: defect.comments.length },
-          { label: '添付', value: defect.attachments.length },
+          {
+            label: '添付',
+            value:
+              defect.attachments.length +
+              defect.comments.reduce(
+                (sum, c) => sum + (c.attachments?.length ?? 0),
+                0
+              ),
+          },
         ]}
       />
 
