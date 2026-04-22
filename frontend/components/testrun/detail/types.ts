@@ -20,7 +20,6 @@ export interface TestResult {
     name: string;
     email: string;
     avatar?: string | null;
-    avatar?: string | null;
   };
   attachments?: TestResultAttachment[];
 }
