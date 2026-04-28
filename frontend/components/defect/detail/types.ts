@@ -63,6 +63,10 @@ export interface Defect {
     name: string;
     title: string;
   }[];
+  executedTestSuites: {
+    id: string;
+    name: string;
+  }[];
   attachments: DefectAttachment[];
   comments: DefectComment[];
 }

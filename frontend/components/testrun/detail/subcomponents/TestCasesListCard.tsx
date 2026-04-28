@@ -404,7 +404,7 @@ export function TestCasesListCard({
     return Number.isNaN(lastNum) ? 0 : lastNum;
   };
 
-  // IN_PROGRESS時はRTC-ID昇順のフラットリスト、それ以外はモジュールグループ表示
+  // IN_PROGRESS時はTC-ID昇順のフラットリスト、それ以外はモジュールグループ表示
   const isInProgress = testRunStatus === 'IN_PROGRESS';
 
   /** 列キー毎の比較値を取得する。数値なら number、文字列なら string を返す。 */

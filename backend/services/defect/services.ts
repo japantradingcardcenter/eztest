@@ -195,6 +195,12 @@ export class DefectService {
                 id: true,
                 tcId: true,
                 title: true,
+                suite: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
                 testCaseSuites: {
                   select: {
                     testSuite: {
@@ -331,6 +337,16 @@ export class DefectService {
           select: {
             id: true,
             name: true,
+            suites: {
+              select: {
+                testSuite: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -532,19 +548,34 @@ export class DefectService {
       })
     );
 
-    const suiteMap = new Map<string, { id: string; name: string }>();
-    if (defect.testRun) {
-      for (const s of defect.testRun.suites) {
-        suiteMap.set(s.testSuite.id, s.testSuite);
+    const uniqueSuites = new Map<string, { id: string; name: string }>();
+
+    defect.testRun?.suites.forEach((suiteLink) => {
+      uniqueSuites.set(suiteLink.testSuite.id, {
+        id: suiteLink.testSuite.id,
+        name: suiteLink.testSuite.name,
+      });
+    });
+
+    testCasesWithFailureCount.forEach((tc) => {
+      const legacySuite = (tc.testCase as any).suite;
+      if (legacySuite) {
+        uniqueSuites.set(legacySuite.id, {
+          id: legacySuite.id,
+          name: legacySuite.name,
+        });
       }
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    for (const tc of defect.testCases as any[]) {
-      for (const s of tc.testCase.testCaseSuites || []) {
-        suiteMap.set(s.testSuite.id, s.testSuite);
-      }
-    }
-    const linkedTestSuites = Array.from(suiteMap.values()).map((s) => ({
+
+      tc.testCase.testCaseSuites?.forEach((suiteLink: { testSuite: { id: string; name: string } }) => {
+        uniqueSuites.set(suiteLink.testSuite.id, {
+          id: suiteLink.testSuite.id,
+          name: suiteLink.testSuite.name,
+        });
+      });
+    });
+
+    const executedTestSuites = Array.from(uniqueSuites.values());
+    const linkedTestSuites = executedTestSuites.map((s) => ({
       id: s.id,
       name: s.name,
       title: s.name,
@@ -553,18 +584,7 @@ export class DefectService {
     return {
       ...defect,
       testCases: testCasesWithFailureCount,
-      testRun: defect.testRun
-        ? {
-            ...defect.testRun,
-            suites: defect.testRun.suites.map((suite) => ({
-              ...suite,
-              testSuite: {
-                ...suite.testSuite,
-                title: suite.testSuite.name,
-              },
-            })),
-          }
-        : null,
+      executedTestSuites,
       linkedTestSuites,
     };
   }
