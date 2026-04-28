@@ -527,6 +527,10 @@ model Defect {
   device        String?       // 端末: iPhone, Android, PC
   dueDate       DateTime?     // Optional due date for the defect
   progressPercentage Int?      // Optional progress percentage (0-100)
+  shortcutStoryId  Int?       // Linked Shortcut story id when reported to Shortcut
+  shortcutStoryUrl String?    // Shortcut story app URL for quick access
+  shortcutEpicId   Int?       // Linked Shortcut epic id (pre-selected before choosing a story)
+  shortcutEpicName String?    // Cached Shortcut epic name for display
   createdById   String
   resolvedAt    DateTime?
   closedAt      DateTime?

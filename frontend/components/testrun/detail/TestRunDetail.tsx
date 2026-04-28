@@ -7,9 +7,16 @@ import { TestRunHeader } from './subcomponents/TestRunHeader';
 import { TestRunStatsCards } from './subcomponents/TestRunStatsCards';
 import { TestCasesListCard } from './subcomponents/TestCasesListCard';
 import { RecordResultDialog } from './subcomponents/RecordResultDialog';
+import { ViewResultDialog } from './subcomponents/ViewResultDialog';
 import { AddTestCasesDialog } from '@/frontend/components/common/dialogs/AddTestCasesDialog';
 import { AddTestSuitesDialog } from './subcomponents/AddTestSuitesDialog';
 import { CreateDefectDialog } from '@/frontend/components/defect/subcomponents/CreateDefectDialog';
+import { ShortcutEpicPickerDialog } from '@/frontend/components/defect/detail/subcomponents/ShortcutEpicPickerDialog';
+import { ShortcutStoryPickerDialog } from '@/frontend/components/defect/detail/subcomponents/ShortcutStoryPickerDialog';
+import {
+  extractEpicId,
+  resolveShortcutId,
+} from '@/frontend/components/defect/detail/subcomponents/shortcutEpicDetect';
 import { SendTestRunReportDialog } from './subcomponents/SendTestRunReportDialog';
 import {
   CheckCircle,
@@ -41,6 +48,15 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [addSuitesDialogOpen, setAddSuitesDialogOpen] = useState(false);
   const [createDefectDialogOpen, setCreateDefectDialogOpen] = useState(false);
   const [selectedTestCaseForDefect, setSelectedTestCaseForDefect] = useState<string | null>(null);
+  // Shortcut Sub-task follow-up flow launched by "ストーリーを作成" in CreateDefectDialog.
+  // The pickers are kept here (not inside CreateDefectDialog) so they stay
+  // mounted after CreateDefectDialog closes/unmounts on successful submit.
+  const [defectForStory, setDefectForStory] =
+    useState<{ id: string; defectId: string; title: string } | null>(null);
+  const [shortcutEpicPickerOpen, setShortcutEpicPickerOpen] = useState(false);
+  const [shortcutStoryPickerOpen, setShortcutStoryPickerOpen] = useState(false);
+  const [shortcutResolvedEpic, setShortcutResolvedEpic] =
+    useState<{ id: number; name: string | null } | null>(null);
   const [selectedTestCase, setSelectedTestCase] = useState<{
     testCaseId: string;
     testCaseName: string;
@@ -66,6 +82,9 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [excludeLoading, setExcludeLoading] = useState(false);
   /** テスト結果コメントの添付（保存時に TestResult に紐づけ） */
   const [resultCommentAttachments, setResultCommentAttachments] = useState<Attachment[]>([]);
+  /** 実行済みテストケースの結果（コメント・添付）を読み取り専用で表示するダイアログ */
+  const [viewResultDialogOpen, setViewResultDialogOpen] = useState(false);
+  const [viewingResult, setViewingResult] = useState<TestResult | null>(null);
 
   const [resultForm, setResultForm, clearResultForm] = useFormPersistence<ResultFormData>(
     `testrun-result-${testRunId}`,
@@ -799,6 +818,45 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     setCreateDefectDialogOpen(true);
   };
 
+  const handleCreateStoryForDefect = async (defect: { id: string; defectId: string; title: string }) => {
+    setDefectForStory(defect);
+
+    // Collect hints from the test case this defect was created against.
+    const tc = selectedTestCaseForDefect
+      ? (testRun?.results.find((r) => r.testCase.id === selectedTestCaseForDefect)?.testCase
+          ?? testRun?.testCases?.find((t) => t.id === selectedTestCaseForDefect)
+          ?? null)
+      : null;
+    const suiteNames =
+      tc?.testCaseSuites?.map((s) => s.testSuite?.name).filter(Boolean) ?? [];
+
+    const hint = extractEpicId(
+      defect.title,
+      testRun?.name,
+      tc?.title,
+      tc?.tcId,
+      ...suiteNames
+    );
+    if (hint) {
+      try {
+        const resolved = await resolveShortcutId(hint);
+        if (resolved.kind !== 'unknown' && resolved.epicId) {
+          setShortcutResolvedEpic({ id: resolved.epicId, name: resolved.epicName });
+          setShortcutStoryPickerOpen(true);
+          return;
+        }
+      } catch {
+        // Fall through to manual epic picker
+      }
+    }
+    setShortcutEpicPickerOpen(true);
+  };
+
+  const handleViewResult = (result: TestResult) => {
+    setViewingResult(result);
+    setViewResultDialogOpen(true);
+  };
+
   const handleExcludeRequest = (testCase: TestCase, currentStatus: string) => {
     setExcludeTarget({
       testCaseId: testCase.id,
@@ -991,8 +1049,18 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           onExecuteTestCase={handleOpenResultDialog}
           onCreateDefect={handleCreateDefect}
           onExcludeTestCase={handleExcludeRequest}
+          onViewResult={handleViewResult}
           forceShowDefectActions={showAutomationDefectActions}
           getResultIcon={getResultIcon}
+        />
+
+        <ViewResultDialog
+          open={viewResultDialogOpen}
+          onOpenChange={(open) => {
+            setViewResultDialogOpen(open);
+            if (!open) setViewingResult(null);
+          }}
+          result={viewingResult}
         />
 
         <RecordResultDialog
@@ -1086,6 +1154,43 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
             testRunEnvironment={testRun.environment}
             testRunPlatform={testRun.platform}
             testRunDevice={testRun.device}
+            onCreateStoryAfterDefect={handleCreateStoryForDefect}
+          />
+        )}
+
+        {defectForStory && testRun.project?.id && (
+          <ShortcutEpicPickerDialog
+            projectId={testRun.project.id}
+            defectId={defectForStory.id}
+            open={shortcutEpicPickerOpen}
+            onOpenChange={setShortcutEpicPickerOpen}
+            persistToDefect={false}
+            onLinked={(epic) => {
+              setShortcutResolvedEpic({ id: epic.id, name: epic.name });
+              setShortcutEpicPickerOpen(false);
+              setShortcutStoryPickerOpen(true);
+            }}
+          />
+        )}
+
+        {defectForStory && shortcutResolvedEpic && testRun.project?.id && (
+          <ShortcutStoryPickerDialog
+            projectId={testRun.project.id}
+            defectId={defectForStory.id}
+            epicId={shortcutResolvedEpic.id}
+            epicName={shortcutResolvedEpic.name}
+            open={shortcutStoryPickerOpen}
+            onOpenChange={setShortcutStoryPickerOpen}
+            onAttached={(result) => {
+              setShortcutStoryPickerOpen(false);
+              setDefectForStory(null);
+              setShortcutResolvedEpic(null);
+              setFloatingAlert({
+                type: 'success',
+                title: 'Shortcut Story を作成しました',
+                message: `Story #${result.shortcutStoryId} を Sub-task として登録しました`,
+              });
+            }}
           />
         )}
 

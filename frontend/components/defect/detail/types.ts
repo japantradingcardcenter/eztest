@@ -15,6 +15,10 @@ export interface Defect {
   closedAt: Date | null;
   dueDate: Date | null;
   progressPercentage: number | null;
+  shortcutStoryId: number | null;
+  shortcutStoryUrl: string | null;
+  shortcutEpicId: number | null;
+  shortcutEpicName: string | null;
   createdAt: Date;
   updatedAt: Date;
   project: {
@@ -50,9 +54,15 @@ export interface Defect {
       testSuite: {
         id: string;
         name: string;
+        title?: string;
       };
     }[];
   } | null;
+  linkedTestSuites?: {
+    id: string;
+    name: string;
+    title: string;
+  }[];
   executedTestSuites: {
     id: string;
     name: string;
