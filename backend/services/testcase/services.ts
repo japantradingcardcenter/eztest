@@ -1216,6 +1216,17 @@ export class TestCaseService {
             status: true,
           },
         },
+        attachments: {
+          select: {
+            id: true,
+            filename: true,
+            originalName: true,
+            size: true,
+            mimeType: true,
+            uploadedAt: true,
+            fieldName: true,
+          },
+        },
       },
       orderBy: {
         executedAt: 'desc',

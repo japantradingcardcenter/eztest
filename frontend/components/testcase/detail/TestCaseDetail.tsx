@@ -892,7 +892,15 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
 
             <LinkedDefectsCard testCase={testCase} onRefresh={fetchTestCase} />
 
-            <TestCaseHistoryCard testCaseId={testCaseId} />
+            <TestCaseHistoryCard
+              testCaseId={testCaseId}
+              testCase={{
+                id: testCase.id,
+                title: testCase.title,
+                tcId: testCase.tcId,
+                rtcId: testCase.rtcId,
+              }}
+            />
           </div>
 
           <div className="space-y-6">

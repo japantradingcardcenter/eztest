@@ -433,14 +433,13 @@ export function TestCasesListCard({
     }));
 
   /**
-   * 実行済みテストケース（コメント/添付ファイルが記録され得る行）かを判定する。
-   * NOT_STARTED や、コメントが無い空の SKIPPED プレースホルダーは未実行として扱う。
+   * 結果モーダル（ViewResultDialog）を開くべき行かを判定する。
+   * コメントまたは添付ファイルが記録されている実行済み行のみモーダルで表示し、
+   * それ以外（未実行、もしくはコメント・添付が無い行）はテストケース詳細ページへ遷移させる。
    */
   const isExecutedRow = (row: ResultRow): boolean => {
     if (!row.status || row.status === 'NOT_STARTED') return false;
-    if (row.status === 'SKIPPED' && !row.comment && !(row.result.attachments?.length)) {
-      return false;
-    }
+    if (!row.comment && !(row.result.attachments?.length)) return false;
     return true;
   };
 
