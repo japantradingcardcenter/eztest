@@ -434,12 +434,12 @@ export function TestCasesListCard({
 
   /**
    * 結果モーダル（ViewResultDialog）を開くべき行かを判定する。
-   * コメントまたは添付ファイルが記録されている実行済み行のみモーダルで表示し、
-   * それ以外（未実行、もしくはコメント・添付が無い行）はテストケース詳細ページへ遷移させる。
+   * ステータスが入力済み（NOT_STARTED 以外）の実行済み行はクリック時に
+   * モーダルを開いてコメント・添付ファイルを読み取り専用で表示する。
+   * 未実行行はこれまで通りテストケース詳細ページへ遷移させる。
    */
   const isExecutedRow = (row: ResultRow): boolean => {
     if (!row.status || row.status === 'NOT_STARTED') return false;
-    if (!row.comment && !(row.result.attachments?.length)) return false;
     return true;
   };
 
